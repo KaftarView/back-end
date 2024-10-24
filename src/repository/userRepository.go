@@ -60,18 +60,22 @@ func (repo *UserRepository) UpdateUserToken(user entities.User, token string) {
 	repo.db.Save(&user)
 }
 
-func (repo *UserRepository) CreateNewUser(username string, email string, password string, token string, verified bool) {
+// TODO
+func (repo *UserRepository) CreateNewUser(
+	username string, email string, password string, token string, verified bool) entities.User {
 	user := entities.User{
 		Name:     username,
 		Email:    email,
 		Password: password,
 		Token:    token,
 		Verified: verified,
+		// Roles: []entities.Role{role},
 	}
 	result := repo.db.Create(&user)
 	if result.Error != nil {
 		panic(result.Error)
 	}
+	return user
 }
 
 func (repo *UserRepository) ActivateUserAccount(user entities.User) {
@@ -95,4 +99,34 @@ func (repo *UserRepository) FindUnverifiedUsersBeforeDate(date time.Time) []enti
 		panic(err)
 	}
 	return users
+}
+
+func (repo *UserRepository) FindRoleByName(name string) (entities.Role, bool) {
+	var role entities.Role
+	result := repo.db.Where("name = ?", name).First(&role)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return role, false
+		}
+		panic(result.Error)
+	}
+	return role, true
+}
+
+func (repo *UserRepository) CreateNewRole(name string) entities.Role {
+	role := entities.Role{
+		Name: name,
+	}
+	result := repo.db.Create(&role)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return role
+}
+
+func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.Role) {
+	err := repo.db.Model(&user).Association("Roles").Append(&role)
+	if err != nil {
+		panic(err)
+	}
 }
