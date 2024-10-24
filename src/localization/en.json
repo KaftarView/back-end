@@ -15,7 +15,8 @@
         "loginFailed": "Login failed. Please check your username and password, and ensure your account is activated.",
         "emailNotExist": "You should register first.",
         "rateLimitExceed": "Rate limit exceeded.",
-        "authentication": "Access Denied."
+        "forbidden": "Access Denied.",
+        "unauthorized": "There was an issue with your authentication. Please try again."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",

@@ -60,7 +60,6 @@ func (repo *UserRepository) UpdateUserToken(user entities.User, token string) {
 	repo.db.Save(&user)
 }
 
-// TODO
 func (repo *UserRepository) CreateNewUser(
 	username string, email string, password string, token string, verified bool) entities.User {
 	user := entities.User{
@@ -69,7 +68,6 @@ func (repo *UserRepository) CreateNewUser(
 		Password: password,
 		Token:    token,
 		Verified: verified,
-		// Roles: []entities.Role{role},
 	}
 	result := repo.db.Create(&user)
 	if result.Error != nil {

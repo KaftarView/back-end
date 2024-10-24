@@ -26,7 +26,8 @@ func NewAuthMiddleware(constants *bootstrap.Constants, userRepository *repositor
 func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, allowedRules []string) {
 	tokenString, err := c.Cookie(authMiddleware.constants.Context.Token)
 	if err != nil {
-		panic(err)
+		unauthorizedError := exceptions.NewUnauthorizedError()
+		panic(unauthorizedError)
 	}
 	claims := jwt.VerifyToken(tokenString)
 	subject := claims["sub"].(string)
@@ -38,18 +39,21 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 	roles := authMiddleware.userRepository.FindUserRolesByUserID(user.ID)
 
 	if !isAllowRole(allowedRules, roles) {
-		authError := exceptions.NewAuthError()
+		authError := exceptions.NewForbiddenError()
 		panic(authError)
 	}
 	c.Next()
 }
 
 func isAllowRole(allowedRoles []string, userRoles []entities.Role) bool {
+	allowedRolesMap := make(map[string]bool)
 	for _, allowedRole := range allowedRoles {
-		for _, userRole := range userRoles {
-			if allowedRole == userRole.Name {
-				return true
-			}
+		allowedRolesMap[allowedRole] = true
+	}
+
+	for _, userRole := range userRoles {
+		if allowedRolesMap[userRole.Name] {
+			return true
 		}
 	}
 	return false

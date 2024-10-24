@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"crypto/rsa"
+	"first-project/src/exceptions"
 	"fmt"
 	"os"
 	"time"
@@ -81,5 +82,6 @@ func VerifyToken(tokenString string) jwt.MapClaims {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims
 	}
-	panic(fmt.Errorf("invalid token"))
+	unauthorizedError := exceptions.NewUnauthorizedError()
+	panic(unauthorizedError)
 }
