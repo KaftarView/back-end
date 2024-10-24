@@ -130,3 +130,12 @@ func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.R
 		panic(err)
 	}
 }
+
+func (repo *UserRepository) FindUserRolesByUserID(userID uint) []entities.Role {
+	var user entities.User
+	err := repo.db.Preload("Roles").First(&user, userID).Error
+	if err != nil {
+		panic(err)
+	}
+	return user.Roles
+}

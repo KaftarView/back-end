@@ -34,6 +34,8 @@ func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 					handleRegistrationError(c, registrationErrors, recovery.constants.Translator)
 				} else if _, ok := err.(exceptions.LoginError); ok {
 					handleLoginError(c, recovery.constants.Translator)
+				} else if _, ok := err.(exceptions.AuthError); ok {
+					handleAuthenticationError(c, recovery.constants.Translator)
 				} else if rateLimitError, ok := err.(exceptions.RateLimitError); ok {
 					handleRateLimitError(c, rateLimitError, recovery.constants.Translator, recovery.constants.RetryAfterHeader)
 				} else {
@@ -90,6 +92,12 @@ func handleRegistrationError(c *gin.Context, registrationErrors exceptions.UserR
 func handleLoginError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.loginFailed")
+	controller.Response(c, 422, message, nil)
+}
+
+func handleAuthenticationError(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.authentication")
 	controller.Response(c, 422, message, nil)
 }
 

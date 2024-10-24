@@ -117,3 +117,7 @@ func (userController *UserController) ResetPassword(c *gin.Context) {
 	message, _ := trans.T("successMessage.resetPassword")
 	controller.Response(c, 200, message, nil)
 }
+
+func (userController *UserController) AdminSayHello(c *gin.Context) {
+	controller.Response(c, 200, "Hello From Admin", nil)
+}
