@@ -84,8 +84,12 @@ func (userController *UserController) Login(c *gin.Context) {
 	}
 	param := controller.Validated[loginParams](c, &userController.constants.Context)
 	userController.userService.VerifyLogin(param.Username, param.Password)
-	jwtString := jwt.GenerateJWT(c, "./jwtKeys", userController.constants.Context.IsLoadedJWTPrivateKey, param.Username)
-	c.SetCookie(userController.constants.Context.Token, jwtString, 3600, "/", "localhost", true, true)
+	accessToken, refreshToken := jwt.GenerateJWT(
+		c, "./jwtKeys", userController.constants.Context.IsLoadedJWTPrivateKey, param.Username)
+	jwt.SetAuthCookies(
+		c, accessToken, refreshToken,
+		userController.constants.Context.AccessToken,
+		userController.constants.Context.RefreshToken)
 
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")

@@ -24,6 +24,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		di.Constants, userService, emailService)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository)
+	authController := controller_v1_general.NewAuthController(di.Constants)
 
 	routerGroup.GET("/ping", controller_v1_general.Pong)
 	routerGroup.GET("/add/:num1/:num2", sampleController.Add)
@@ -35,6 +36,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	routerGroup.GET("/admin", func(c *gin.Context) {
 		authMiddleware.AuthenticateMiddleware(c, []string{"Admin"})
 	}, userController.AdminSayHello)
+	routerGroup.POST("/refreshToken", authController.RefreshToken)
 
 	return routerGroup
 }

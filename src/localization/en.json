@@ -23,6 +23,7 @@
         "emailVerification": "Email Verified.",
         "login": "Login Successfully.",
         "forgotPassword": "You can change Your Password.",
-        "resetPassword": "Password reset Successfully."
+        "resetPassword": "Password reset Successfully.",
+        "refreshToken": "Your session has been extended."
     }
 }

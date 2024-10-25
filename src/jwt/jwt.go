@@ -18,10 +18,12 @@ type JWTToken struct {
 
 var jwtToken = &JWTToken{}
 
-func setupJWTKeys(c *gin.Context, privateKeyPath, publicKeyPath, contextJWTKey string) {
+func setupJWTKeys(c *gin.Context, jwtKeysPath, contextJWTKey string) {
 	_, exists := c.Get(contextJWTKey)
 	if !exists {
+		privateKeyPath := jwtKeysPath + "/privateKey.pem"
 		loadPrivateKey(jwtToken, privateKeyPath)
+		publicKeyPath := jwtKeysPath + "/publicKey.pem"
 		loadPublicKey(jwtToken, publicKeyPath)
 		c.Set(contextJWTKey, jwtToken)
 	}
@@ -49,26 +51,45 @@ func loadPublicKey(jwtToken *JWTToken, publicKeyPath string) {
 	}
 }
 
-func GenerateJWT(c *gin.Context, jwtKeysPath, contextJWTKey, username string) string {
-	privateKeyPath := jwtKeysPath + "/privateKey.pem"
-	publicKeyPath := jwtKeysPath + "/publicKey.pem"
-	setupJWTKeys(c, privateKeyPath, publicKeyPath, contextJWTKey)
-	claims := jwt.MapClaims{
+func GenerateJWT(c *gin.Context, jwtKeysPath, contextJWTKey, username string) (string, string) {
+	setupJWTKeys(c, jwtKeysPath, contextJWTKey)
+	accessTokenClaims := jwt.MapClaims{
 		"iss": "test",
 		"sub": username,
-		"exp": time.Now().Add(time.Hour * 1).Unix(),
+		// "exp": time.Now().Add(time.Hour * 1).Unix(),
+		"exp": time.Now().Add(time.Minute * 1).Unix(),
 		"iat": time.Now().Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	tokenString, err := token.SignedString(jwtToken.PrivateKey)
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, accessTokenClaims)
+	accessTokenString, err := accessToken.SignedString(jwtToken.PrivateKey)
 	if err != nil {
 		panic(err)
 	}
-	return tokenString
+
+	refreshTokenClaims := jwt.MapClaims{
+		"iss": "test",
+		"sub": username,
+		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"iat": time.Now().Unix(),
+	}
+
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodRS256, refreshTokenClaims)
+	refreshTokenString, err := refreshToken.SignedString(jwtToken.PrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return accessTokenString, refreshTokenString
 }
 
-func VerifyToken(tokenString string) jwt.MapClaims {
+func SetAuthCookies(c *gin.Context, accessToken, refreshToken, accessTokenKey, refreshTokenKey string) {
+	c.SetCookie(accessTokenKey, accessToken, 60, "/", "localhost", true, true)
+	c.SetCookie(refreshTokenKey, refreshToken, 3600*24*7, "/", "localhost", true, true)
+}
+
+func VerifyToken(c *gin.Context, jwtKeysPath, contextJWTKey, tokenString string) jwt.MapClaims {
+	setupJWTKeys(c, jwtKeysPath, contextJWTKey)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			panic(fmt.Errorf("unexpected signing method: %v", token.Header["alg"]))
@@ -78,7 +99,6 @@ func VerifyToken(tokenString string) jwt.MapClaims {
 	if err != nil {
 		panic(err)
 	}
-
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims
 	}
