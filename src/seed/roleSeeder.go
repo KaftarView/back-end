@@ -31,19 +31,25 @@ func (rs *RoleSeeder) SeedRoles() {
 		rs.userRepository.CreateNewRole(roleName)
 	}
 
-	bytes, err := bcrypt.GenerateFromPassword([]byte(rs.admin.Password), 14)
-	if err != nil {
-		panic(err)
+	_, adminExist := rs.userRepository.FindByUsernameAndVerified("Admin", true)
+	if !adminExist {
+		bytes, err := bcrypt.GenerateFromPassword([]byte(rs.admin.Password), 14)
+		if err != nil {
+			panic(err)
+		}
+		adminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
+		adminRole, _ := rs.userRepository.FindRoleByName(roleNames[0])
+		rs.userRepository.AssignRoleToUser(adminUser, adminRole)
 	}
-	adminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
-	adminRole, _ := rs.userRepository.FindRoleByName(roleNames[0])
-	rs.userRepository.AssignRoleToUser(adminUser, adminRole)
 
-	bytes, err = bcrypt.GenerateFromPassword([]byte(rs.moderator.Password), 14)
-	if err != nil {
-		panic(err)
+	_, moderatorExist := rs.userRepository.FindByUsernameAndVerified("Moderator", true)
+	if !moderatorExist {
+		bytes, err := bcrypt.GenerateFromPassword([]byte(rs.moderator.Password), 14)
+		if err != nil {
+			panic(err)
+		}
+		moderatorUser := rs.userRepository.CreateNewUser("Moderator", rs.moderator.EmailAddress, string(bytes), "", true)
+		moderatorRole, _ := rs.userRepository.FindRoleByName(roleNames[1])
+		rs.userRepository.AssignRoleToUser(moderatorUser, moderatorRole)
 	}
-	moderatorUser := rs.userRepository.CreateNewUser("Moderator", rs.moderator.EmailAddress, string(bytes), "", true)
-	moderatorRole, _ := rs.userRepository.FindRoleByName(roleNames[1])
-	rs.userRepository.AssignRoleToUser(moderatorUser, moderatorRole)
 }
