@@ -24,12 +24,12 @@ func NewAuthMiddleware(constants *bootstrap.Constants, userRepository *repositor
 }
 
 func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, allowedRules []string) {
-	tokenString, err := c.Cookie(authMiddleware.constants.Context.Token)
+	tokenString, err := c.Cookie(authMiddleware.constants.Context.AccessToken)
 	if err != nil {
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
-	claims := jwt.VerifyToken(tokenString)
+	claims := jwt.VerifyToken(c, "./jwtKeys", authMiddleware.constants.Context.IsLoadedJWTPrivateKey, tokenString)
 	subject := claims["sub"].(string)
 	user, userExist := authMiddleware.userRepository.FindByUsernameAndVerified(subject, true)
 	if !userExist {

@@ -16,7 +16,8 @@ type Context struct {
 	IsLoadedValidationTranslator string
 	IsLoadedJWTPrivateKey        string
 	RetryAfterHeader             string
-	Token                        string
+	AccessToken                  string
+	RefreshToken                 string
 }
 
 type ErrorField struct {
@@ -51,7 +52,8 @@ func NewConstants() *Constants {
 			IsLoadedValidationTranslator: "isLoadedValidationTranslator",
 			IsLoadedJWTPrivateKey:        "isLoadedJWTPrivateKey",
 			RetryAfterHeader:             "Retry-After",
-			Token:                        "token",
+			AccessToken:                  "access_token",
+			RefreshToken:                 "refresh_token",
 		},
 		ErrorField: ErrorField{
 			Username: "username",
