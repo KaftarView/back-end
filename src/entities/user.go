@@ -9,5 +9,6 @@ type User struct {
 	Password          string
 	Token             string
 	Verified          bool
+	Roles             []Role     `gorm:"many2many:user_roles;"`
 	PreviousPasswords []Password `gorm:"foreignKey:UserID"`
 }

@@ -10,6 +10,8 @@ import (
 type Env struct {
 	PRIMARY_DB Database
 	Email      EmailInfo
+	Admin      UserInfo
+	Moderator  UserInfo
 }
 
 type Database struct {
@@ -25,6 +27,11 @@ type EmailInfo struct {
 	EmailPassword string
 	SMTPHost      string
 	SMTPPort      string
+}
+
+type UserInfo struct {
+	EmailAddress string
+	Password     string
 }
 
 func NewEnvironments() *Env {
@@ -46,6 +53,14 @@ func NewEnvironments() *Env {
 			EmailPassword: os.Getenv("EMAIL_PASSWORD"),
 			SMTPHost:      os.Getenv("SMTP_HOST"),
 			SMTPPort:      os.Getenv("SMTP_PORT"),
+		},
+		Admin: UserInfo{
+			EmailAddress: os.Getenv("ADMIN_EMAIL"),
+			Password:     os.Getenv("ADMIN_PASSWORD"),
+		},
+		Moderator: UserInfo{
+			EmailAddress: os.Getenv("MODERATOR_EMAIL"),
+			Password:     os.Getenv("MODERATOR_PASSWORD"),
 		},
 	}
 }

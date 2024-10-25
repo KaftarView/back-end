@@ -14,6 +14,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/repository"
 	"first-project/src/routes"
+	"first-project/src/seed"
 )
 
 func main() {
@@ -37,6 +38,9 @@ func main() {
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&entities.User{}, &entities.Password{})
 
 	userRepository := repository.NewUserRepository(db)
+	roleSeeder := seed.NewRoleSeeder(userRepository, &di.Env.Admin, &di.Env.Moderator)
+	roleSeeder.SeedRoles()
+
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	cronJob := application.NewCronJob(userRepository, emailService)
 	cronJob.RunCronJob()

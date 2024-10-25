@@ -85,10 +85,11 @@ func (userController *UserController) Login(c *gin.Context) {
 	param := controller.Validated[loginParams](c, &userController.constants.Context)
 	userController.userService.VerifyLogin(param.Username, param.Password)
 	jwtString := jwt.GenerateJWT(c, "./jwtKeys", userController.constants.Context.IsLoadedJWTPrivateKey, param.Username)
+	c.SetCookie(userController.constants.Context.Token, jwtString, 3600, "/", "localhost", true, true)
 
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")
-	controller.Response(c, 200, message, jwtString)
+	controller.Response(c, 200, message, nil)
 }
 
 func (userController *UserController) ForgotPassword(c *gin.Context) {
@@ -115,4 +116,8 @@ func (userController *UserController) ResetPassword(c *gin.Context) {
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.resetPassword")
 	controller.Response(c, 200, message, nil)
+}
+
+func (userController *UserController) AdminSayHello(c *gin.Context) {
+	controller.Response(c, 200, "Hello From Admin", nil)
 }

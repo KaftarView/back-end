@@ -14,7 +14,9 @@
         "invalidToken": "Token is invalid.",
         "loginFailed": "Login failed. Please check your username and password, and ensure your account is activated.",
         "emailNotExist": "You should register first.",
-        "rateLimitExceed": "Rate limit exceeded."
+        "rateLimitExceed": "Rate limit exceeded.",
+        "forbidden": "Access Denied.",
+        "unauthorized": "There was an issue with your authentication. Please try again."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",

@@ -26,26 +26,33 @@ func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			if err, ok := rec.(error); ok {
-				if validationErrors, ok := err.(validator.ValidationErrors); ok {
-					handleValidationError(c, validationErrors, recovery.constants.Translator)
-				} else if bindingError, ok := err.(exceptions.BindingError); ok {
-					handleBindingError(c, bindingError, recovery.constants.Translator)
-				} else if registrationErrors, ok := err.(exceptions.UserRegistrationError); ok {
-					handleRegistrationError(c, registrationErrors, recovery.constants.Translator)
-				} else if _, ok := err.(exceptions.LoginError); ok {
-					handleLoginError(c, recovery.constants.Translator)
-				} else if rateLimitError, ok := err.(exceptions.RateLimitError); ok {
-					handleRateLimitError(c, rateLimitError, recovery.constants.Translator, recovery.constants.RetryAfterHeader)
-				} else {
-					unhandledErrors(c, err, recovery.constants.Translator)
-				}
-
+				recovery.handleRecoveredError(c, err)
 				c.Abort()
 			}
 		}
 	}()
 
 	c.Next()
+}
+
+func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err error) {
+	if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		handleValidationError(c, validationErrors, recovery.constants.Translator)
+	} else if bindingError, ok := err.(exceptions.BindingError); ok {
+		handleBindingError(c, bindingError, recovery.constants.Translator)
+	} else if registrationErrors, ok := err.(exceptions.UserRegistrationError); ok {
+		handleRegistrationError(c, registrationErrors, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.LoginError); ok {
+		handleLoginError(c, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.ForbiddenError); ok {
+		handleForbiddenError(c, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.UnauthorizedError); ok {
+		handleUnauthorizedError(c, recovery.constants.Translator)
+	} else if rateLimitError, ok := err.(exceptions.RateLimitError); ok {
+		handleRateLimitError(c, rateLimitError, recovery.constants.Translator, recovery.constants.RetryAfterHeader)
+	} else {
+		unhandledErrors(c, err, recovery.constants.Translator)
+	}
 }
 
 func handleValidationError(c *gin.Context, validationErrors validator.ValidationErrors, transKey string) {
@@ -91,6 +98,18 @@ func handleLoginError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.loginFailed")
 	controller.Response(c, 422, message, nil)
+}
+
+func handleForbiddenError(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.forbidden")
+	controller.Response(c, 401, message, nil)
+}
+
+func handleUnauthorizedError(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.unauthorized")
+	controller.Response(c, 401, message, nil)
 }
 
 func handleRateLimitError(c *gin.Context, rateLimitError exceptions.RateLimitError, transKey, retryAfterHeader string) {

@@ -96,7 +96,9 @@ func (userService *UserService) UpdateOrCreateUser(username string, email string
 		if err != nil {
 			panic(err)
 		}
-		userService.userRepository.CreateNewUser(username, email, hashedPassword, otp, false)
+		user := userService.userRepository.CreateNewUser(username, email, hashedPassword, otp, false)
+		role, _ := userService.userRepository.FindRoleByName("User")
+		userService.userRepository.AssignRoleToUser(user, role)
 	}
 }
 
