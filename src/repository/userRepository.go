@@ -90,9 +90,11 @@ func (repo *UserRepository) UpdateUserPassword(user entities.User, password stri
 	repo.db.Save(&user)
 }
 
-func (repo *UserRepository) FindUnverifiedUsersBeforeDate(date time.Time) []entities.User {
+func (repo *UserRepository) FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeekAgo time.Time) []entities.User {
 	var users []entities.User
-	err := repo.db.Where("verified = ? AND created_at <= ?", false, date).Find(&users).Error
+	err := repo.db.Where(
+		"verified = ? AND created_at >= ? AND created_at < ?",
+		false, startOfWeekAgo, endOfWeekAgo).Find(&users).Error
 	if err != nil {
 		panic(err)
 	}

@@ -5,7 +5,6 @@ import (
 	"first-project/src/controller"
 	"first-project/src/exceptions"
 	"first-project/src/jwt"
-	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,9 +26,7 @@ func (authController *AuthController) RefreshToken(c *gin.Context) {
 		panic(unauthorizedError)
 	}
 
-	log.Println(refreshToken)
 	claims := jwt.VerifyToken(c, "./jwtKeys", authController.constants.Context.IsLoadedJWTPrivateKey, refreshToken)
-	log.Println("reached here")
 	subject := claims["sub"].(string)
 
 	accessToken, newRefreshToken := jwt.GenerateJWT(
