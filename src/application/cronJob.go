@@ -2,10 +2,12 @@ package application
 
 import (
 	application_communication "first-project/src/application/communication/emailService"
+	"first-project/src/entities"
 	"first-project/src/repository"
+	"sync"
 	"time"
 
-	"github.com/robfig/cron/v3"
+	"github.com/go-co-op/gocron"
 )
 
 type CronJob struct {
@@ -20,22 +22,30 @@ func NewCronJob(userRepository *repository.UserRepository, emailService *applica
 	}
 }
 
-func (cronJob *CronJob) RunCronJob() {
-	jobScheduler := cron.New()
+func (cronJob *CronJob) reminderEmailToUnverifiedUsers() {
+	startOfWeekAgo := time.Now().AddDate(0, 0, -7).Truncate(24 * time.Hour)
+	endOfWeekAgo := startOfWeekAgo.Add(24 * time.Hour)
+	users := cronJob.userRepository.FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeekAgo)
 
-	jobScheduler.AddFunc("@daily", func() {
-		oneWeekAgo := time.Now().AddDate(0, 0, -7)
-		users := cronJob.userRepository.FindUnverifiedUsersBeforeDate(oneWeekAgo)
+	var wg sync.WaitGroup
+	for _, user := range users {
+		wg.Add(1)
+		go func(user entities.User) {
+			defer wg.Done()
 
-		for _, user := range users {
 			data := struct {
 				Username string
 			}{
 				Username: user.Name,
 			}
 			cronJob.emailService.SendEmail(user.Email, "Activate your account", "activateAccount/en.html", data)
-		}
-	})
+		}(user)
+	}
+	wg.Wait()
+}
 
-	jobScheduler.Start()
+func (cronJob *CronJob) RunCronJob() {
+	jobScheduler := gocron.NewScheduler(time.UTC)
+	jobScheduler.Every(1).Day().At("00:00").Do(cronJob.reminderEmailToUnverifiedUsers)
+	jobScheduler.StartAsync()
 }
