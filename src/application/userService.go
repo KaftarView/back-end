@@ -2,6 +2,7 @@ package application
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/enums"
 	"first-project/src/exceptions"
 	"first-project/src/repository"
 	"regexp"
@@ -97,7 +98,7 @@ func (userService *UserService) UpdateOrCreateUser(username string, email string
 			panic(err)
 		}
 		user := userService.userRepository.CreateNewUser(username, email, hashedPassword, otp, false)
-		role, _ := userService.userRepository.FindRoleByName("User")
+		role, _ := userService.userRepository.FindRoleByType(enums.User)
 		userService.userRepository.AssignRoleToUser(user, role)
 	}
 }

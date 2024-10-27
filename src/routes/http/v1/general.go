@@ -9,6 +9,7 @@ import (
 	application_math "first-project/src/application/math"
 	"first-project/src/bootstrap"
 	controller_v1_general "first-project/src/controller/v1/general"
+	"first-project/src/enums"
 	middleware_authentication "first-project/src/middleware/Authentication"
 	"first-project/src/repository"
 )
@@ -34,7 +35,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	routerGroup.POST("/forgotPassword", userController.ForgotPassword)
 	routerGroup.PUT("/resetPassword", userController.ResetPassword)
 	routerGroup.GET("/admin", func(c *gin.Context) {
-		authMiddleware.AuthenticateMiddleware(c, []string{"Admin"})
+		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.Admin})
 	}, userController.AdminSayHello)
 	routerGroup.POST("/refreshToken", authController.RefreshToken)
 
