@@ -2,6 +2,7 @@ package seed
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/enums"
 	"first-project/src/repository"
 
 	"golang.org/x/crypto/bcrypt"
@@ -22,13 +23,13 @@ func NewRoleSeeder(userRepository *repository.UserRepository, admin, moderator *
 }
 
 func (rs *RoleSeeder) SeedRoles() {
-	roleNames := []string{"Admin", "Moderator", "User"}
-	for _, roleName := range roleNames {
-		_, roleExist := rs.userRepository.FindRoleByName(roleName)
+	rolesType := enums.GetAllRoleTypes()
+	for _, roleType := range rolesType {
+		_, roleExist := rs.userRepository.FindRoleByType(roleType)
 		if roleExist {
 			continue
 		}
-		rs.userRepository.CreateNewRole(roleName)
+		rs.userRepository.CreateNewRole(roleType)
 	}
 
 	_, adminExist := rs.userRepository.FindByUsernameAndVerified("Admin", true)
@@ -38,7 +39,7 @@ func (rs *RoleSeeder) SeedRoles() {
 			panic(err)
 		}
 		adminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
-		adminRole, _ := rs.userRepository.FindRoleByName(roleNames[0])
+		adminRole, _ := rs.userRepository.FindRoleByType(enums.Admin)
 		rs.userRepository.AssignRoleToUser(adminUser, adminRole)
 	}
 
@@ -49,7 +50,7 @@ func (rs *RoleSeeder) SeedRoles() {
 			panic(err)
 		}
 		moderatorUser := rs.userRepository.CreateNewUser("Moderator", rs.moderator.EmailAddress, string(bytes), "", true)
-		moderatorRole, _ := rs.userRepository.FindRoleByName(roleNames[1])
+		moderatorRole, _ := rs.userRepository.FindRoleByType(enums.Moderator)
 		rs.userRepository.AssignRoleToUser(moderatorUser, moderatorRole)
 	}
 }

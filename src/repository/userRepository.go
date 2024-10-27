@@ -2,6 +2,7 @@ package repository
 
 import (
 	"first-project/src/entities"
+	"first-project/src/enums"
 	"time"
 
 	"gorm.io/gorm"
@@ -101,9 +102,9 @@ func (repo *UserRepository) FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeek
 	return users
 }
 
-func (repo *UserRepository) FindRoleByName(name string) (entities.Role, bool) {
+func (repo *UserRepository) FindRoleByType(roleType enums.RoleType) (entities.Role, bool) {
 	var role entities.Role
-	result := repo.db.Where("name = ?", name).First(&role)
+	result := repo.db.Where("type = ?", roleType).First(&role)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return role, false
@@ -113,9 +114,9 @@ func (repo *UserRepository) FindRoleByName(name string) (entities.Role, bool) {
 	return role, true
 }
 
-func (repo *UserRepository) CreateNewRole(name string) entities.Role {
+func (repo *UserRepository) CreateNewRole(roleType enums.RoleType) entities.Role {
 	role := entities.Role{
-		Name: name,
+		Type: roleType,
 	}
 	result := repo.db.Create(&role)
 	if result.Error != nil {

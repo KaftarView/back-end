@@ -1,8 +1,12 @@
 package entities
 
-import "gorm.io/gorm"
+import (
+	"first-project/src/enums"
+
+	"gorm.io/gorm"
+)
 
 type Role struct {
 	gorm.Model
-	Name string `gorm:"unique;not null"`
+	Type enums.RoleType `gorm:"not null"`
 }

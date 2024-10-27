@@ -3,6 +3,7 @@ package middleware_authentication
 import (
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
+	"first-project/src/enums"
 	"first-project/src/exceptions"
 	"first-project/src/jwt"
 	"first-project/src/repository"
@@ -23,7 +24,7 @@ func NewAuthMiddleware(constants *bootstrap.Constants, userRepository *repositor
 	}
 }
 
-func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, allowedRules []string) {
+func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, allowedRules []enums.RoleType) {
 	tokenString, err := c.Cookie(authMiddleware.constants.Context.AccessToken)
 	if err != nil {
 		unauthorizedError := exceptions.NewUnauthorizedError()
@@ -45,14 +46,14 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 	c.Next()
 }
 
-func isAllowRole(allowedRoles []string, userRoles []entities.Role) bool {
-	allowedRolesMap := make(map[string]bool)
+func isAllowRole(allowedRoles []enums.RoleType, userRoles []entities.Role) bool {
+	allowedRolesMap := make(map[enums.RoleType]bool)
 	for _, allowedRole := range allowedRoles {
 		allowedRolesMap[allowedRole] = true
 	}
 
 	for _, userRole := range userRoles {
-		if allowedRolesMap[userRole.Name] {
+		if allowedRolesMap[userRole.Type] {
 			return true
 		}
 	}
