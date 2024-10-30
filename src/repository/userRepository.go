@@ -32,6 +32,18 @@ func (repo *UserRepository) Test2() []entities.Test {
 	return results
 }
 
+func (repo *UserRepository) FindByUserID(userID uint) (entities.User, bool) {
+	var user entities.User
+	result := repo.db.First(&user, userID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return user, false
+		}
+		panic(result.Error)
+	}
+	return user, true
+}
+
 func (repo *UserRepository) FindByUsernameAndVerified(username string, verified bool) (entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("name = ? AND verified = ?", username, verified).First(&user)

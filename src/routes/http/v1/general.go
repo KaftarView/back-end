@@ -2,6 +2,7 @@ package routes_http_v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"first-project/src/application"
@@ -14,7 +15,7 @@ import (
 	"first-project/src/repository"
 )
 
-func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB) *gin.RouterGroup {
+func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
 	userRepository := repository.NewUserRepository(db)
 	addService := application_math.NewAddService(userRepository)
 	sampleController := controller_v1_general.NewSampleController(di.Constants, addService)

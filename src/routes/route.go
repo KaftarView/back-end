@@ -8,10 +8,11 @@ import (
 	routes_http_v1 "first-project/src/routes/http/v1"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB) {
+func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	localizationMiddleware := middleware_i18n.NewLocalization(&di.Constants.Context)
 	recoveryMiddleware := middleware_exceptions.NewRecovery(&di.Constants.Context)
 	rateLimitMiddleware := middleware_rate_limit.NewRateLimit(5, 10)
@@ -22,12 +23,12 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB) {
 
 	v1 := ginEngine.Group("/v1")
 
-	registerGeneralRoutes(v1, di, db)
+	registerGeneralRoutes(v1, di, db, rdb)
 	registerCustomerRoutes(v1, di)
 }
 
-func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB) *gin.RouterGroup {
-	return routes_http_v1.SetupGeneralRoutes(v1, di, db)
+func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
 }
 
 func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di) *gin.RouterGroup {
