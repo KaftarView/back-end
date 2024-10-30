@@ -1,22 +1,29 @@
-package redis
+package cache
 
 import (
 	"context"
 	"encoding/json"
-	"first-project/src/entities"
+	"first-project/src/enums"
+	"first-project/src/exceptions"
 	"first-project/src/repository"
 	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
 
-type UserRedis struct {
+type UserCacheData struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Roles []enums.RoleType
+}
+
+type UserCache struct {
 	rdb            *redis.Client
 	userRepository *repository.UserRepository
 }
 
-func NewUserRedis(rdb *redis.Client, userRepository *repository.UserRepository) *UserRedis {
-	return &UserRedis{
+func NewUserCache(rdb *redis.Client, userRepository *repository.UserRepository) *UserCache {
+	return &UserCache{
 		rdb:            rdb,
 		userRepository: userRepository,
 	}
@@ -24,46 +31,46 @@ func NewUserRedis(rdb *redis.Client, userRepository *repository.UserRepository) 
 
 var ctx = context.Background()
 
-func (userRedis *UserRedis) SetUser(user *entities.User) {
-	key := "user:" + strconv.Itoa(int(user.ID))
-	userData, err := json.Marshal(user)
-	// TODO
+func (userRedis *UserCache) SetUser(userID uint, username, email string) {
+	key := "user:" + strconv.Itoa(int(userID))
+	roles := userRedis.userRepository.FindUserRoleTypesByUserID(userID)
+	userData := UserCacheData{
+		Name:  username,
+		Email: email,
+		Roles: roles,
+	}
+
+	userDataJSON, err := json.Marshal(userData)
 	if err != nil {
 		panic(err)
 	}
 
-	// TODO
-	err = userRedis.rdb.Set(ctx, key, userData, 3600).Err()
+	// TODO set label for 3600 ttl of redis -> sync it with jwt
+	err = userRedis.rdb.Set(ctx, key, userDataJSON, 3600).Err()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (userRedis *UserRedis) GetUser(userID uint) (entities.User, error) {
+func (userRedis *UserCache) GetUser(userID uint) UserCacheData {
 	key := "user:" + strconv.Itoa(int(userID))
 	val, err := userRedis.rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
 		user, userExist := userRedis.userRepository.FindByUserID(userID)
 		if !userExist {
-			// TODO
-			// unauthorized error
-			return user, err
+			unauthorizedError := exceptions.NewUnauthorizedError()
+			panic(unauthorizedError)
 		}
-		userRedis.SetUser(&user)
-
-		return user, nil
-
-		// TODO
+		userRedis.SetUser(userID, user.Name, user.Email)
+		val, _ = userRedis.rdb.Get(ctx, key).Result()
 	} else if err != nil {
 		panic(err)
 	}
 
-	// If the key exists, unmarshal the value
-	var user entities.User
-	err = json.Unmarshal([]byte(val), &user)
+	var userData UserCacheData
+	err = json.Unmarshal([]byte(val), &userData)
 	if err != nil {
 		panic(err)
 	}
-
-	return user, nil
+	return userData
 }

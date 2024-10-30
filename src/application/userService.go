@@ -124,7 +124,7 @@ func (userService *UserService) ActivateUser(email, otp string) {
 	userService.userRepository.ActivateUserAccount(user)
 }
 
-func (userService *UserService) VerifyLogin(username string, password string) (user entities.User) {
+func (userService *UserService) AuthenticateUser(username string, password string) (user entities.User) {
 	user, verifiedUserExist := userService.userRepository.FindByUsernameAndVerified(username, true)
 	if !verifiedUserExist {
 		loginError := exceptions.NewLoginError()

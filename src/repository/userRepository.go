@@ -144,11 +144,15 @@ func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.R
 	}
 }
 
-func (repo *UserRepository) FindUserRolesByUserID(userID uint) []entities.Role {
+func (repo *UserRepository) FindUserRoleTypesByUserID(userID uint) []enums.RoleType {
 	var user entities.User
 	err := repo.db.Preload("Roles").First(&user, userID).Error
 	if err != nil {
 		panic(err)
 	}
-	return user.Roles
+	roleTypes := make([]enums.RoleType, len(user.Roles))
+	for i, role := range user.Roles {
+		roleTypes[i] = role.Type
+	}
+	return roleTypes
 }

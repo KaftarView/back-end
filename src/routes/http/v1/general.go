@@ -12,6 +12,7 @@ import (
 	controller_v1_general "first-project/src/controller/v1/general"
 	"first-project/src/enums"
 	middleware_authentication "first-project/src/middleware/Authentication"
+	cache "first-project/src/redis"
 	"first-project/src/repository"
 )
 
@@ -22,8 +23,9 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	userService := application.NewUserService(di.Constants, userRepository)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
+	userCache := cache.NewUserCache(rdb, userRepository)
 	userController := controller_v1_general.NewUserController(
-		di.Constants, userService, emailService)
+		di.Constants, userService, emailService, userCache)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository)
 	authController := controller_v1_general.NewAuthController(di.Constants)
