@@ -6,6 +6,7 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/jwt"
+	cache "first-project/src/redis"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,17 +15,20 @@ type UserController struct {
 	constants    *bootstrap.Constants
 	userService  *application.UserService
 	emailService *application_communication.EmailService
+	userCache    *cache.UserCache
 }
 
 func NewUserController(
 	constants *bootstrap.Constants,
 	userService *application.UserService,
 	emailService *application_communication.EmailService,
+	userCache *cache.UserCache,
 ) *UserController {
 	return &UserController{
 		constants:    constants,
 		userService:  userService,
 		emailService: emailService,
+		userCache:    userCache,
 	}
 }
 
@@ -83,14 +87,14 @@ func (userController *UserController) Login(c *gin.Context) {
 		Password string `json:"password" validate:"required"`
 	}
 	param := controller.Validated[loginParams](c, &userController.constants.Context)
-	userController.userService.VerifyLogin(param.Username, param.Password)
+	user := userController.userService.AuthenticateUser(param.Username, param.Password)
 	accessToken, refreshToken := jwt.GenerateJWT(
-		c, "./jwtKeys", userController.constants.Context.IsLoadedJWTPrivateKey, param.Username)
+		c, "./jwtKeys", userController.constants.Context.IsLoadedJWTPrivateKey, user.ID)
 	jwt.SetAuthCookies(
 		c, accessToken, refreshToken,
 		userController.constants.Context.AccessToken,
 		userController.constants.Context.RefreshToken)
-
+	userController.userCache.SetUser(user.ID, user.Name, user.Email)
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")
 	controller.Response(c, 200, message, nil)

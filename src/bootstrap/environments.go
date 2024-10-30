@@ -8,10 +8,11 @@ import (
 )
 
 type Env struct {
-	PRIMARY_DB Database
-	Email      EmailInfo
-	Admin      UserInfo
-	Moderator  UserInfo
+	PRIMARY_DB   Database
+	PrimaryRedis RedisDB
+	Email        EmailInfo
+	Admin        UserInfo
+	Moderator    UserInfo
 }
 
 type Database struct {
@@ -20,6 +21,12 @@ type Database struct {
 	DB_PORT string
 	DB_USER string
 	DB_PASS string
+}
+
+type RedisDB struct {
+	Addr     string
+	Password string
+	DB       int
 }
 
 type EmailInfo struct {

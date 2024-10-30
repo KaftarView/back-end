@@ -2,12 +2,10 @@ package middleware_authentication
 
 import (
 	"first-project/src/bootstrap"
-	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	"first-project/src/jwt"
 	"first-project/src/repository"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,13 +29,9 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 		panic(unauthorizedError)
 	}
 	claims := jwt.VerifyToken(c, "./jwtKeys", authMiddleware.constants.Context.IsLoadedJWTPrivateKey, tokenString)
-	subject := claims["sub"].(string)
-	user, userExist := authMiddleware.userRepository.FindByUsernameAndVerified(subject, true)
-	if !userExist {
-		panic(fmt.Errorf("no user found for this jwt token subject"))
-	}
+	userID := claims["sub"].(uint)
 
-	roles := authMiddleware.userRepository.FindUserRolesByUserID(user.ID)
+	roles := authMiddleware.userRepository.FindUserRoleTypesByUserID(userID)
 
 	if !isAllowRole(allowedRules, roles) {
 		authError := exceptions.NewForbiddenError()
@@ -46,14 +40,14 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 	c.Next()
 }
 
-func isAllowRole(allowedRoles []enums.RoleType, userRoles []entities.Role) bool {
+func isAllowRole(allowedRoles []enums.RoleType, userRoles []enums.RoleType) bool {
 	allowedRolesMap := make(map[enums.RoleType]bool)
 	for _, allowedRole := range allowedRoles {
 		allowedRolesMap[allowedRole] = true
 	}
 
 	for _, userRole := range userRoles {
-		if allowedRolesMap[userRole.Type] {
+		if allowedRolesMap[userRole] {
 			return true
 		}
 	}

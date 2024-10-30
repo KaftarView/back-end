@@ -27,10 +27,10 @@ func (authController *AuthController) RefreshToken(c *gin.Context) {
 	}
 
 	claims := jwt.VerifyToken(c, "./jwtKeys", authController.constants.Context.IsLoadedJWTPrivateKey, refreshToken)
-	subject := claims["sub"].(string)
+	userID := claims["sub"].(uint)
 
 	accessToken, newRefreshToken := jwt.GenerateJWT(
-		c, "./jwtKeys", authController.constants.Context.IsLoadedJWTPrivateKey, subject)
+		c, "./jwtKeys", authController.constants.Context.IsLoadedJWTPrivateKey, userID)
 
 	jwt.SetAuthCookies(
 		c, accessToken, newRefreshToken,

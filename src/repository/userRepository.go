@@ -32,6 +32,18 @@ func (repo *UserRepository) Test2() []entities.Test {
 	return results
 }
 
+func (repo *UserRepository) FindByUserID(userID uint) (entities.User, bool) {
+	var user entities.User
+	result := repo.db.First(&user, userID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return user, false
+		}
+		panic(result.Error)
+	}
+	return user, true
+}
+
 func (repo *UserRepository) FindByUsernameAndVerified(username string, verified bool) (entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("name = ? AND verified = ?", username, verified).First(&user)
@@ -132,11 +144,15 @@ func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.R
 	}
 }
 
-func (repo *UserRepository) FindUserRolesByUserID(userID uint) []entities.Role {
+func (repo *UserRepository) FindUserRoleTypesByUserID(userID uint) []enums.RoleType {
 	var user entities.User
 	err := repo.db.Preload("Roles").First(&user, userID).Error
 	if err != nil {
 		panic(err)
 	}
-	return user.Roles
+	roleTypes := make([]enums.RoleType, len(user.Roles))
+	for i, role := range user.Roles {
+		roleTypes[i] = role.Type
+	}
+	return roleTypes
 }

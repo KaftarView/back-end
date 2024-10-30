@@ -2,6 +2,7 @@ package application
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	"first-project/src/repository"
@@ -123,7 +124,7 @@ func (userService *UserService) ActivateUser(email, otp string) {
 	userService.userRepository.ActivateUserAccount(user)
 }
 
-func (userService *UserService) VerifyLogin(username string, password string) {
+func (userService *UserService) AuthenticateUser(username string, password string) (user entities.User) {
 	user, verifiedUserExist := userService.userRepository.FindByUsernameAndVerified(username, true)
 	if !verifiedUserExist {
 		loginError := exceptions.NewLoginError()
@@ -134,6 +135,7 @@ func (userService *UserService) VerifyLogin(username string, password string) {
 		loginError := exceptions.NewLoginError()
 		panic(loginError)
 	}
+	return user
 }
 
 func (userService *UserService) VerifyUserActivated(email string) {

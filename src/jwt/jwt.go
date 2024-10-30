@@ -51,11 +51,11 @@ func loadPublicKey(jwtToken *JWTToken, publicKeyPath string) {
 	}
 }
 
-func GenerateJWT(c *gin.Context, jwtKeysPath, contextJWTKey, username string) (string, string) {
+func GenerateJWT(c *gin.Context, jwtKeysPath, contextJWTKey string, userID uint) (string, string) {
 	setupJWTKeys(c, jwtKeysPath, contextJWTKey)
 	accessTokenClaims := jwt.MapClaims{
 		"iss": "test",
-		"sub": username,
+		"sub": userID,
 		// "exp": time.Now().Add(time.Hour * 1).Unix(),
 		"exp": time.Now().Add(time.Minute * 1).Unix(),
 		"iat": time.Now().Unix(),
@@ -69,7 +69,7 @@ func GenerateJWT(c *gin.Context, jwtKeysPath, contextJWTKey, username string) (s
 
 	refreshTokenClaims := jwt.MapClaims{
 		"iss": "test",
-		"sub": username,
+		"sub": userID,
 		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
 		"iat": time.Now().Unix(),
 	}
