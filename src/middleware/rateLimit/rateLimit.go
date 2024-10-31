@@ -22,7 +22,7 @@ func NewRateLimit(limit rate.Limit, burst int) *RateLimitMiddleware {
 func (rl *RateLimitMiddleware) RateLimit(c *gin.Context) {
 	limiter := rate.NewLimiter(rl.limit, rl.burst)
 	if !limiter.Allow() {
-		rateLimitError := exceptions.NewRateLimitError("60")
+		rateLimitError := exceptions.NewRateLimitError()
 		panic(rateLimitError)
 	}
 	c.Next()

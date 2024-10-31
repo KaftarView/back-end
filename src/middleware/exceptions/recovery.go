@@ -48,8 +48,8 @@ func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err erro
 		handleForbiddenError(c, recovery.constants.Translator)
 	} else if _, ok := err.(exceptions.UnauthorizedError); ok {
 		handleUnauthorizedError(c, recovery.constants.Translator)
-	} else if rateLimitError, ok := err.(exceptions.RateLimitError); ok {
-		handleRateLimitError(c, rateLimitError, recovery.constants.Translator, recovery.constants.RetryAfterHeader)
+	} else if _, ok := err.(exceptions.RateLimitError); ok {
+		handleRateLimitError(c, recovery.constants.Translator)
 	} else {
 		unhandledErrors(c, err, recovery.constants.Translator)
 	}
@@ -112,8 +112,7 @@ func handleUnauthorizedError(c *gin.Context, transKey string) {
 	controller.Response(c, 401, message, nil)
 }
 
-func handleRateLimitError(c *gin.Context, rateLimitError exceptions.RateLimitError, transKey, retryAfterHeader string) {
-	c.Header(retryAfterHeader, rateLimitError.RetryAfter)
+func handleRateLimitError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.rateLimitExceed")
 	controller.Response(c, 429, message, nil)
