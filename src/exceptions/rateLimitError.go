@@ -1,14 +1,12 @@
 package exceptions
 
 type RateLimitError struct {
-	Message    string
-	RetryAfter string
+	Message string
 }
 
-func NewRateLimitError(retryAfter string) RateLimitError {
+func NewRateLimitError() RateLimitError {
 	return RateLimitError{
-		Message:    "Rate limit exceeded. Please try again later.",
-		RetryAfter: retryAfter,
+		Message: "Rate limit exceeded. Please try again later.",
 	}
 }
 

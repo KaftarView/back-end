@@ -15,7 +15,6 @@ type Context struct {
 	Translator                   string
 	IsLoadedValidationTranslator string
 	IsLoadedJWTPrivateKey        string
-	RetryAfterHeader             string
 	AccessToken                  string
 	RefreshToken                 string
 }
@@ -51,7 +50,6 @@ func NewConstants() *Constants {
 			Translator:                   "translator",
 			IsLoadedValidationTranslator: "isLoadedValidationTranslator",
 			IsLoadedJWTPrivateKey:        "isLoadedJWTPrivateKey",
-			RetryAfterHeader:             "Retry-After",
 			AccessToken:                  "access_token",
 			RefreshToken:                 "refresh_token",
 		},
