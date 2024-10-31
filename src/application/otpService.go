@@ -8,11 +8,17 @@ import (
 	"time"
 )
 
+type OTPService struct{}
+
+func NewOTPService() *OTPService {
+	return &OTPService{}
+}
+
 const otpLength = 6
 
 var table = []byte("123456789")
 
-func GenerateOTP() string {
+func (o *OTPService) GenerateOTP() string {
 	otp := make([]byte, otpLength)
 	n, err := io.ReadAtLeast(rand.Reader, otp, otpLength)
 	if n != otpLength {
@@ -24,7 +30,7 @@ func GenerateOTP() string {
 	return string(otp)
 }
 
-func VerifyOTP(
+func (o *OTPService) VerifyOTP(
 	user entities.User, email, inputOTP, otpFieldError, expiredTokenTagError, invalidTokenTagError string) {
 	var registrationError exceptions.UserRegistrationError
 

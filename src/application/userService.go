@@ -14,12 +14,16 @@ import (
 type UserService struct {
 	constants      *bootstrap.Constants
 	userRepository *repository.UserRepository
+	otpService     *OTPService
 }
 
-func NewUserService(constants *bootstrap.Constants, userRepository *repository.UserRepository) *UserService {
+func NewUserService(
+	constants *bootstrap.Constants, userRepository *repository.UserRepository, otpService *OTPService,
+) *UserService {
 	return &UserService{
 		constants:      constants,
 		userRepository: userRepository,
+		otpService:     otpService,
 	}
 }
 
@@ -115,12 +119,11 @@ func (userService *UserService) ActivateUser(email, otp string) {
 	}
 
 	user, _ := userService.userRepository.FindByEmailAndVerified(email, false)
-	VerifyOTP(
+	userService.otpService.VerifyOTP(
 		user, email, otp,
 		userService.constants.ErrorField.OTP,
 		userService.constants.ErrorTag.ExpiredToken,
 		userService.constants.ErrorTag.InvalidToken)
-
 	userService.userRepository.ActivateUserAccount(user)
 }
 
