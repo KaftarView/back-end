@@ -10,6 +10,7 @@ import (
 type Env struct {
 	PRIMARY_DB   Database
 	PrimaryRedis RedisDB
+	Applications AppInfo
 	Email        EmailInfo
 	Admin        UserInfo
 	Moderator    UserInfo
@@ -24,9 +25,15 @@ type Database struct {
 }
 
 type RedisDB struct {
+	Port     string
 	Addr     string
 	Password string
-	DB       int
+	DB       string
+}
+
+type AppInfo struct {
+	BACKGROUND_SERVICE_ENABLED string
+	API_SERVICE_ENABLED        string
 }
 
 type EmailInfo struct {
@@ -54,6 +61,16 @@ func NewEnvironments() *Env {
 			DB_PORT: os.Getenv("DB_PORT"),
 			DB_USER: os.Getenv("DB_USER"),
 			DB_PASS: os.Getenv("DB_PASS"),
+		},
+		PrimaryRedis: RedisDB{
+			Port:     os.Getenv("REDIS_PORT"),
+			Addr:     os.Getenv("REDIS_ADDR"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       os.Getenv("REDIS_DB"),
+		},
+		Applications: AppInfo{
+			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),
+			API_SERVICE_ENABLED:        os.Getenv("API_SERVICE_ENABLED"),
 		},
 		Email: EmailInfo{
 			EmailFrom:     os.Getenv("EMAIL_FROM"),

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -39,10 +40,11 @@ func main() {
 	}
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&entities.User{}, &entities.Password{})
 
+	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     di.Env.PrimaryRedis.Addr,
 		Password: di.Env.PrimaryRedis.Password,
-		DB:       di.Env.PrimaryRedis.DB,
+		DB:       dbNumber,
 	})
 	_, err = rdb.Ping(context.Background()).Result()
 	if err != nil {
@@ -53,11 +55,17 @@ func main() {
 	roleSeeder := seed.NewRoleSeeder(userRepository, &di.Env.Admin, &di.Env.Moderator)
 	roleSeeder.SeedRoles()
 
-	emailService := application_communication.NewEmailService(&di.Env.Email)
-	cronJob := application.NewCronJob(userRepository, emailService)
-	cronJob.RunCronJob()
+	backgroundEnabled, _ := strconv.ParseBool(di.Env.Applications.BACKGROUND_SERVICE_ENABLED)
+	if backgroundEnabled {
+		emailService := application_communication.NewEmailService(&di.Env.Email)
+		cronJob := application.NewCronJob(userRepository, emailService)
+		cronJob.RunCronJob()
+	}
 
-	routes.Run(ginEngine, di, db, rdb)
+	APIServiceEnabled, _ := strconv.ParseBool(di.Env.Applications.API_SERVICE_ENABLED)
+	if APIServiceEnabled {
+		routes.Run(ginEngine, di, db, rdb)
+	}
 
 	ginEngine.Run(":8080")
 }
