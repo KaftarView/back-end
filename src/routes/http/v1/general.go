@@ -21,11 +21,12 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	addService := application_math.NewAddService(userRepository)
 	sampleController := controller_v1_general.NewSampleController(di.Constants, addService)
 
-	userService := application.NewUserService(di.Constants, userRepository)
+	otpService := application.NewOTPService()
+	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	userCache := cache.NewUserCache(rdb, userRepository)
 	userController := controller_v1_general.NewUserController(
-		di.Constants, userService, emailService, userCache)
+		di.Constants, userService, emailService, userCache, otpService)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository)
 	authController := controller_v1_general.NewAuthController(di.Constants)

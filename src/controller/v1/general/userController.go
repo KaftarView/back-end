@@ -16,6 +16,7 @@ type UserController struct {
 	userService  *application.UserService
 	emailService *application_communication.EmailService
 	userCache    *cache.UserCache
+	otpService   *application.OTPService
 }
 
 func NewUserController(
@@ -23,12 +24,14 @@ func NewUserController(
 	userService *application.UserService,
 	emailService *application_communication.EmailService,
 	userCache *cache.UserCache,
+	otpService *application.OTPService,
 ) *UserController {
 	return &UserController{
 		constants:    constants,
 		userService:  userService,
 		emailService: emailService,
 		userCache:    userCache,
+		otpService:   otpService,
 	}
 }
 
@@ -49,7 +52,7 @@ func (userController *UserController) Register(c *gin.Context) {
 	}
 	param := controller.Validated[registerParams](c, &userController.constants.Context)
 	userController.userService.ValidateUserRegistrationDetails(param.Username, param.Email, param.Password, param.ConfirmPassword)
-	otp := application.GenerateOTP()
+	otp := userController.otpService.GenerateOTP()
 	userController.userService.UpdateOrCreateUser(param.Username, param.Email, param.Password, otp)
 
 	emailTemplateData := struct {
