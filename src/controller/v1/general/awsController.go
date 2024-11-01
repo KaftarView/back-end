@@ -33,3 +33,10 @@ func (ac *AWSController) UploadObjectController(c *gin.Context) {
 	message, _ := trans.T("successMessage.uploadObjectToBucket")
 	controller.Response(c, 200, message, nil)
 }
+
+func (ac *AWSController) DeleteObjectController(c *gin.Context) {
+	ac.awsService.DeleteObject("kaftarTestUpload.mp4")
+	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteObjectFromBucket")
+	controller.Response(c, 200, message, nil)
+}

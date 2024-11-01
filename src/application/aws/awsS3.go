@@ -69,3 +69,28 @@ func (a *AWSS3) UploadObject(objectPath string) {
 		panic(fmt.Errorf("unable to upload %q to %q, %v", objectPath, a.bucket.Name, err))
 	}
 }
+func (a *AWSS3) DeleteObject(objectName string) {
+	sess, _ := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
+	})
+	svc := s3.New(sess, &aws.Config{
+		Region:   aws.String(a.bucket.Region),
+		Endpoint: aws.String(a.bucket.Endpoint),
+	})
+
+	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(a.bucket.Name),
+		Key:    aws.String(objectName),
+	})
+	if err != nil {
+		panic(fmt.Errorf("unable to upload %q to %q, %v", objectName, a.bucket.Name, err))
+	}
+
+	err = svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(a.bucket.Name),
+		Key:    aws.String(objectName),
+	})
+	if err != nil {
+		panic(fmt.Errorf("unable to open file %q, %v", objectName, err))
+	}
+}

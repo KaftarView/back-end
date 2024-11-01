@@ -26,6 +26,7 @@
         "resetPassword": "Password reset Successfully.",
         "refreshToken": "Your session has been extended.",
         "createBucket": "Bucket Created Successfully.",
-        "uploadObjectToBucket": "Object added to bucket Created Successfully."
+        "uploadObjectToBucket": "Object added to bucket Created Successfully.",
+        "deleteObjectFromBucket": "Object deleted from bucket Created Successfully."
     }
 }
