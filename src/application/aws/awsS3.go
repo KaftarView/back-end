@@ -3,11 +3,14 @@ package application_aws
 import (
 	"first-project/src/bootstrap"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type AWSS3 struct {
@@ -40,5 +43,29 @@ func (a *AWSS3) CreateBucket() {
 	})
 	if err != nil {
 		panic(fmt.Errorf("error occurred while waiting for bucket to be created, %q, %v", a.bucket.Name, err))
+	}
+}
+
+func (a *AWSS3) UploadObject(objectPath string) {
+	file, err := os.Open(objectPath)
+	if err != nil {
+		panic(fmt.Errorf("unable to open file %q, %v", objectPath, err))
+	}
+	defer file.Close()
+
+	sess, _ := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
+		Region:      aws.String(a.bucket.Region),
+		Endpoint:    aws.String(a.bucket.Endpoint),
+	})
+
+	uploader := s3manager.NewUploader(sess)
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(a.bucket.Name),
+		Key:    aws.String(filepath.Base(objectPath)),
+		Body:   file,
+	})
+	if err != nil {
+		panic(fmt.Errorf("unable to upload %q to %q, %v", objectPath, a.bucket.Name, err))
 	}
 }

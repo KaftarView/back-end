@@ -46,7 +46,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.Admin})
 	}, userController.AdminSayHello)
 	routerGroup.POST("/refreshToken", authController.RefreshToken)
-	routerGroup.POST("/bucket/create", awsController.CreateBucket)
+	routerGroup.POST("/bucket/create", awsController.CreateBucketController)
+	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
 
 	return routerGroup
 }

@@ -20,8 +20,15 @@ func NewAWSController(constants *bootstrap.Constants, awsService *application_aw
 	}
 }
 
-func (ac *AWSController) CreateBucket(c *gin.Context) {
+func (ac *AWSController) CreateBucketController(c *gin.Context) {
 	ac.awsService.CreateBucket()
+	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
+	message, _ := trans.T("successMessage.createBucket")
+	controller.Response(c, 200, message, nil)
+}
+
+func (ac *AWSController) UploadObjectController(c *gin.Context) {
+	ac.awsService.UploadObject("C:\\Users\\Alos\\Downloads\\Telegram Desktop\\kaftarTestUpload.mp4")
 	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createBucket")
 	controller.Response(c, 200, message, nil)
