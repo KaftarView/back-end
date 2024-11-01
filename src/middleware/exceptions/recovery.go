@@ -6,6 +6,7 @@ import (
 	"first-project/src/exceptions"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -75,6 +76,8 @@ func handleBindingError(c *gin.Context, bindingError exceptions.BindingError, tr
 
 	if numError, ok := bindingError.Err.(*strconv.NumError); ok {
 		message, _ = trans.T("errors.numeric", numError.Num)
+	} else if bindingError == http.ErrMissingFile {
+		message, _ = trans.T("errors.fileRequired")
 	}
 
 	controller.Response(c, 400, message, nil)

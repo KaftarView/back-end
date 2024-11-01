@@ -39,6 +39,7 @@ type ErrorTag struct {
 	InvalidToken            string
 	LoginFailed             string
 	EmailNotExist           string
+	Required                string
 }
 
 type Redis struct {
@@ -72,6 +73,7 @@ func NewConstants() *Constants {
 			InvalidToken:            "invalidToken",
 			LoginFailed:             "loginFailed",
 			EmailNotExist:           "emailNotExist",
+			Required:                "required",
 		},
 		Redis: Redis{},
 	}

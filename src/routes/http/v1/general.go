@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"first-project/src/application"
+	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_math "first-project/src/application/math"
 	"first-project/src/bootstrap"
@@ -31,6 +32,9 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository)
 	authController := controller_v1_general.NewAuthController(di.Constants)
 
+	awsService := application_aws.NewAWSS3(&di.Env.PrimaryBucket)
+	awsController := controller_v1_general.NewAWSController(di.Constants, awsService)
+
 	routerGroup.GET("/ping", controller_v1_general.Pong)
 	routerGroup.GET("/add/:num1/:num2", sampleController.Add)
 	routerGroup.POST("/register", userController.Register)
@@ -42,6 +46,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.Admin})
 	}, userController.AdminSayHello)
 	routerGroup.POST("/refreshToken", authController.RefreshToken)
+	routerGroup.POST("/bucket/create", awsController.CreateBucketController)
+	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
+	routerGroup.POST("/bucket/delete", awsController.DeleteObjectController)
+	routerGroup.GET("/bucket/listObjects", awsController.GetListOfObjectsController)
 
 	return routerGroup
 }
