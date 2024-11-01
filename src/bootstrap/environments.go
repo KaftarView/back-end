@@ -33,7 +33,6 @@ type RedisDB struct {
 }
 
 type Bucket struct {
-	Name      string
 	Region    string
 	AccessKey string
 	SecretKey string
@@ -78,7 +77,6 @@ func NewEnvironments() *Env {
 			DB:       os.Getenv("REDIS_DB"),
 		},
 		PrimaryBucket: Bucket{
-			Name:      os.Getenv("BUCKET_NAME"),
 			Region:    os.Getenv("BUCKET_REGION"),
 			AccessKey: os.Getenv("BUCKET_ACCESS_key"),
 			SecretKey: os.Getenv("BUCKET_SECRET_key"),

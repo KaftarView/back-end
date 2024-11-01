@@ -21,7 +21,7 @@ func NewAWSS3(bucket *bootstrap.Bucket) *AWSS3 {
 		bucket: bucket,
 	}
 }
-func (a *AWSS3) CreateBucket() {
+func (a *AWSS3) CreateBucket(bucketName string) {
 	sess, _ := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
 	})
@@ -31,21 +31,21 @@ func (a *AWSS3) CreateBucket() {
 	})
 
 	_, err := svc.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(a.bucket.Name),
+		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to create bucket %q, %v", a.bucket.Name, err))
+		panic(fmt.Errorf("unable to create bucket %q, %v", bucketName, err))
 	}
 
 	err = svc.WaitUntilBucketExists(&s3.HeadBucketInput{
-		Bucket: aws.String(a.bucket.Name),
+		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		panic(fmt.Errorf("error occurred while waiting for bucket to be created, %q, %v", a.bucket.Name, err))
+		panic(fmt.Errorf("error occurred while waiting for bucket to be created, %q, %v", bucketName, err))
 	}
 }
 
-func (a *AWSS3) UploadObject(file *multipart.FileHeader) {
+func (a *AWSS3) UploadObject(file *multipart.FileHeader, bucketName string) {
 	fileReader, err := file.Open()
 	if err != nil {
 		panic(fmt.Errorf("unable to open file %q, %v", file.Filename, err))
@@ -60,16 +60,16 @@ func (a *AWSS3) UploadObject(file *multipart.FileHeader) {
 
 	uploader := s3manager.NewUploader(sess)
 	_, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(a.bucket.Name),
+		Bucket: aws.String(bucketName),
 		Key:    aws.String(file.Filename),
 		Body:   fileReader,
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", file.Filename, a.bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %v", file.Filename, bucketName, err))
 	}
 }
 
-func (a *AWSS3) DeleteObject(objectName string) {
+func (a *AWSS3) DeleteObject(bucketName, objectName string) {
 	sess, _ := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
 	})
@@ -79,15 +79,15 @@ func (a *AWSS3) DeleteObject(objectName string) {
 	})
 
 	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(a.bucket.Name),
+		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectName),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", objectName, a.bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %v", objectName, bucketName, err))
 	}
 
 	err = svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
-		Bucket: aws.String(a.bucket.Name),
+		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectName),
 	})
 	if err != nil {
@@ -95,7 +95,7 @@ func (a *AWSS3) DeleteObject(objectName string) {
 	}
 }
 
-func (a *AWSS3) ListObjects() []map[string]interface{} {
+func (a *AWSS3) ListObjects(bucketName string) []map[string]interface{} {
 	sess, _ := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
 	})
@@ -105,10 +105,10 @@ func (a *AWSS3) ListObjects() []map[string]interface{} {
 	})
 
 	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket: aws.String(a.bucket.Name),
+		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to list items in bucket %q, %v", a.bucket.Name, err))
+		panic(fmt.Errorf("unable to list items in bucket %q, %v", bucketName, err))
 	}
 
 	itemMap := make([]map[string]interface{}, 0)
