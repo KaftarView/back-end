@@ -8,12 +8,13 @@ import (
 )
 
 type Env struct {
-	PRIMARY_DB   Database
-	PrimaryRedis RedisDB
-	Applications AppInfo
-	Email        EmailInfo
-	Admin        UserInfo
-	Moderator    UserInfo
+	PRIMARY_DB    Database
+	PrimaryRedis  RedisDB
+	PrimaryBucket Bucket
+	Applications  AppInfo
+	Email         EmailInfo
+	Admin         UserInfo
+	Moderator     UserInfo
 }
 
 type Database struct {
@@ -29,6 +30,14 @@ type RedisDB struct {
 	Addr     string
 	Password string
 	DB       string
+}
+
+type Bucket struct {
+	Name      string
+	Region    string
+	AccessKey string
+	SecretKey string
+	Endpoint  string
 }
 
 type AppInfo struct {
@@ -67,6 +76,13 @@ func NewEnvironments() *Env {
 			Addr:     os.Getenv("REDIS_ADDR"),
 			Password: os.Getenv("REDIS_PASSWORD"),
 			DB:       os.Getenv("REDIS_DB"),
+		},
+		PrimaryBucket: Bucket{
+			Name:      os.Getenv("BUCKET_NAME"),
+			Region:    os.Getenv("BUCKET_REGION"),
+			AccessKey: os.Getenv("BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("BUCKET_ENDPOINT"),
 		},
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),
