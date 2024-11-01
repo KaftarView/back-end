@@ -94,3 +94,33 @@ func (a *AWSS3) DeleteObject(objectName string) {
 		panic(fmt.Errorf("unable to open file %q, %v", objectName, err))
 	}
 }
+
+func (a *AWSS3) ListObjects() []map[string]interface{} {
+	sess, _ := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
+	})
+	svc := s3.New(sess, &aws.Config{
+		Region:   aws.String(a.bucket.Region),
+		Endpoint: aws.String(a.bucket.Endpoint),
+	})
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(a.bucket.Name),
+	})
+	if err != nil {
+		panic(fmt.Errorf("unable to list items in bucket %q, %v", a.bucket.Name, err))
+	}
+
+	itemMap := make([]map[string]interface{}, 0)
+	for _, item := range resp.Contents {
+		itemData := map[string]interface{}{
+			"Name":         *item.Key,
+			"LastModified": *item.LastModified,
+			"Size":         *item.Size,
+			"StorageClass": *item.StorageClass,
+		}
+		itemMap = append(itemMap, itemData)
+	}
+
+	return itemMap
+}

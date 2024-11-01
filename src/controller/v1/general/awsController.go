@@ -50,3 +50,8 @@ func (ac *AWSController) DeleteObjectController(c *gin.Context) {
 	message, _ := trans.T("successMessage.deleteObjectFromBucket")
 	controller.Response(c, 200, message, nil)
 }
+
+func (ac *AWSController) GetListOfObjectsController(c *gin.Context) {
+	objects := ac.awsService.ListObjects()
+	controller.Response(c, 200, "", objects)
+}

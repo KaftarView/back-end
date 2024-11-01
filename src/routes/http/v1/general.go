@@ -49,6 +49,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	routerGroup.POST("/bucket/create", awsController.CreateBucketController)
 	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
 	routerGroup.POST("/bucket/delete", awsController.DeleteObjectController)
+	routerGroup.GET("/bucket/listObjects", awsController.GetListOfObjectsController)
 
 	return routerGroup
 }
