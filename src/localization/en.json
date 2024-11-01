@@ -16,7 +16,8 @@
         "emailNotExist": "You should register first.",
         "rateLimitExceed": "Rate limit exceeded.",
         "forbidden": "Access Denied.",
-        "unauthorized": "There was an issue with your authentication. Please try again."
+        "unauthorized": "There was an issue with your authentication. Please try again.",
+        "fileRequired": "File is required."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",

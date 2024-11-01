@@ -3,8 +3,7 @@ package application_aws
 import (
 	"first-project/src/bootstrap"
 	"fmt"
-	"os"
-	"path/filepath"
+	"mime/multipart"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -46,12 +45,12 @@ func (a *AWSS3) CreateBucket() {
 	}
 }
 
-func (a *AWSS3) UploadObject(objectPath string) {
-	file, err := os.Open(objectPath)
+func (a *AWSS3) UploadObject(file *multipart.FileHeader) {
+	fileReader, err := file.Open()
 	if err != nil {
-		panic(fmt.Errorf("unable to open file %q, %v", objectPath, err))
+		panic(fmt.Errorf("unable to open file %q, %v", file.Filename, err))
 	}
-	defer file.Close()
+	defer fileReader.Close()
 
 	sess, _ := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
@@ -62,13 +61,14 @@ func (a *AWSS3) UploadObject(objectPath string) {
 	uploader := s3manager.NewUploader(sess)
 	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(a.bucket.Name),
-		Key:    aws.String(filepath.Base(objectPath)),
-		Body:   file,
+		Key:    aws.String(file.Filename),
+		Body:   fileReader,
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", objectPath, a.bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %v", file.Filename, a.bucket.Name, err))
 	}
 }
+
 func (a *AWSS3) DeleteObject(objectName string) {
 	sess, _ := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
