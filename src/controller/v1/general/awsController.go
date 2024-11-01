@@ -30,6 +30,6 @@ func (ac *AWSController) CreateBucketController(c *gin.Context) {
 func (ac *AWSController) UploadObjectController(c *gin.Context) {
 	ac.awsService.UploadObject("C:\\Users\\Alos\\Downloads\\Telegram Desktop\\kaftarTestUpload.mp4")
 	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
-	message, _ := trans.T("successMessage.createBucket")
+	message, _ := trans.T("successMessage.uploadObjectToBucket")
 	controller.Response(c, 200, message, nil)
 }
