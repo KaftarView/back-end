@@ -12,6 +12,7 @@ import (
 	"first-project/src/bootstrap"
 	controller_v1_general "first-project/src/controller/v1/general"
 	"first-project/src/enums"
+	application_jwt "first-project/src/jwt"
 	middleware_authentication "first-project/src/middleware/Authentication"
 	cache "first-project/src/redis"
 	"first-project/src/repository"
@@ -26,11 +27,12 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	userCache := cache.NewUserCache(rdb, userRepository)
+	jwtService := application_jwt.NewJWTToken(di.Constants)
 	userController := controller_v1_general.NewUserController(
-		di.Constants, userService, emailService, userCache, otpService)
+		di.Constants, userService, emailService, userCache, otpService, jwtService)
 
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository)
-	authController := controller_v1_general.NewAuthController(di.Constants)
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 
 	awsService := application_aws.NewAWSS3(&di.Env.PrimaryBucket)
 	awsController := controller_v1_general.NewAWSController(di.Constants, awsService)
