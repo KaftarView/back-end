@@ -1,7 +1,7 @@
 package application_math
 
 import (
-	"first-project/src/repository"
+	repository "first-project/src/repository/database"
 	"log"
 )
 

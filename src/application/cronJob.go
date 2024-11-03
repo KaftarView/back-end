@@ -3,7 +3,7 @@ package application
 import (
 	application_communication "first-project/src/application/communication/emailService"
 	"first-project/src/entities"
-	"first-project/src/repository"
+	repository "first-project/src/repository/database"
 	"sync"
 	"time"
 

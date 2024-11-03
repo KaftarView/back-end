@@ -7,7 +7,7 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
-	cache "first-project/src/redis"
+	cache "first-project/src/repository/redis"
 
 	"github.com/gin-gonic/gin"
 )

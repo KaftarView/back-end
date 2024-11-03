@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	"first-project/src/repository"
+	repository "first-project/src/repository/database"
 	"strconv"
 
 	"github.com/redis/go-redis/v9"

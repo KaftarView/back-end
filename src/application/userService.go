@@ -5,7 +5,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	"first-project/src/repository"
+	repository "first-project/src/repository/database"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"

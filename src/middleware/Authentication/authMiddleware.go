@@ -6,7 +6,7 @@ import (
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	jwt_keys "first-project/src/jwtKeys"
-	"first-project/src/repository"
+	repository "first-project/src/repository/database"
 
 	"github.com/gin-gonic/gin"
 )

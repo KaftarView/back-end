@@ -3,7 +3,7 @@ package seed
 import (
 	"first-project/src/bootstrap"
 	"first-project/src/enums"
-	"first-project/src/repository"
+	repository "first-project/src/repository/database"
 
 	"golang.org/x/crypto/bcrypt"
 )
