@@ -1,15 +1,15 @@
 package application_math
 
 import (
-	"first-project/src/repository"
+	repository_database "first-project/src/repository/database"
 	"log"
 )
 
 type AddService struct {
-	userRepository *repository.UserRepository
+	userRepository *repository_database.UserRepository
 }
 
-func NewAddService(userRepository *repository.UserRepository) *AddService {
+func NewAddService(userRepository *repository_database.UserRepository) *AddService {
 	return &AddService{
 		userRepository: userRepository,
 	}

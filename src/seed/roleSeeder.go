@@ -3,18 +3,18 @@ package seed
 import (
 	"first-project/src/bootstrap"
 	"first-project/src/enums"
-	"first-project/src/repository"
+	repository_database "first-project/src/repository/database"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type RoleSeeder struct {
-	userRepository *repository.UserRepository
+	userRepository *repository_database.UserRepository
 	admin          *bootstrap.UserInfo
 	moderator      *bootstrap.UserInfo
 }
 
-func NewRoleSeeder(userRepository *repository.UserRepository, admin, moderator *bootstrap.UserInfo) *RoleSeeder {
+func NewRoleSeeder(userRepository *repository_database.UserRepository, admin, moderator *bootstrap.UserInfo) *RoleSeeder {
 	return &RoleSeeder{
 		userRepository: userRepository,
 		admin:          admin,
