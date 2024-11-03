@@ -3,9 +3,10 @@ package controller_v1_general
 import (
 	"first-project/src/application"
 	application_communication "first-project/src/application/communication/emailService"
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
-	application_jwt "first-project/src/jwt"
+	jwt_keys "first-project/src/jwtKeys"
 	cache "first-project/src/redis"
 
 	"github.com/gin-gonic/gin"
@@ -94,9 +95,13 @@ func (userController *UserController) Login(c *gin.Context) {
 	}
 	param := controller.Validated[loginParams](c, &userController.constants.Context)
 	user := userController.userService.AuthenticateUser(param.Username, param.Password)
-	accessToken, refreshToken := userController.jwtService.GenerateJWT(
-		c, "./jwtKeys", user.ID)
-	userController.jwtService.SetAuthCookies(c, accessToken, refreshToken)
+	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	accessToken, refreshToken := userController.jwtService.GenerateJWT(user.ID)
+	controller.SetAuthCookies(
+		c, accessToken, refreshToken,
+		userController.constants.Context.AccessToken,
+		userController.constants.Context.RefreshToken,
+	)
 	userController.userCache.SetUser(user.ID, user.Name, user.Email)
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")

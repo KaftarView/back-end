@@ -1,10 +1,11 @@
 package controller_v1_general
 
 import (
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/exceptions"
-	application_jwt "first-project/src/jwt"
+	jwt_keys "first-project/src/jwtKeys"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,10 +28,15 @@ func (authController *AuthController) RefreshToken(c *gin.Context) {
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
-	claims := authController.jwtService.VerifyToken(c, "./jwtKeys", refreshToken)
+	claims := authController.jwtService.VerifyToken(refreshToken)
 	userID := claims["sub"].(uint)
-	accessToken, newRefreshToken := authController.jwtService.GenerateJWT(c, "./jwtKeys", userID)
-	authController.jwtService.SetAuthCookies(c, accessToken, newRefreshToken)
+	jwt_keys.SetupJWTKeys(c, authController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	accessToken, newRefreshToken := authController.jwtService.GenerateJWT(userID)
+	controller.SetAuthCookies(
+		c, accessToken, newRefreshToken,
+		authController.constants.Context.AccessToken,
+		authController.constants.Context.RefreshToken,
+	)
 
 	trans := controller.GetTranslator(c, authController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.refreshToken")

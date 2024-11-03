@@ -1,10 +1,11 @@
 package middleware_authentication
 
 import (
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	application_jwt "first-project/src/jwt"
+	jwt_keys "first-project/src/jwtKeys"
 	"first-project/src/repository"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,8 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
-	claims := authMiddleware.jwtService.VerifyToken(c, "./jwtKeys", tokenString)
+	jwt_keys.SetupJWTKeys(c, authMiddleware.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	claims := authMiddleware.jwtService.VerifyToken(tokenString)
 	userID := claims["sub"].(uint)
 
 	roles := authMiddleware.userRepository.FindUserRoleTypesByUserID(userID)

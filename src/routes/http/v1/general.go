@@ -8,11 +8,12 @@ import (
 	"first-project/src/application"
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
+	application_jwt "first-project/src/application/jwt"
 	application_math "first-project/src/application/math"
 	"first-project/src/bootstrap"
 	controller_v1_general "first-project/src/controller/v1/general"
 	"first-project/src/enums"
-	application_jwt "first-project/src/jwt"
+
 	middleware_authentication "first-project/src/middleware/Authentication"
 	cache "first-project/src/redis"
 	"first-project/src/repository"
@@ -27,7 +28,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	userCache := cache.NewUserCache(rdb, userRepository)
-	jwtService := application_jwt.NewJWTToken(di.Constants)
+	jwtService := application_jwt.NewJWTToken()
 	userController := controller_v1_general.NewUserController(
 		di.Constants, userService, emailService, userCache, otpService, jwtService)
 

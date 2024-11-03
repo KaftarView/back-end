@@ -1,4 +1,4 @@
 .env
 first\-project
 first\-project.exe
-jwtKeys
+*.pem
