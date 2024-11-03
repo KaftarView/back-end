@@ -52,8 +52,9 @@ func main() {
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&entities.User{}, &entities.Password{})
 
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
+	addr := fmt.Sprintf("%s:%s", di.Env.PrimaryRedis.Addr, di.Env.PrimaryRedis.Port)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     di.Env.PrimaryRedis.Addr,
+		Addr:     addr,
 		Password: di.Env.PrimaryRedis.Password,
 		DB:       dbNumber,
 	})

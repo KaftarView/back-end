@@ -3,10 +3,10 @@ package repository_cache
 import (
 	"context"
 	"encoding/json"
+	"first-project/src/bootstrap"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
-	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -18,12 +18,18 @@ type UserCacheData struct {
 }
 
 type UserCache struct {
+	constants      *bootstrap.Constants
 	rdb            *redis.Client
 	userRepository *repository_database.UserRepository
 }
 
-func NewUserCache(rdb *redis.Client, userRepository *repository_database.UserRepository) *UserCache {
+func NewUserCache(
+	constants *bootstrap.Constants,
+	rdb *redis.Client,
+	userRepository *repository_database.UserRepository,
+) *UserCache {
 	return &UserCache{
+		constants:      constants,
 		rdb:            rdb,
 		userRepository: userRepository,
 	}
@@ -31,9 +37,9 @@ func NewUserCache(rdb *redis.Client, userRepository *repository_database.UserRep
 
 var ctx = context.Background()
 
-func (userRedis *UserCache) SetUser(userID uint, username, email string) {
-	key := "user:" + strconv.Itoa(int(userID))
-	roles := userRedis.userRepository.FindUserRoleTypesByUserID(userID)
+func (userCache *UserCache) SetUser(userID uint, username, email string) {
+	key := userCache.constants.Redis.GetUserID(int(userID))
+	roles := userCache.userRepository.FindUserRoleTypesByUserID(userID)
 	userData := UserCacheData{
 		Name:  username,
 		Email: email,
@@ -46,23 +52,23 @@ func (userRedis *UserCache) SetUser(userID uint, username, email string) {
 	}
 
 	// TODO set label for 3600 ttl of redis -> sync it with jwt
-	err = userRedis.rdb.Set(ctx, key, userDataJSON, 3600).Err()
+	err = userCache.rdb.Set(ctx, key, userDataJSON, 3600).Err()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (userRedis *UserCache) GetUser(userID uint) UserCacheData {
-	key := "user:" + strconv.Itoa(int(userID))
-	val, err := userRedis.rdb.Get(ctx, key).Result()
+func (userCache *UserCache) GetUser(userID uint) UserCacheData {
+	key := userCache.constants.Redis.GetUserID(int(userID))
+	val, err := userCache.rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
-		user, userExist := userRedis.userRepository.FindByUserID(userID)
+		user, userExist := userCache.userRepository.FindByUserID(userID)
 		if !userExist {
 			unauthorizedError := exceptions.NewUnauthorizedError()
 			panic(unauthorizedError)
 		}
-		userRedis.SetUser(userID, user.Name, user.Email)
-		val, _ = userRedis.rdb.Get(ctx, key).Result()
+		userCache.SetUser(userID, user.Name, user.Email)
+		val, _ = userCache.rdb.Get(ctx, key).Result()
 	} else if err != nil {
 		panic(err)
 	}

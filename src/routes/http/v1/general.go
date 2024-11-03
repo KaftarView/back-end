@@ -27,7 +27,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	otpService := application.NewOTPService()
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
-	userCache := repository_cache.NewUserCache(rdb, userRepository)
+	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
 	jwtService := application_jwt.NewJWTToken()
 	userController := controller_v1_general.NewUserController(
 		di.Constants, userService, emailService, userCache, otpService, jwtService)
