@@ -1,10 +1,11 @@
 package middleware_authentication
 
 import (
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	"first-project/src/jwt"
+	jwt_keys "first-project/src/jwtKeys"
 	"first-project/src/repository"
 
 	"github.com/gin-gonic/gin"
@@ -13,12 +14,18 @@ import (
 type AuthMiddleware struct {
 	constants      *bootstrap.Constants
 	userRepository *repository.UserRepository
+	jwtService     *application_jwt.JWTToken
 }
 
-func NewAuthMiddleware(constants *bootstrap.Constants, userRepository *repository.UserRepository) *AuthMiddleware {
+func NewAuthMiddleware(
+	constants *bootstrap.Constants,
+	userRepository *repository.UserRepository,
+	jwtService *application_jwt.JWTToken,
+) *AuthMiddleware {
 	return &AuthMiddleware{
 		constants:      constants,
 		userRepository: userRepository,
+		jwtService:     jwtService,
 	}
 }
 
@@ -28,10 +35,11 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
-	claims := jwt.VerifyToken(c, "./jwtKeys", authMiddleware.constants.Context.IsLoadedJWTPrivateKey, tokenString)
-	userID := claims["sub"].(uint)
+	jwt_keys.SetupJWTKeys(c, authMiddleware.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	claims := authMiddleware.jwtService.VerifyToken(tokenString)
+	userID := uint(claims["sub"].(float64))
 
-	roles := authMiddleware.userRepository.FindUserRoleTypesByUserID(userID)
+	roles := authMiddleware.userRepository.FindUserRoleTypesByUserID(uint(userID))
 
 	if !isAllowRole(allowedRules, roles) {
 		authError := exceptions.NewForbiddenError()

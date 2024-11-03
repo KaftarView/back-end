@@ -3,9 +3,10 @@ package controller_v1_general
 import (
 	"first-project/src/application"
 	application_communication "first-project/src/application/communication/emailService"
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
-	"first-project/src/jwt"
+	jwt_keys "first-project/src/jwtKeys"
 	cache "first-project/src/redis"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,7 @@ type UserController struct {
 	emailService *application_communication.EmailService
 	userCache    *cache.UserCache
 	otpService   *application.OTPService
+	jwtService   *application_jwt.JWTToken
 }
 
 func NewUserController(
@@ -25,6 +27,7 @@ func NewUserController(
 	emailService *application_communication.EmailService,
 	userCache *cache.UserCache,
 	otpService *application.OTPService,
+	jwtService *application_jwt.JWTToken,
 ) *UserController {
 	return &UserController{
 		constants:    constants,
@@ -32,6 +35,7 @@ func NewUserController(
 		emailService: emailService,
 		userCache:    userCache,
 		otpService:   otpService,
+		jwtService:   jwtService,
 	}
 }
 
@@ -91,12 +95,13 @@ func (userController *UserController) Login(c *gin.Context) {
 	}
 	param := controller.Validated[loginParams](c, &userController.constants.Context)
 	user := userController.userService.AuthenticateUser(param.Username, param.Password)
-	accessToken, refreshToken := jwt.GenerateJWT(
-		c, "./jwtKeys", userController.constants.Context.IsLoadedJWTPrivateKey, user.ID)
-	jwt.SetAuthCookies(
+	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	accessToken, refreshToken := userController.jwtService.GenerateJWT(user.ID)
+	controller.SetAuthCookies(
 		c, accessToken, refreshToken,
 		userController.constants.Context.AccessToken,
-		userController.constants.Context.RefreshToken)
+		userController.constants.Context.RefreshToken,
+	)
 	userController.userCache.SetUser(user.ID, user.Name, user.Email)
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")
