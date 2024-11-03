@@ -1,11 +1,11 @@
-package cache
+package repository_cache
 
 import (
 	"context"
 	"encoding/json"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository "first-project/src/repository/database"
+	repository_database "first-project/src/repository/database"
 	"strconv"
 
 	"github.com/redis/go-redis/v9"
@@ -19,10 +19,10 @@ type UserCacheData struct {
 
 type UserCache struct {
 	rdb            *redis.Client
-	userRepository *repository.UserRepository
+	userRepository *repository_database.UserRepository
 }
 
-func NewUserCache(rdb *redis.Client, userRepository *repository.UserRepository) *UserCache {
+func NewUserCache(rdb *redis.Client, userRepository *repository_database.UserRepository) *UserCache {
 	return &UserCache{
 		rdb:            rdb,
 		userRepository: userRepository,

@@ -7,7 +7,7 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
-	cache "first-project/src/repository/redis"
+	repository_cache "first-project/src/repository/redis"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +16,7 @@ type UserController struct {
 	constants    *bootstrap.Constants
 	userService  *application.UserService
 	emailService *application_communication.EmailService
-	userCache    *cache.UserCache
+	userCache    *repository_cache.UserCache
 	otpService   *application.OTPService
 	jwtService   *application_jwt.JWTToken
 }
@@ -25,7 +25,7 @@ func NewUserController(
 	constants *bootstrap.Constants,
 	userService *application.UserService,
 	emailService *application_communication.EmailService,
-	userCache *cache.UserCache,
+	userCache *repository_cache.UserCache,
 	otpService *application.OTPService,
 	jwtService *application_jwt.JWTToken,
 ) *UserController {

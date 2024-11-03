@@ -1,4 +1,4 @@
-package repository
+package repository_database
 
 import (
 	"first-project/src/entities"

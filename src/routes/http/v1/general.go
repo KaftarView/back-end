@@ -13,21 +13,21 @@ import (
 	"first-project/src/bootstrap"
 	controller_v1_general "first-project/src/controller/v1/general"
 	"first-project/src/enums"
-	repository "first-project/src/repository/database"
-	cache "first-project/src/repository/redis"
+	repository_database "first-project/src/repository/database"
+	repository_cache "first-project/src/repository/redis"
 
 	middleware_authentication "first-project/src/middleware/Authentication"
 )
 
 func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	userRepository := repository.NewUserRepository(db)
+	userRepository := repository_database.NewUserRepository(db)
 	addService := application_math.NewAddService(userRepository)
 	sampleController := controller_v1_general.NewSampleController(di.Constants, addService)
 
 	otpService := application.NewOTPService()
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
-	userCache := cache.NewUserCache(rdb, userRepository)
+	userCache := repository_cache.NewUserCache(rdb, userRepository)
 	jwtService := application_jwt.NewJWTToken()
 	userController := controller_v1_general.NewUserController(
 		di.Constants, userService, emailService, userCache, otpService, jwtService)

@@ -3,7 +3,7 @@ package application
 import (
 	application_communication "first-project/src/application/communication/emailService"
 	"first-project/src/entities"
-	repository "first-project/src/repository/database"
+	repository_database "first-project/src/repository/database"
 	"sync"
 	"time"
 
@@ -11,11 +11,11 @@ import (
 )
 
 type CronJob struct {
-	userRepository *repository.UserRepository
+	userRepository *repository_database.UserRepository
 	emailService   *application_communication.EmailService
 }
 
-func NewCronJob(userRepository *repository.UserRepository, emailService *application_communication.EmailService) *CronJob {
+func NewCronJob(userRepository *repository_database.UserRepository, emailService *application_communication.EmailService) *CronJob {
 	return &CronJob{
 		userRepository: userRepository,
 		emailService:   emailService,
