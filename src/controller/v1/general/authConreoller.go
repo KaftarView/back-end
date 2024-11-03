@@ -28,9 +28,9 @@ func (authController *AuthController) RefreshToken(c *gin.Context) {
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
-	claims := authController.jwtService.VerifyToken(refreshToken)
-	userID := claims["sub"].(uint)
 	jwt_keys.SetupJWTKeys(c, authController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	claims := authController.jwtService.VerifyToken(refreshToken)
+	userID := uint(claims["sub"].(float64))
 	accessToken, newRefreshToken := authController.jwtService.GenerateJWT(userID)
 	controller.SetAuthCookies(
 		c, accessToken, newRefreshToken,

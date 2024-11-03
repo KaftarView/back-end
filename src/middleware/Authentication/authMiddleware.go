@@ -37,9 +37,9 @@ func (authMiddleware *AuthMiddleware) AuthenticateMiddleware(c *gin.Context, all
 	}
 	jwt_keys.SetupJWTKeys(c, authMiddleware.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
 	claims := authMiddleware.jwtService.VerifyToken(tokenString)
-	userID := claims["sub"].(uint)
+	userID := uint(claims["sub"].(float64))
 
-	roles := authMiddleware.userRepository.FindUserRoleTypesByUserID(userID)
+	roles := authMiddleware.userRepository.FindUserRoleTypesByUserID(uint(userID))
 
 	if !isAllowRole(allowedRules, roles) {
 		authError := exceptions.NewForbiddenError()
