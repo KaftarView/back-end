@@ -18,20 +18,6 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-func (repo *UserRepository) Test() []string {
-	var tables []string
-	repo.db.Raw("SHOW TABLES").Scan(&tables)
-
-	return tables
-}
-
-func (repo *UserRepository) Test2() []entities.Test {
-	var results []entities.Test
-	repo.db.Where("name = ?", "ali").Find(&results)
-
-	return results
-}
-
 func (repo *UserRepository) FindByUserID(userID uint) (entities.User, bool) {
 	var user entities.User
 	result := repo.db.First(&user, userID)

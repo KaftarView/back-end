@@ -9,7 +9,6 @@ import (
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
-	application_math "first-project/src/application/math"
 	"first-project/src/bootstrap"
 	controller_v1_general "first-project/src/controller/v1/general"
 	"first-project/src/enums"
@@ -21,8 +20,6 @@ import (
 
 func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
 	userRepository := repository_database.NewUserRepository(db)
-	addService := application_math.NewAddService(userRepository)
-	sampleController := controller_v1_general.NewSampleController(di.Constants, addService)
 
 	otpService := application.NewOTPService()
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
@@ -38,8 +35,6 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	awsService := application_aws.NewAWSS3(&di.Env.PrimaryBucket)
 	awsController := controller_v1_general.NewAWSController(di.Constants, awsService)
 
-	routerGroup.GET("/ping", controller_v1_general.Pong)
-	routerGroup.GET("/add/:num1/:num2", sampleController.Add)
 	routerGroup.POST("/register", userController.Register)
 	routerGroup.POST("/register/activate", userController.VerifyEmail)
 	routerGroup.POST("/login", userController.Login)
