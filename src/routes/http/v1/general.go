@@ -6,16 +6,12 @@ import (
 	"gorm.io/gorm"
 
 	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_general "first-project/src/controller/v1/general"
-	"first-project/src/enums"
 	repository_database "first-project/src/repository/database"
 	repository_cache "first-project/src/repository/redis"
-
-	middleware_authentication "first-project/src/middleware/Authentication"
 )
 
 func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
@@ -29,25 +25,14 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	userController := controller_v1_general.NewUserController(
 		di.Constants, userService, emailService, userCache, otpService, jwtService)
 
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 
-	awsService := application_aws.NewAWSS3(&di.Env.PrimaryBucket)
-	awsController := controller_v1_general.NewAWSController(di.Constants, awsService)
-
 	routerGroup.POST("/register", userController.Register)
-	routerGroup.POST("/register/activate", userController.VerifyEmail)
+	routerGroup.POST("/register/verify", userController.VerifyEmail)
 	routerGroup.POST("/login", userController.Login)
-	routerGroup.POST("/forgotPassword", userController.ForgotPassword)
-	routerGroup.PUT("/resetPassword", userController.ResetPassword)
-	routerGroup.GET("/admin", func(c *gin.Context) {
-		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.Admin})
-	}, userController.AdminSayHello)
-	routerGroup.POST("/refreshToken", authController.RefreshToken)
-	routerGroup.POST("/bucket/create", awsController.CreateBucketController)
-	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
-	routerGroup.POST("/bucket/delete", awsController.DeleteObjectController)
-	routerGroup.GET("/bucket/listObjects", awsController.GetListOfObjectsController)
+	routerGroup.POST("/forgot-password", userController.ForgotPassword)
+	routerGroup.PUT("/reset-password", userController.ResetPassword)
+	routerGroup.POST("/refresh-token", authController.RefreshToken)
 
 	return routerGroup
 }
