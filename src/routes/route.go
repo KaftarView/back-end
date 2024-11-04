@@ -24,13 +24,13 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client
 	v1 := ginEngine.Group("/v1")
 
 	registerGeneralRoutes(v1, di, db, rdb)
-	registerCustomerRoutes(v1, di)
+	registerAdminRoutes(v1, di, db, rdb)
 }
 
 func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
 	return routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
 }
 
-func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di) *gin.RouterGroup {
-	return routes_http_v1.SetupCustomerRoutes(v1.Group("customer"), di)
+func registerAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupAdminRoutes(v1, di, db, rdb)
 }

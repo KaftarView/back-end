@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&entities.User{}, &entities.Password{})
+	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&entities.User{}, &entities.Role{})
 
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
 	addr := fmt.Sprintf("%s:%s", di.Env.PrimaryRedis.Addr, di.Env.PrimaryRedis.Port)
@@ -67,14 +67,20 @@ func main() {
 	roleSeeder := seed.NewRoleSeeder(userRepository, &di.Env.Admin, &di.Env.Moderator)
 	roleSeeder.SeedRoles()
 
-	backgroundEnabled, _ := strconv.ParseBool(di.Env.Applications.BACKGROUND_SERVICE_ENABLED)
+	backgroundEnabled, err := strconv.ParseBool(di.Env.Applications.BACKGROUND_SERVICE_ENABLED)
+	if err != nil {
+		log.Fatal("Error during checking background service enable")
+	}
 	if backgroundEnabled {
 		emailService := application_communication.NewEmailService(&di.Env.Email)
 		cronJob := application.NewCronJob(userRepository, emailService)
 		cronJob.RunCronJob()
 	}
 
-	APIServiceEnabled, _ := strconv.ParseBool(di.Env.Applications.API_SERVICE_ENABLED)
+	APIServiceEnabled, err := strconv.ParseBool(di.Env.Applications.API_SERVICE_ENABLED)
+	if err != nil {
+		log.Fatal("Error during checking API service enable")
+	}
 	if APIServiceEnabled {
 		routes.Run(ginEngine, di, db, rdb)
 	}
