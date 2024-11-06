@@ -13,8 +13,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"first-project/src/application"
 	application_communication "first-project/src/application/communication/emailService"
+	application_cron "first-project/src/application/cron"
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
 	repository "first-project/src/repository/database"
@@ -73,7 +73,7 @@ func main() {
 	}
 	if backgroundEnabled {
 		emailService := application_communication.NewEmailService(&di.Env.Email)
-		cronJob := application.NewCronJob(userRepository, emailService)
+		cronJob := application_cron.NewCronJob(userRepository, emailService)
 		cronJob.RunCronJob()
 	}
 
