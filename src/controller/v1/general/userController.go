@@ -113,11 +113,26 @@ func (userController *UserController) ForgotPassword(c *gin.Context) {
 		Email string `json:"email" validate:"required,email"`
 	}
 	param := controller.Validated[forgotPasswordParams](c, &userController.constants.Context)
-	userController.userService.VerifyUserActivated(param.Email)
+	otp := userController.otpService.GenerateOTP()
+	userController.userService.UpdateUserOTPIfExists(param.Email, otp)
+	emailTemplateData := struct{ OTP string }{OTP: otp}
+	templatePath := getTemplatePath(c, userController.constants.Context.Translator)
+	userController.emailService.SendEmail(
+		param.Email, "Forgot Password", "forgotPassword/"+templatePath, emailTemplateData)
 
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.forgotPassword")
 	controller.Response(c, 200, message, nil)
+}
+
+func (userController *UserController) ConfirmOTP(c *gin.Context) {
+	type confirmOTPParams struct {
+		Email string `json:"email" validate:"required"`
+		OTP   string `json:"otp" validate:"required"`
+	}
+	param := controller.Validated[confirmOTPParams](c, &userController.constants.Context)
+	userController.userService.ValidateUserOTP(param.Email, param.OTP)
+	controller.Response(c, 200, "", nil)
 }
 
 func (userController *UserController) ResetPassword(c *gin.Context) {

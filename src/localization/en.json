@@ -23,7 +23,7 @@
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
         "emailVerification": "Email Verified.",
         "login": "Login Successfully.",
-        "forgotPassword": "You can change Your Password.",
+        "forgotPassword": "Please check your email to enter OTP to reset your password.",
         "resetPassword": "Password reset Successfully.",
         "refreshToken": "Your session has been extended.",
         "createBucket": "Bucket Created Successfully.",

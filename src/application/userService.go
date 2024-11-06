@@ -120,8 +120,7 @@ func (userService *UserService) ActivateUser(email, otp string) {
 
 	user, _ := userService.userRepository.FindByEmailAndVerified(email, false)
 	userService.otpService.VerifyOTP(
-		user, email, otp,
-		userService.constants.ErrorField.OTP,
+		user, otp, userService.constants.ErrorField.OTP,
 		userService.constants.ErrorTag.ExpiredToken,
 		userService.constants.ErrorTag.InvalidToken)
 	userService.userRepository.ActivateUserAccount(user)
@@ -141,15 +140,31 @@ func (userService *UserService) AuthenticateUser(username string, password strin
 	return user
 }
 
-func (userService *UserService) VerifyUserActivated(email string) {
+func (userService *UserService) UpdateUserOTPIfExists(email, otp string) {
 	var registrationError exceptions.UserRegistrationError
-	_, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !verifiedUserExist {
 		registrationError.AppendError(
 			userService.constants.ErrorField.Email,
 			userService.constants.ErrorTag.EmailNotExist)
 		panic(registrationError)
 	}
+	userService.userRepository.UpdateUserToken(user, otp)
+}
+
+func (userService *UserService) ValidateUserOTP(email, otp string) {
+	var registrationError exceptions.UserRegistrationError
+	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	if !verifiedUserExist {
+		registrationError.AppendError(
+			userService.constants.ErrorField.Email,
+			userService.constants.ErrorTag.EmailNotExist)
+		panic(registrationError)
+	}
+	userService.otpService.VerifyOTP(
+		user, otp, userService.constants.ErrorField.OTP,
+		userService.constants.ErrorTag.ExpiredToken,
+		userService.constants.ErrorTag.InvalidToken)
 }
 
 func (userService *UserService) ResetPasswordService(email, password, confirmPassword string) {

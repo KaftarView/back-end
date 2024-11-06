@@ -31,7 +31,7 @@ func (o *OTPService) GenerateOTP() string {
 }
 
 func (o *OTPService) VerifyOTP(
-	user entities.User, email, inputOTP, otpFieldError, expiredTokenTagError, invalidTokenTagError string) {
+	user entities.User, inputOTP, otpFieldError, expiredTokenTagError, invalidTokenTagError string) {
 	var registrationError exceptions.UserRegistrationError
 
 	if time.Since(user.UpdatedAt) > 20*time.Minute {

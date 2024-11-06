@@ -31,6 +31,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	routerGroup.POST("/register/verify", userController.VerifyEmail)
 	routerGroup.POST("/login", userController.Login)
 	routerGroup.POST("/forgot-password", userController.ForgotPassword)
+	routerGroup.POST("/confirm-otp", userController.ConfirmOTP)
 	routerGroup.PUT("/reset-password", userController.ResetPassword)
 	routerGroup.POST("/refresh-token", authController.RefreshToken)
 
