@@ -43,6 +43,8 @@ func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err erro
 		handleBindingError(c, bindingError, recovery.constants.Translator)
 	} else if registrationErrors, ok := err.(exceptions.UserRegistrationError); ok {
 		handleRegistrationError(c, registrationErrors, recovery.constants.Translator)
+	} else if conflictErrors, ok := err.(exceptions.ConflictError); ok {
+		handleConflictError(c, conflictErrors, recovery.constants.Translator)
 	} else if _, ok := err.(exceptions.LoginError); ok {
 		handleLoginError(c, recovery.constants.Translator)
 	} else if _, ok := err.(exceptions.ForbiddenError); ok {
@@ -83,6 +85,20 @@ func handleBindingError(c *gin.Context, bindingError exceptions.BindingError, tr
 	controller.Response(c, 400, message, nil)
 }
 
+func handleConflictError(c *gin.Context, conflictErrors exceptions.ConflictError, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	errorMessages := make(map[string]map[string]string)
+	for _, conflictError := range conflictErrors.FieldErrors() {
+		if _, ok := errorMessages[conflictError.Field]; !ok {
+			errorMessages[conflictError.Field] = make(map[string]string)
+		}
+		message, _ := trans.T(fmt.Sprintf("errors.%s", conflictError.Tag), conflictError.Field)
+		errorMessages[conflictError.Field][conflictError.Tag] = message
+	}
+
+	controller.Response(c, 409, errorMessages, nil)
+}
+
 func handleRegistrationError(c *gin.Context, registrationErrors exceptions.UserRegistrationError, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	errorMessages := make(map[string]map[string]string)
@@ -100,13 +116,13 @@ func handleRegistrationError(c *gin.Context, registrationErrors exceptions.UserR
 func handleLoginError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.loginFailed")
-	controller.Response(c, 422, message, nil)
+	controller.Response(c, 401, message, nil)
 }
 
 func handleForbiddenError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.forbidden")
-	controller.Response(c, 401, message, nil)
+	controller.Response(c, 403, message, nil)
 }
 
 func handleUnauthorizedError(c *gin.Context, transKey string) {

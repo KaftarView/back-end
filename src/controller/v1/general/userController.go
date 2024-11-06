@@ -72,7 +72,7 @@ func (userController *UserController) Register(c *gin.Context) {
 
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.userRegistration")
-	controller.Response(c, 200, message, nil)
+	controller.Response(c, 201, message, nil)
 }
 
 func (userController *UserController) VerifyEmail(c *gin.Context) {

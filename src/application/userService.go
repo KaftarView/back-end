@@ -59,20 +59,24 @@ func (userService *UserService) passwordValidation(password string) []string {
 func (userService *UserService) ValidateUserRegistrationDetails(
 	username string, email string, password string, confirmPassword string) {
 	var registrationError exceptions.UserRegistrationError
+	var conflictError exceptions.ConflictError
 	isRegError := false
 	_, usernameExist := userService.userRepository.FindByUsernameAndVerified(username, true)
 	if usernameExist {
 		isRegError = true
-		registrationError.AppendError(
+		conflictError.AppendError(
 			userService.constants.ErrorField.Username,
 			userService.constants.ErrorTag.AlreadyExist)
 	}
 	_, emailExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if emailExist {
 		isRegError = true
-		registrationError.AppendError(
+		conflictError.AppendError(
 			userService.constants.ErrorField.Email,
 			userService.constants.ErrorTag.AlreadyExist)
+	}
+	if isRegError {
+		panic(conflictError)
 	}
 	passwordErrorTags := userService.passwordValidation(password)
 	if len(passwordErrorTags) > 0 {
@@ -87,7 +91,6 @@ func (userService *UserService) ValidateUserRegistrationDetails(
 			userService.constants.ErrorField.Password,
 			userService.constants.ErrorTag.NotMatchConfirmPAssword)
 	}
-
 	if isRegError {
 		panic(registrationError)
 	}
