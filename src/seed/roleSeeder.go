@@ -32,7 +32,7 @@ func (rs *RoleSeeder) SeedRoles() {
 		rs.userRepository.CreateNewRole(roleType)
 	}
 
-	_, adminExist := rs.userRepository.FindByUsername("Admin")
+	_, adminExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Admin")
 	if !adminExist {
 		bytes, err := bcrypt.GenerateFromPassword([]byte(rs.admin.Password), 14)
 		if err != nil {
@@ -43,7 +43,7 @@ func (rs *RoleSeeder) SeedRoles() {
 		rs.userRepository.AssignRoleToUser(adminUser, adminRole)
 	}
 
-	_, moderatorExist := rs.userRepository.FindByUsername("Moderator")
+	_, moderatorExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Moderator")
 	if !moderatorExist {
 		bytes, err := bcrypt.GenerateFromPassword([]byte(rs.moderator.Password), 14)
 		if err != nil {
