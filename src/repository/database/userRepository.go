@@ -30,7 +30,7 @@ func (repo *UserRepository) FindByUserID(userID uint) (entities.User, bool) {
 	return user, true
 }
 
-func (repo *UserRepository) FindByUsername(username string) (entities.User, bool) {
+func (repo *UserRepository) FindActiveOrVerifiedUserByUsername(username string) (entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("name = ?", username).First(&user)
 	if result.Error != nil {
@@ -39,10 +39,14 @@ func (repo *UserRepository) FindByUsername(username string) (entities.User, bool
 		}
 		panic(result.Error)
 	}
-	return user, true
+	if user.Verified || time.Since(user.UpdatedAt) < 20*time.Minute {
+		return user, true
+	}
+	repo.db.Delete(&user)
+	return user, false
 }
 
-func (repo *UserRepository) FindByEmail(email string) (entities.User, bool) {
+func (repo *UserRepository) FindActiveOrVerifiedUserByEmail(email string) (entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
@@ -51,7 +55,11 @@ func (repo *UserRepository) FindByEmail(email string) (entities.User, bool) {
 		}
 		panic(result.Error)
 	}
-	return user, true
+	if user.Verified || time.Since(user.UpdatedAt) < 20*time.Minute {
+		return user, true
+	}
+	repo.db.Delete(&user)
+	return user, false
 }
 
 func (repo *UserRepository) FindByUsernameAndVerified(username string, verified bool) (entities.User, bool) {
@@ -59,6 +67,9 @@ func (repo *UserRepository) FindByUsernameAndVerified(username string, verified 
 	result := repo.db.Where("name = ? AND verified = ?", username, verified).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
+			if time.Since(user.UpdatedAt) < 20*time.Minute {
+				return user, true
+			}
 			return user, false
 		}
 		panic(result.Error)

@@ -61,14 +61,14 @@ func (userService *UserService) ValidateUserRegistrationDetails(
 	var registrationError exceptions.UserRegistrationError
 	var conflictError exceptions.ConflictError
 	isRegError := false
-	_, usernameExist := userService.userRepository.FindByUsername(username)
+	_, usernameExist := userService.userRepository.FindActiveOrVerifiedUserByUsername(username)
 	if usernameExist {
 		isRegError = true
 		conflictError.AppendError(
 			userService.constants.ErrorField.Username,
 			userService.constants.ErrorTag.AlreadyExist)
 	}
-	_, emailExist := userService.userRepository.FindByEmail(email)
+	_, emailExist := userService.userRepository.FindActiveOrVerifiedUserByUsername(email)
 	if emailExist {
 		isRegError = true
 		conflictError.AppendError(
