@@ -23,8 +23,17 @@ func NewRoleSeeder(userRepository *repository_database.UserRepository, admin, mo
 }
 
 func (rs *RoleSeeder) SeedRoles() {
-	rolesType := enums.GetAllRoleTypes()
-	for _, roleType := range rolesType {
+	permissionTypes := enums.GetAllPermissionTypes()
+	for _, permissionType := range permissionTypes {
+		_, roleExist := rs.userRepository.FindPermissionByType(permissionType)
+		if roleExist {
+			continue
+		}
+		rs.userRepository.CreateNewPermission(permissionType)
+	}
+
+	roleTypes := enums.GetAllRoleTypes()
+	for _, roleType := range roleTypes {
 		_, roleExist := rs.userRepository.FindRoleByType(roleType)
 		if roleExist {
 			continue
@@ -41,6 +50,12 @@ func (rs *RoleSeeder) SeedRoles() {
 		adminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
 		adminRole, _ := rs.userRepository.FindRoleByType(enums.Admin)
 		rs.userRepository.AssignRoleToUser(adminUser, adminRole)
+		viewPermission, _ := rs.userRepository.FindPermissionByType(enums.View)
+		deletePermission, _ := rs.userRepository.FindPermissionByType(enums.Delete)
+		editPermission, _ := rs.userRepository.FindPermissionByType(enums.Edit)
+		rs.userRepository.AssignPermissionToRole(adminRole, viewPermission)
+		rs.userRepository.AssignPermissionToRole(adminRole, deletePermission)
+		rs.userRepository.AssignPermissionToRole(adminRole, editPermission)
 	}
 
 	_, moderatorExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Moderator")
@@ -52,5 +67,9 @@ func (rs *RoleSeeder) SeedRoles() {
 		moderatorUser := rs.userRepository.CreateNewUser("Moderator", rs.moderator.EmailAddress, string(bytes), "", true)
 		moderatorRole, _ := rs.userRepository.FindRoleByType(enums.Moderator)
 		rs.userRepository.AssignRoleToUser(moderatorUser, moderatorRole)
+		viewPermission, _ := rs.userRepository.FindPermissionByType(enums.View)
+		editPermission, _ := rs.userRepository.FindPermissionByType(enums.Edit)
+		rs.userRepository.AssignPermissionToRole(moderatorRole, viewPermission)
+		rs.userRepository.AssignPermissionToRole(moderatorRole, editPermission)
 	}
 }
