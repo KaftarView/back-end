@@ -147,6 +147,18 @@ func (repo *UserRepository) FindRoleByType(roleType enums.RoleType) (entities.Ro
 	return role, true
 }
 
+func (repo *UserRepository) FindPermissionByType(permissionType enums.PermissionType) (entities.Permission, bool) {
+	var permission entities.Permission
+	result := repo.db.Where("type = ?", permissionType).First(&permission)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return permission, false
+		}
+		panic(result.Error)
+	}
+	return permission, true
+}
+
 func (repo *UserRepository) CreateNewRole(roleType enums.RoleType) entities.Role {
 	role := entities.Role{
 		Type: roleType,
@@ -158,8 +170,26 @@ func (repo *UserRepository) CreateNewRole(roleType enums.RoleType) entities.Role
 	return role
 }
 
+func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionType) entities.Permission {
+	permission := entities.Permission{
+		Type: permissionType,
+	}
+	result := repo.db.Create(&permission)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return permission
+}
+
 func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.Role) {
 	err := repo.db.Model(&user).Association("Roles").Append(&role)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (repo *UserRepository) AssignPermissionToRole(role entities.Role, permission entities.Permission) {
+	err := repo.db.Model(&role).Association("Permissions").Append(&permission)
 	if err != nil {
 		panic(err)
 	}

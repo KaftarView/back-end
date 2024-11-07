@@ -49,7 +49,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&entities.User{}, &entities.Role{})
+	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(
+		&entities.User{},
+		&entities.Role{},
+		&entities.Permission{},
+	)
 
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
 	addr := fmt.Sprintf("%s:%s", di.Env.PrimaryRedis.Addr, di.Env.PrimaryRedis.Port)
