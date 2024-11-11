@@ -39,7 +39,7 @@ func (repo *UserRepository) FindActiveOrVerifiedUserByUsername(username string) 
 		}
 		panic(result.Error)
 	}
-	if user.Verified || time.Since(user.UpdatedAt) < 20*time.Minute {
+	if user.Verified || time.Since(user.UpdatedAt) < 2*time.Minute {
 		return user, true
 	}
 	repo.db.Delete(&user)
@@ -55,7 +55,7 @@ func (repo *UserRepository) FindActiveOrVerifiedUserByEmail(email string) (entit
 		}
 		panic(result.Error)
 	}
-	if user.Verified || time.Since(user.UpdatedAt) < 20*time.Minute {
+	if user.Verified || time.Since(user.UpdatedAt) < 2*time.Minute {
 		return user, true
 	}
 	repo.db.Delete(&user)
@@ -67,7 +67,7 @@ func (repo *UserRepository) FindByUsernameAndVerified(username string, verified 
 	result := repo.db.Where("name = ? AND verified = ?", username, verified).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			if time.Since(user.UpdatedAt) < 20*time.Minute {
+			if time.Since(user.UpdatedAt) < 2*time.Minute {
 				return user, true
 			}
 			return user, false
