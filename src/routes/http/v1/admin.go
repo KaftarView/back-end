@@ -25,7 +25,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
 	jwtService := application_jwt.NewJWTToken()
-	awsService := application_aws.NewAWSS3(&di.Env.PrimaryBucket)
+	awsService := application_aws.NewAWSS3(di.Constants, &di.Env.PrimaryBucket)
 	userController := controller_v1_general.NewUserController(
 		di.Constants, userService, emailService, userCache, otpService, jwtService)
 
@@ -35,10 +35,10 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	routerGroup.GET("/admin/hello", func(c *gin.Context) {
 		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.Admin})
 	}, userController.AdminSayHello)
-	routerGroup.POST("/bucket/create", awsController.CreateBucketController)
 	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
 	routerGroup.POST("/bucket/delete", awsController.DeleteObjectController)
 	routerGroup.GET("/bucket/list-objects", awsController.GetListOfObjectsController)
+	routerGroup.GET("/bucket/user-objects", awsController.GetUserObjects)
 
 	return routerGroup
 }
