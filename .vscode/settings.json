@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
+        "aerr",
+        "awserr",
         "AWSS",
         "galidator",
         "gocron",
@@ -10,6 +12,7 @@
         "Inno",
         "joho",
         "nicksnyder",
+        "Presign",
         "sess",
         "smpt",
         "tmpl",

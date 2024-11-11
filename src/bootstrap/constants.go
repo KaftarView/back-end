@@ -5,10 +5,11 @@ import (
 )
 
 type Constants struct {
-	Context    Context
-	ErrorField ErrorField
-	ErrorTag   ErrorTag
-	Redis      Redis
+	Context       Context
+	ErrorField    ErrorField
+	ErrorTag      ErrorTag
+	Redis         Redis
+	ObjectStorage Object
 }
 
 type Context struct {
@@ -43,6 +44,9 @@ type ErrorTag struct {
 }
 
 type Redis struct {
+}
+
+type Object struct {
 }
 
 func NewConstants() *Constants {
@@ -81,4 +85,8 @@ func NewConstants() *Constants {
 
 func (r *Redis) GetUserID(userID int) string {
 	return fmt.Sprintf("user:%d", userID)
+}
+
+func (o *Object) GetObjectKey(objectID int, objectTittle, objectName string) string {
+	return fmt.Sprintf("%s/%d/%s", objectTittle, objectID, objectName)
 }

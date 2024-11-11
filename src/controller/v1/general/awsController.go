@@ -4,7 +4,7 @@ import (
 	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
-	"first-project/src/exceptions"
+	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,28 +21,13 @@ func NewAWSController(constants *bootstrap.Constants, awsService *application_aw
 	}
 }
 
-func (ac *AWSController) CreateBucketController(c *gin.Context) {
-	type createBucketParams struct {
-		BucketName string `json:"bucket_name" validate:"required"`
-	}
-	param := controller.Validated[createBucketParams](c, &ac.constants.Context)
-	ac.awsService.CreateBucket(param.BucketName)
-	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
-	message, _ := trans.T("successMessage.createBucket")
-	controller.Response(c, 200, message, nil)
-}
-
 func (ac *AWSController) UploadObjectController(c *gin.Context) {
 	type uploadObjectParams struct {
-		BucketName string `json:"bucket_name" validate:"required"`
+		File *multipart.FileHeader `form:"fileSample" validate:"required"`
 	}
 	param := controller.Validated[uploadObjectParams](c, &ac.constants.Context)
-	file, err := c.FormFile("file")
-	if err != nil {
-		bindingError := exceptions.BindingError{Err: err}
-		panic(bindingError)
-	}
-	ac.awsService.UploadObject(file, param.BucketName)
+	// TODO: should be based on request -> different for each req type
+	ac.awsService.UploadObject(param.File, "session", 123)
 	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
 	message, _ := trans.T("successMessage.uploadObjectToBucket")
 	controller.Response(c, 200, message, nil)
@@ -50,21 +35,22 @@ func (ac *AWSController) UploadObjectController(c *gin.Context) {
 
 func (ac *AWSController) DeleteObjectController(c *gin.Context) {
 	type deletedObjectParams struct {
-		BucketName string `json:"bucket_name" validate:"required"`
 		ObjectName string `json:"obj_name" validate:"required"`
 	}
 	param := controller.Validated[deletedObjectParams](c, &ac.constants.Context)
-	ac.awsService.DeleteObject(param.ObjectName, param.BucketName)
+	ac.awsService.DeleteObject(param.ObjectName)
 	trans := controller.GetTranslator(c, ac.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteObjectFromBucket")
 	controller.Response(c, 200, message, nil)
 }
 
 func (ac *AWSController) GetListOfObjectsController(c *gin.Context) {
-	type listBucketParams struct {
-		BucketName string `json:"bucket_name" validate:"required"`
-	}
-	param := controller.Validated[listBucketParams](c, &ac.constants.Context)
-	objects := ac.awsService.ListObjects(param.BucketName)
+	objects := ac.awsService.ListObjects()
+	controller.Response(c, 200, "", objects)
+}
+
+func (ac *AWSController) GetUserObjects(c *gin.Context) {
+	// TODO: should be based on request
+	objects := ac.awsService.GetSessionVideoURLs(123)
 	controller.Response(c, 200, "", objects)
 }
