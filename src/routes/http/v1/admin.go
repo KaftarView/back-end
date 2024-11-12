@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+func SetupSuperAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
 	userRepository := repository_database.NewUserRepository(db)
 
 	otpService := application.NewOTPService()
@@ -33,7 +33,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	awsController := controller_v1_general.NewAWSController(di.Constants, awsService)
 
 	routerGroup.GET("/admin/hello", func(c *gin.Context) {
-		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.Admin})
+		authMiddleware.AuthenticateMiddleware(c, []enums.RoleType{enums.SuperAdmin})
 	}, userController.AdminSayHello)
 	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
 	routerGroup.POST("/bucket/delete", awsController.DeleteObjectController)

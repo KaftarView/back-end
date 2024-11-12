@@ -41,35 +41,31 @@ func (rs *RoleSeeder) SeedRoles() {
 		rs.userRepository.CreateNewRole(roleType)
 	}
 
-	_, adminExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Admin")
-	if !adminExist {
+	_, superAdminExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Admin")
+	if !superAdminExist {
 		bytes, err := bcrypt.GenerateFromPassword([]byte(rs.admin.Password), 14)
 		if err != nil {
 			panic(err)
 		}
-		adminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
-		adminRole, _ := rs.userRepository.FindRoleByType(enums.Admin)
-		rs.userRepository.AssignRoleToUser(adminUser, adminRole)
-		viewPermission, _ := rs.userRepository.FindPermissionByType(enums.View)
-		deletePermission, _ := rs.userRepository.FindPermissionByType(enums.Delete)
-		editPermission, _ := rs.userRepository.FindPermissionByType(enums.Edit)
-		rs.userRepository.AssignPermissionToRole(adminRole, viewPermission)
-		rs.userRepository.AssignPermissionToRole(adminRole, deletePermission)
-		rs.userRepository.AssignPermissionToRole(adminRole, editPermission)
-	}
+		superAdminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
+		superAdminRole, _ := rs.userRepository.FindRoleByType(enums.SuperAdmin)
+		rs.userRepository.AssignRoleToUser(superAdminUser, superAdminRole)
 
-	_, moderatorExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Moderator")
-	if !moderatorExist {
-		bytes, err := bcrypt.GenerateFromPassword([]byte(rs.moderator.Password), 14)
-		if err != nil {
-			panic(err)
-		}
-		moderatorUser := rs.userRepository.CreateNewUser("Moderator", rs.moderator.EmailAddress, string(bytes), "", true)
-		moderatorRole, _ := rs.userRepository.FindRoleByType(enums.Moderator)
-		rs.userRepository.AssignRoleToUser(moderatorUser, moderatorRole)
-		viewPermission, _ := rs.userRepository.FindPermissionByType(enums.View)
-		editPermission, _ := rs.userRepository.FindPermissionByType(enums.Edit)
-		rs.userRepository.AssignPermissionToRole(moderatorRole, viewPermission)
-		rs.userRepository.AssignPermissionToRole(moderatorRole, editPermission)
+		permission, _ := rs.userRepository.FindPermissionByType(enums.ManageUsers)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.ManageRoles)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.CreateEvent)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.EditEvent)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.PublishEvent)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.ManageNewsAndBlogs)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.ModerateComments)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.ViewReports)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
 	}
 }

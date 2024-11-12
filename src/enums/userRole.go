@@ -3,11 +3,23 @@ package enums
 type RoleType uint
 
 const (
-	User RoleType = iota + 1
+	SuperAdmin RoleType = iota + 1
+	EventManager
+	ContentManager
+	Editor
 	Moderator
-	Admin
+	Viewer
+	User
 )
 
 func GetAllRoleTypes() []RoleType {
-	return []RoleType{User, Moderator, Admin}
+	return []RoleType{
+		SuperAdmin,
+		EventManager,
+		ContentManager,
+		Editor,
+		Moderator,
+		Viewer,
+		User,
+	}
 }

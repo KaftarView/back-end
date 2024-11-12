@@ -24,13 +24,38 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client
 	v1 := ginEngine.Group("/v1")
 
 	registerGeneralRoutes(v1, di, db, rdb)
-	registerAdminRoutes(v1, di, db, rdb)
+	registerSuperAdminRoutes(v1, di, db, rdb)
+	registerEventManagerRoutes(v1, di, db, rdb)
+	registerContentManagerRoutes(v1, di, db, rdb)
+	registerEditorRoutes(v1, di, db, rdb)
+	registerModeratorRoutes(v1, di, db, rdb)
+	registerViewerRoutes(v1, di, db, rdb)
 }
 
 func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
 	return routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
 }
 
-func registerAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupAdminRoutes(v1, di, db, rdb)
+func registerSuperAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupSuperAdminRoutes(v1, di, db, rdb)
+}
+
+func registerEventManagerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupEventManagerRoutes(v1, di, db, rdb)
+}
+
+func registerContentManagerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupContentManagerRoutes(v1, di, db, rdb)
+}
+
+func registerEditorRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupEditorRoutes(v1, di, db, rdb)
+}
+
+func registerModeratorRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupModeratorRoutes(v1, di, db, rdb)
+}
+
+func registerViewerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+	return routes_http_v1.SetupViewerRoutes(v1, di, db, rdb)
 }

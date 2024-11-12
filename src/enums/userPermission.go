@@ -3,11 +3,25 @@ package enums
 type PermissionType uint
 
 const (
-	View PermissionType = iota + 1
-	Edit
-	Delete
+	ManageUsers PermissionType = iota + 1
+	ManageRoles
+	CreateEvent
+	EditEvent
+	PublishEvent
+	ManageNewsAndBlogs
+	ModerateComments
+	ViewReports
 )
 
 func GetAllPermissionTypes() []PermissionType {
-	return []PermissionType{View, Edit, Delete}
+	return []PermissionType{
+		ManageUsers,
+		ManageRoles,
+		CreateEvent,
+		EditEvent,
+		PublishEvent,
+		ManageNewsAndBlogs,
+		ModerateComments,
+		ViewReports,
+	}
 }
