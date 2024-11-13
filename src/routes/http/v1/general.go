@@ -14,7 +14,7 @@ import (
 	repository_cache "first-project/src/repository/redis"
 )
 
-func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
+func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
 
 	otpService := application.NewOTPService()
@@ -27,13 +27,22 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 
-	routerGroup.POST("/register", userController.Register)
-	routerGroup.POST("/register/verify", userController.VerifyEmail)
-	routerGroup.POST("/login", userController.Login)
-	routerGroup.POST("/forgot-password", userController.ForgotPassword)
-	routerGroup.POST("/confirm-otp", userController.ConfirmOTP)
-	routerGroup.PUT("/reset-password", userController.ResetPassword)
-	routerGroup.POST("/refresh-token", authController.RefreshToken)
+	public := routerGroup.Group("/public")
+	{
+		events := public.Group("/events")
+		{
+			events.GET("") // some api here
+		}
+	}
 
-	return routerGroup
+	auth := routerGroup.Group("/auth")
+	{
+		auth.POST("/register", userController.Register)
+		auth.POST("/register/verify", userController.VerifyEmail)
+		auth.POST("/login", userController.Login)
+		auth.POST("/forgot-password", userController.ForgotPassword)
+		auth.POST("/confirm-otp", userController.ConfirmOTP)
+		auth.PUT("/reset-password", userController.ResetPassword)
+		auth.POST("/refresh-token", authController.RefreshToken)
+	}
 }

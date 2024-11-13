@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"first-project/src/bootstrap"
-	"first-project/src/enums"
+	"first-project/src/entities"
 	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
 
@@ -14,7 +14,7 @@ import (
 type UserCacheData struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
-	Roles []enums.RoleType
+	Roles []entities.Role
 }
 
 type UserCache struct {

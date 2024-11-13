@@ -18,6 +18,7 @@ type Context struct {
 	IsLoadedJWTKeys              string
 	AccessToken                  string
 	RefreshToken                 string
+	UserID                       string
 }
 
 type ErrorField struct {
@@ -57,6 +58,7 @@ func NewConstants() *Constants {
 			IsLoadedJWTKeys:              "isLoadedJWTKeys",
 			AccessToken:                  "access_token",
 			RefreshToken:                 "refresh_token",
+			UserID:                       "userID",
 		},
 		ErrorField: ErrorField{
 			Username: "username",
