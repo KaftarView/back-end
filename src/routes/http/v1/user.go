@@ -31,13 +31,22 @@ func SetupUserRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	awsController := controller_v1_general.NewAWSController(di.Constants, awsService)
 
-	routerGroup.GET("/admin/hello", func(c *gin.Context) {
-		authMiddleware.RequirePermission(c, []enums.PermissionType{enums.ManageUsers})
-	}, userController.AdminSayHello)
 	profile := routerGroup.Group("/profile")
 	{
 		profile.GET("") // some sample
 	}
+
+	users := routerGroup.Group("/users")
+	users.Use(func(c *gin.Context) {
+		authMiddleware.RequirePermission(c, []enums.PermissionType{enums.ManageUsers})
+	})
+	{
+		users.PUT("/add-roles", userController.UpdateUserRoles)
+	}
+
+	routerGroup.GET("/admin/hello", func(c *gin.Context) {
+		authMiddleware.RequirePermission(c, []enums.PermissionType{enums.ManageUsers})
+	}, userController.AdminSayHello)
 	routerGroup.POST("/bucket/upload", awsController.UploadObjectController)
 	routerGroup.POST("/bucket/delete", awsController.DeleteObjectController)
 	routerGroup.GET("/bucket/list-objects", awsController.GetListOfObjectsController)

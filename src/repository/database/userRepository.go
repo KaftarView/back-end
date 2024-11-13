@@ -182,8 +182,14 @@ func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionT
 }
 
 func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.Role) {
-	err := repo.db.Model(&user).Association("Roles").Append(&role)
-	if err != nil {
+	exists := repo.db.Model(&user).
+		Where("id = ?", role.ID).
+		Association("Roles").
+		Count() > 0
+	if exists {
+		return
+	}
+	if err := repo.db.Model(&user).Association("Roles").Append(&role); err != nil {
 		panic(err)
 	}
 }
@@ -202,11 +208,6 @@ func (repo *UserRepository) FindUserRoleTypesByUserID(userID uint) []entities.Ro
 		panic(err)
 	}
 	return user.Roles
-	// roleTypes := make([]enums.RoleType, len(user.Roles))
-	// for i, role := range user.Roles {
-	// 	roleTypes[i] = role.Type
-	// }
-	// return roleTypes
 }
 
 func (repo *UserRepository) FindPermissionsByRole(roleID uint) []enums.PermissionType {
