@@ -195,15 +195,29 @@ func (repo *UserRepository) AssignPermissionToRole(role entities.Role, permissio
 	}
 }
 
-func (repo *UserRepository) FindUserRoleTypesByUserID(userID uint) []enums.RoleType {
+func (repo *UserRepository) FindUserRoleTypesByUserID(userID uint) []entities.Role {
 	var user entities.User
 	err := repo.db.Preload("Roles").First(&user, userID).Error
 	if err != nil {
 		panic(err)
 	}
-	roleTypes := make([]enums.RoleType, len(user.Roles))
-	for i, role := range user.Roles {
-		roleTypes[i] = role.Type
+	return user.Roles
+	// roleTypes := make([]enums.RoleType, len(user.Roles))
+	// for i, role := range user.Roles {
+	// 	roleTypes[i] = role.Type
+	// }
+	// return roleTypes
+}
+
+func (repo *UserRepository) FindPermissionsByRole(roleID uint) []enums.PermissionType {
+	var role entities.Role
+	err := repo.db.Preload("Permissions").First(&role, roleID).Error
+	if err != nil {
+		panic(err)
 	}
-	return roleTypes
+	permissionTypes := make([]enums.PermissionType, len(role.Permissions))
+	for i, permission := range role.Permissions {
+		permissionTypes[i] = permission.Type
+	}
+	return permissionTypes
 }

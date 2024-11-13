@@ -1,10 +1,13 @@
 package routes
 
 import (
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
+	middleware_authentication "first-project/src/middleware/Authentication"
 	middleware_exceptions "first-project/src/middleware/exceptions"
 	middleware_i18n "first-project/src/middleware/i18n"
 	middleware_rate_limit "first-project/src/middleware/rateLimit"
+	repository_database "first-project/src/repository/database"
 	routes_http_v1 "first-project/src/routes/http/v1"
 
 	"github.com/gin-gonic/gin"
@@ -24,38 +27,21 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client
 	v1 := ginEngine.Group("/v1")
 
 	registerGeneralRoutes(v1, di, db, rdb)
-	registerSuperAdminRoutes(v1, di, db, rdb)
-	registerEventManagerRoutes(v1, di, db, rdb)
-	registerContentManagerRoutes(v1, di, db, rdb)
-	registerEditorRoutes(v1, di, db, rdb)
-	registerModeratorRoutes(v1, di, db, rdb)
-	registerViewerRoutes(v1, di, db, rdb)
+	registerProtectedRoutes(v1, di, db, rdb)
+
 }
 
-func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
+func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
+	routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
 }
 
-func registerSuperAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupSuperAdminRoutes(v1, di, db, rdb)
-}
+func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
+	userRepository := repository_database.NewUserRepository(db)
+	jwtService := application_jwt.NewJWTToken()
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+	protected := v1.Group("")
+	protected.Use(authMiddleware.Authentication)
 
-func registerEventManagerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupEventManagerRoutes(v1, di, db, rdb)
-}
-
-func registerContentManagerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupContentManagerRoutes(v1, di, db, rdb)
-}
-
-func registerEditorRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupEditorRoutes(v1, di, db, rdb)
-}
-
-func registerModeratorRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupModeratorRoutes(v1, di, db, rdb)
-}
-
-func registerViewerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) *gin.RouterGroup {
-	return routes_http_v1.SetupViewerRoutes(v1, di, db, rdb)
+	routes_http_v1.SetupUserRoutes(protected, di, db, rdb)
+	routes_http_v1.SetupEventRoutes(protected, di, db, rdb)
 }
