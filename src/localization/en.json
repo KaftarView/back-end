@@ -22,12 +22,12 @@
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
         "emailVerification": "Email Verified.",
-        "login": "Login Successfully.",
+        "login": "Login successfully.",
         "forgotPassword": "Please check your email to enter OTP to reset your password.",
-        "resetPassword": "Password reset Successfully.",
+        "resetPassword": "Password reset successfully.",
         "refreshToken": "Your session has been extended.",
-        "createBucket": "Bucket Created Successfully.",
-        "uploadObjectToBucket": "Object added to bucket Created Successfully.",
-        "deleteObjectFromBucket": "Object deleted from bucket Created Successfully."
+        "uploadObjectToBucket": "Object added to bucket created successfully.",
+        "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
+        "updateUSerRole": "Role added to user successfully."
     }
 }

@@ -194,3 +194,26 @@ func (userService *UserService) ResetPasswordService(email, password, confirmPas
 	user, _ := userService.userRepository.FindByEmailAndVerified(email, true)
 	userService.userRepository.UpdateUserPassword(user, hashedPassword)
 }
+
+func (userService *UserService) UpdateUserRolesIfExists(email string, roles []string) {
+	var registrationError exceptions.UserRegistrationError
+	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	if !verifiedUserExist {
+		registrationError.AppendError(
+			userService.constants.ErrorField.Email,
+			userService.constants.ErrorTag.EmailNotExist)
+		panic(registrationError)
+	}
+	allowedRolesMap := make(map[string]bool)
+	for _, role := range roles {
+		allowedRolesMap[role] = true
+	}
+
+	roleTypes := enums.GetAllRoleTypes()
+	for _, roleType := range roleTypes {
+		if allowedRolesMap[roleType.String()] {
+			role, _ := userService.userRepository.FindRoleByType(roleType)
+			userService.userRepository.AssignRoleToUser(user, role)
+		}
+	}
+}

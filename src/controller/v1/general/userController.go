@@ -149,6 +149,19 @@ func (userController *UserController) ResetPassword(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (userController *UserController) UpdateUserRoles(c *gin.Context) {
+	type userRolesParams struct {
+		Email string   `json:"email" validate:"required"`
+		Roles []string `json:"roles" validate:"required"`
+	}
+	param := controller.Validated[userRolesParams](c, &userController.constants.Context)
+	userController.userService.UpdateUserRolesIfExists(param.Email, param.Roles)
+
+	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateUSerRole")
+	controller.Response(c, 200, message, nil)
+}
+
 func (userController *UserController) AdminSayHello(c *gin.Context) {
 	controller.Response(c, 200, "Hello From Admin", nil)
 }

@@ -61,15 +61,15 @@ func (am *AuthMiddleware) RequirePermission(c *gin.Context, allowedPermissions [
 }
 
 func (am *AuthMiddleware) isAllowRole(allowedPermissions []enums.PermissionType, userRoles []entities.Role) bool {
-	allowedRolesMap := make(map[enums.PermissionType]bool)
+	allowedPermissionMap := make(map[enums.PermissionType]bool)
 	for _, permission := range allowedPermissions {
-		allowedRolesMap[permission] = true
+		allowedPermissionMap[permission] = true
 	}
 
 	for _, userRole := range userRoles {
 		permissions := am.userRepository.FindPermissionsByRole(userRole.ID)
 		for _, permission := range permissions {
-			if allowedRolesMap[permission] {
+			if allowedPermissionMap[permission] {
 				return true
 			}
 		}
