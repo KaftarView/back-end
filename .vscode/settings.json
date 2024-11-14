@@ -16,6 +16,7 @@
         "sess",
         "smpt",
         "tmpl",
+        "unpublish",
         "varchar"
     ]
 }

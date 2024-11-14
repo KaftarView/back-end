@@ -53,6 +53,12 @@ func main() {
 		&entities.User{},
 		&entities.Role{},
 		&entities.Permission{},
+		&entities.Event{},
+		&entities.Comment{},
+		&entities.Communication{},
+		&entities.Discount{},
+		&entities.Organizer{},
+		&entities.Ticket{},
 	)
 
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
