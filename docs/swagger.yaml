@@ -1,0 +1,43 @@
+definitions:
+  controller_v1_general.SwaggerResponseMessage:
+    properties:
+      message:
+        description: Message describing the response
+        type: string
+      status:
+        description: Status code (e.g., 200, 400, etc.)
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with username, email, and password
+      parameters:
+      - description: User Registration
+        in: body
+        name: registerParams
+        required: true
+        schema: {}
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            $ref: '#/definitions/controller_v1_general.SwaggerResponseMessage'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/controller_v1_general.SwaggerResponseMessage'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/controller_v1_general.SwaggerResponseMessage'
+      summary: Register a new user
+      tags:
+      - User
+swagger: "2.0"
