@@ -31,3 +31,11 @@ func GetAllCategoryTypes() []CategoryType {
 		Contests,
 	}
 }
+
+func GetAllCategoryStrings() []string {
+	var categories []string
+	for _, category := range GetAllCategoryTypes() {
+		categories = append(categories, category.String())
+	}
+	return categories
+}
