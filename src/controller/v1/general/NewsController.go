@@ -7,6 +7,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -158,17 +159,29 @@ func (nc *NewsController) GetTopKNews(c *gin.Context) {
 
 	controller.Response(c, 200, "Success", topKNews)
 }
-
 func (nc *NewsController) GetNewsByCategory(c *gin.Context) {
-	categoryParam := c.Param("category")
-	category, err := strconv.Atoi(categoryParam)
-	if err != nil {
-		controller.Response(c, 400, "Invalid category", nil)
+	var requestBody struct {
+		Categories []string `json:"categories"`
+	}
+
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		controller.Response(c, 400, "Invalid input", nil)
 		return
 	}
 
-	categories := []enums.CategoryType{enums.CategoryType(category)}
-	newsList, err := nc.newsService.GetAllNews(categories, 0, 0)
+	var categories []enums.CategoryType
+	for _, categoryName := range requestBody.Categories {
+		category, err := enums.GetCategoryTypeByName(categoryName)
+		if err != nil {
+			controller.Response(c, 400, "Invalid category name: "+categoryName, nil)
+			return
+		}
+		categories = append(categories, category)
+	}
+	var c2 enums.CategoryType = enums.Public
+	log.Printf("C3 %v ", uint(c2))
+	log.Printf("Categories %v ", categories)
+	newsList, err := nc.newsService.GetAllNews(categories, 10, 0) // Limit and Offset can be dynamic
 	if err != nil {
 		controller.Response(c, 500, "Error fetching news by category", nil)
 		return

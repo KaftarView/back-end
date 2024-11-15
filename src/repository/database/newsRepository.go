@@ -3,6 +3,7 @@ package repository_database
 import (
 	"first-project/src/entities"
 	"first-project/src/enums"
+	"log"
 	"time"
 
 	"gorm.io/gorm"
@@ -53,13 +54,25 @@ func (repo *NewsRepository) DeleteNews(id uint) error {
 func (repo *NewsRepository) GetAllNews(categories []enums.CategoryType, limit int, offset int) ([]entities.News, error) {
 	var news []entities.News
 	query := repo.db
+
 	if len(categories) > 0 {
 		query = query.Where("category IN ?", categories)
+		log.Printf("Applied category filter: %v", categories)
 	}
+
+	log.Printf("Categories before query: %v", categories)
+
+	query = query.Debug() // Enable debugging to log SQL and params
+
 	err := query.Limit(limit).Offset(offset).Find(&news).Error
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("Generated SQL Query: %s", query.Statement.SQL.String())
+	log.Printf("SQL Vars: %v", query.Statement.Vars)
+	log.Printf("Query executed successfully. Retrieved %d news items.", len(news))
+
 	return news, nil
 }
 

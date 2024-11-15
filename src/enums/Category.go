@@ -1,5 +1,9 @@
 package enums
 
+import (
+	"errors"
+)
+
 type CategoryType uint
 
 const (
@@ -38,4 +42,19 @@ func GetAllCategoryStrings() []string {
 		categories = append(categories, category.String())
 	}
 	return categories
+}
+
+var stringToCategoryType = map[string]CategoryType{
+	"Public":   Public,
+	"Courses":  Courses,
+	"Events":   Events,
+	"Contests": Contests,
+}
+
+func GetCategoryTypeByName(name string) (CategoryType, error) {
+	category, exists := stringToCategoryType[name]
+	if !exists {
+		return 0, errors.New("invalid category name")
+	}
+	return category, nil
 }

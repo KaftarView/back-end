@@ -17,7 +17,7 @@ func SetupNewsRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB
 
 	news := routerGroup.Group("/news")
 	{
-		news.POST("", newsController.CreateNews)
+		news.POST("/create", newsController.CreateNews)
 		news.GET("/:id", newsController.GetNewsByID)
 		news.PUT("/:id", newsController.UpdateNews)
 		news.DELETE("/:id", newsController.DeleteNews)
