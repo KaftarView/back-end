@@ -5,6 +5,8 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/entities"
+	"first-project/src/enums"
+	"first-project/src/exceptions"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -48,8 +50,8 @@ func (nc *NewsController) GetNewsByID(c *gin.Context) {
 
 	news, err := nc.newsService.GetNewsByID(uint(id))
 	if err != nil {
-		//notFoundError := exceptions.NewNotFoundError("News not found") // should be handled in exceptions
-		panic(err)
+		notFoundError := exceptions.NewNotFoundInDatabaseError() // should be handled in exceptions?
+		panic(notFoundError)
 	}
 
 	controller.Response(c, 200, "Success", news)
@@ -95,4 +97,82 @@ func (nc *NewsController) DeleteNews(c *gin.Context) {
 	}
 
 	controller.Response(c, 200, "News deleted successfully", nil)
+}
+
+func (nc *NewsController) GetNewsList(c *gin.Context) {
+	categories := c.QueryArray("categories")
+	var parsedCategories []enums.CategoryType
+	for _, category := range categories {
+		parsedCategory, err := strconv.Atoi(category)
+		if err != nil {
+			controller.Response(c, 400, "Invalid category", nil)
+			return
+		}
+		parsedCategories = append(parsedCategories, enums.CategoryType(parsedCategory))
+	}
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil || limit <= 0 {
+		controller.Response(c, 400, "Invalid limit", nil)
+		return
+	}
+
+	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if err != nil || offset < 0 {
+		controller.Response(c, 400, "Invalid offset", nil)
+		return
+	}
+
+	newsList, err := nc.newsService.GetAllNews(parsedCategories, limit, offset)
+	if err != nil {
+		controller.Response(c, 500, "Error fetching news list", nil)
+		return
+	}
+
+	controller.Response(c, 200, "Success", newsList)
+}
+
+func (nc *NewsController) GetTopKNews(c *gin.Context) {
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "5"))
+	if err != nil || limit <= 0 {
+		controller.Response(c, 400, "Invalid limit", nil)
+		return
+	}
+
+	categories := c.QueryArray("categories")
+	var parsedCategories []enums.CategoryType
+	for _, category := range categories {
+		parsedCategory, err := strconv.Atoi(category)
+		if err != nil {
+			controller.Response(c, 400, "Invalid category", nil)
+			return
+		}
+		parsedCategories = append(parsedCategories, enums.CategoryType(parsedCategory))
+	}
+
+	topKNews, err := nc.newsService.GetTopKNews(limit, parsedCategories)
+	if err != nil {
+		controller.Response(c, 500, "Error fetching top K news", nil)
+		return
+	}
+
+	controller.Response(c, 200, "Success", topKNews)
+}
+
+func (nc *NewsController) GetNewsByCategory(c *gin.Context) {
+	categoryParam := c.Param("category")
+	category, err := strconv.Atoi(categoryParam)
+	if err != nil {
+		controller.Response(c, 400, "Invalid category", nil)
+		return
+	}
+
+	categories := []enums.CategoryType{enums.CategoryType(category)}
+	newsList, err := nc.newsService.GetAllNews(categories, 0, 0)
+	if err != nil {
+		controller.Response(c, 500, "Error fetching news by category", nil)
+		return
+	}
+
+	controller.Response(c, 200, "Success", newsList)
 }
