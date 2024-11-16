@@ -5,20 +5,16 @@ import (
 )
 
 type Constants struct {
-	Context       Context
-	ErrorField    ErrorField
-	ErrorTag      ErrorTag
-	Redis         Redis
-	ObjectStorage Object
+	Context    Context
+	ErrorField ErrorField
+	ErrorTag   ErrorTag
+	Redis      Redis
 }
 
 type Context struct {
-	Translator                   string
-	IsLoadedValidationTranslator string
-	IsLoadedJWTKeys              string
-	AccessToken                  string
-	RefreshToken                 string
-	UserID                       string
+	Translator                    string
+	IsLoadedValidationTranslator  string
+	IsLoadedCustomValidationError string
 }
 
 type ErrorField struct {
@@ -36,29 +32,22 @@ type ErrorTag struct {
 	ContainsNumber          string
 	ContainsSpecialChar     string
 	NotMatchConfirmPAssword string
-	AlreadyVerified         string
-	ExpiredToken            string
 	InvalidToken            string
+	AlreadyVerified         string
+	OTPExpired              string
+	InvalidOTP              string
 	LoginFailed             string
-	EmailNotExist           string
-	Required                string
 }
 
 type Redis struct {
 }
 
-type Object struct {
-}
-
 func NewConstants() *Constants {
 	return &Constants{
 		Context: Context{
-			Translator:                   "translator",
-			IsLoadedValidationTranslator: "isLoadedValidationTranslator",
-			IsLoadedJWTKeys:              "isLoadedJWTKeys",
-			AccessToken:                  "access_token",
-			RefreshToken:                 "refresh_token",
-			UserID:                       "userID",
+			Translator:                    "translator",
+			IsLoadedValidationTranslator:  "isLoadedValidationTranslator",
+			IsLoadedCustomValidationError: "isLoadedCustomValidationError",
 		},
 		ErrorField: ErrorField{
 			Username: "username",
@@ -68,18 +57,17 @@ func NewConstants() *Constants {
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
-			MinimumLength:           "minimumLength",
 			ContainsLowercase:       "containsLowercase",
+			MinimumLength:           "minimumLength",
 			ContainsUppercase:       "containsUppercase",
 			ContainsNumber:          "containsNumber",
 			ContainsSpecialChar:     "containsSpecialChar",
 			NotMatchConfirmPAssword: "notMatchConfirmPAssword",
-			AlreadyVerified:         "alreadyVerified",
-			ExpiredToken:            "expiredToken",
 			InvalidToken:            "invalidToken",
+			AlreadyVerified:         "alreadyVerified",
+			OTPExpired:              "expiredOTP",
+			InvalidOTP:              "invalidOTP",
 			LoginFailed:             "loginFailed",
-			EmailNotExist:           "emailNotExist",
-			Required:                "required",
 		},
 		Redis: Redis{},
 	}
@@ -87,8 +75,4 @@ func NewConstants() *Constants {
 
 func (r *Redis) GetUserID(userID int) string {
 	return fmt.Sprintf("user:%d", userID)
-}
-
-func (o *Object) GetObjectKey(objectID int, objectTittle, objectName string) string {
-	return fmt.Sprintf("%s/%d/%s", objectTittle, objectID, objectName)
 }

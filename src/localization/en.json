@@ -8,26 +8,15 @@
         "containsUppercase": "The `{0}` should contain lowercase.",
         "containsNumber": "The `{0}` should contain lowercase.",
         "containsSpecialChar": "The `{0}` should contain lowercase.",
-        "notMatchConfirmPAssword": "password and confirm password are not match.",
-        "alreadyVerified": "User Already Verified.",
-        "expiredToken": "Token is expired.",
         "invalidToken": "Token is invalid.",
-        "loginFailed": "Login failed. Please check your username and password, and ensure your account is activated.",
-        "emailNotExist": "You should register first.",
-        "rateLimitExceed": "Rate limit exceeded.",
-        "forbidden": "Access Denied.",
-        "unauthorized": "There was an issue with your authentication. Please try again.",
-        "fileRequired": "File is required."
+        "alreadyVerified": "User Already Verified.",
+        "expiredOTP": "Input one time password is expired.",
+        "invalidOTP": "Input one time password is invalid.",
+        "notMatchConfirmPAssword": "password and confirm password are not match."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
         "emailVerification": "Email Verified.",
-        "login": "Login successfully.",
-        "forgotPassword": "Please check your email to enter OTP to reset your password.",
-        "resetPassword": "Password reset successfully.",
-        "refreshToken": "Your session has been extended.",
-        "uploadObjectToBucket": "Object added to bucket created successfully.",
-        "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
-        "updateUSerRole": "Role added to user successfully."
+        "login": "Login Successfully."
     }
 }

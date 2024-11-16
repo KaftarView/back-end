@@ -1,21 +1,13 @@
 {
     "cSpell.words": [
-        "aerr",
-        "awserr",
-        "AWSS",
         "galidator",
-        "gocron",
         "godotenv",
         "golodash",
         "gonic",
         "gorm",
         "Inno",
-        "joho",
         "nicksnyder",
-        "Presign",
-        "sess",
         "smpt",
-        "tmpl",
         "varchar"
     ]
 }

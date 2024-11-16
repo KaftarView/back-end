@@ -4,10 +4,10 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Name     string
-	Email    string
-	Password string
-	Token    string
-	Verified bool
-	Roles    []Role `gorm:"many2many:user_roles;"`
+	Name              string
+	Email             string
+	Password          string
+	OTP               string
+	Verified          bool
+	PreviousPasswords []Password `gorm:"foreignKey:UserID"`
 }
