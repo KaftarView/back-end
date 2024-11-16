@@ -17,3 +17,13 @@ type News struct {
 	Author      string             `gorm:"type:varchar(100);not null" json:"author"`
 	PublishedAt time.Time          `gorm:"type:timestamp;not null;index" json:"published_at"`
 }
+
+type NewsDTO struct {
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description"`
+	Content     string `json:"content" binding:"required"`
+	ImageURL    string `json:"image_url"`
+	Category    string `json:"category" binding:"required"`
+	Author      string `json:"author" binding:"required"`
+	PublishedAt string `json:"published_at" binding:"required"`
+}

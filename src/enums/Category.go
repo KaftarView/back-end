@@ -2,6 +2,7 @@ package enums
 
 import (
 	"errors"
+	"first-project/src/exceptions"
 )
 
 type CategoryType uint
@@ -51,6 +52,12 @@ var stringToCategoryType = map[string]CategoryType{
 	"Contests": Contests,
 }
 
+func StringToCategoryType(category string) (CategoryType, error) {
+	if value, exists := stringToCategoryType[category]; exists {
+		return value, nil
+	}
+	return 0, exceptions.NewNotFoundInDatabaseError()
+}
 func GetCategoryTypeByName(name string) (CategoryType, error) {
 	category, exists := stringToCategoryType[name]
 	if !exists {

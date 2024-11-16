@@ -9,6 +9,7 @@ import (
 	"first-project/src/exceptions"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,10 +27,32 @@ func NewNewsController(constants *bootstrap.Constants, newsService *application_
 }
 
 func (nc *NewsController) CreateNews(c *gin.Context) {
-	var newNews entities.News
-	if err := c.ShouldBindJSON(&newNews); err != nil {
+	var newsDTO entities.NewsDTO
+	if err := c.ShouldBindJSON(&newsDTO); err != nil {
 		controller.Response(c, 400, "Invalid input", nil)
 		return
+	}
+
+	categoryType, err := enums.StringToCategoryType(newsDTO.Category)
+	if err != nil {
+		controller.Response(c, 400, "Invalid category", nil)
+		return
+	}
+
+	publishedAt, err := time.Parse(time.RFC3339, newsDTO.PublishedAt)
+	if err != nil {
+		controller.Response(c, 400, "Invalid published_at format", nil)
+		return
+	}
+
+	newNews := entities.News{
+		Title:       newsDTO.Title,
+		Description: newsDTO.Description,
+		Content:     newsDTO.Content,
+		ImageURL:    newsDTO.ImageURL,
+		Category:    categoryType,
+		Author:      newsDTO.Author,
+		PublishedAt: publishedAt,
 	}
 
 	createdNews, err := nc.newsService.CreateNews(newNews)
