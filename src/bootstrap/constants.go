@@ -26,6 +26,8 @@ type ErrorField struct {
 	Password string
 	Email    string
 	OTP      string
+	Tittle   string
+	Location string
 }
 
 type ErrorTag struct {
@@ -42,6 +44,7 @@ type ErrorTag struct {
 	LoginFailed             string
 	EmailNotExist           string
 	Required                string
+	LocationAlreadyTaken    string
 }
 
 type Redis struct {
@@ -65,6 +68,8 @@ func NewConstants() *Constants {
 			Password: "password",
 			Email:    "email",
 			OTP:      "OTP",
+			Tittle:   "tittle",
+			Location: "location",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
@@ -80,6 +85,7 @@ func NewConstants() *Constants {
 			LoginFailed:             "loginFailed",
 			EmailNotExist:           "emailNotExist",
 			Required:                "required",
+			LocationAlreadyTaken:    "locationAlreadyTaken",
 		},
 		Redis: Redis{},
 	}

@@ -1,6 +1,8 @@
 package routes_http_v1
 
 import (
+	"first-project/src/application"
+	application_aws "first-project/src/application/aws"
 	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
@@ -15,39 +17,39 @@ import (
 
 func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
+	eventRepository := repository_database.NewEventRepository(db)
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
-	eventController := controller_v1_event.NewEventController()
+	eventService := application.NewEventService(di.Constants, eventRepository)
+	awsService := application_aws.NewAWSS3(di.Constants, &di.Env.PrimaryBucket)
+	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService)
+
 	events := routerGroup.Group("/events")
 	{
 		read := events.Group("")
-		read.Use(func(c *gin.Context) {
-			authMiddleware.RequirePermission(c, []enums.PermissionType{enums.CreateEvent})
-		})
+		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ViewReports}))
 		{
-			events.GET("", eventController.ListEvents)
-			events.GET("/:id", eventController.GetEvent)
+			read.GET("", eventController.ListEvents)
+			read.GET("/:id", eventController.GetEvent)
 		}
 
-		events.POST("", func(c *gin.Context) {
-			authMiddleware.RequirePermission(c, []enums.PermissionType{enums.CreateEvent})
-		}, eventController.CreateEvent)
-
-		createOrEdit := events.Group("")
-		createOrEdit.Use(func(c *gin.Context) {
-			authMiddleware.RequirePermission(c, []enums.PermissionType{enums.CreateEvent, enums.EditEvent})
-		})
+		create := events.Group("")
+		create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
 		{
-			createOrEdit.PUT("/:id", eventController.UpdateEvent)
-			createOrEdit.DELETE("/:id", eventController.DeleteEvent)
-			createOrEdit.POST("/:id/media", eventController.UploadEventMedia)
-			createOrEdit.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
+			create.POST("/create", eventController.CreateEvent)
+		}
+
+		updateOrDelete := events.Group("")
+		updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		{
+			updateOrDelete.PUT("/:id", eventController.UpdateEvent)
+			updateOrDelete.DELETE("/:id", eventController.DeleteEvent)
+			updateOrDelete.POST("/:id/media", eventController.UploadEventMedia)
+			updateOrDelete.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
 		}
 
 		publish := events.Group("")
-		publish.Use(func(c *gin.Context) {
-			authMiddleware.RequirePermission(c, []enums.PermissionType{enums.PublishEvent})
-		})
+		publish.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.PublishEvent}))
 		{
 			publish.POST("/:id/publish", eventController.PublishEvent)
 			publish.POST("/:id/unpublish", eventController.UnpublishEvent)

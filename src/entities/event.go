@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"first-project/src/enums"
 	"time"
 
 	"gorm.io/gorm"
@@ -8,15 +9,16 @@ import (
 
 type Event struct {
 	gorm.Model
-	Status      string    `gorm:"type:enum('draft','published','cancelled','completed');default:'draft'"`
-	Category    string    `gorm:"type:varchar(50);index"`
-	Description string    `gorm:"type:text"`
-	FromDate    time.Time `gorm:"not null;index"`
-	ToDate      time.Time `gorm:"not null"`
-	MinCapacity uint      `gorm:"not null"`
-	MaxCapacity uint      `gorm:"not null"`
-	VenueType   string    `gorm:"type:enum('online','physical','hybrid');not null"`
-	Location    string    `gorm:"type:text"`
+	Name        string            `gorm:"type:varchar(50);not null"`
+	Status      enums.EventStatus ``
+	Category    string            `gorm:"type:varchar(50);index"`
+	Description string            `gorm:"type:text"`
+	FromDate    time.Time         `gorm:"not null;index"`
+	ToDate      time.Time         `gorm:"not null"`
+	MinCapacity uint              `gorm:"not null"`
+	MaxCapacity uint              `gorm:"not null"`
+	VenueType   enums.EventVenue  ``
+	Location    string            `gorm:"type:text"`
 
 	Organizers     []Organizer     `gorm:"many2many:event_organizers"`
 	Attendees      []User          `gorm:"many2many:event_attendees"`
