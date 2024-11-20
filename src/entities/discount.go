@@ -8,7 +8,6 @@ import (
 
 type Discount struct {
 	gorm.Model
-	EventID    uint      `gorm:"not null;index"`
 	Code       string    `gorm:"type:varchar(50);uniqueIndex"`
 	Type       string    `gorm:"type:enum('percentage','fixed');not null"`
 	Value      float64   `gorm:"not null"`
@@ -17,4 +16,8 @@ type Discount struct {
 	MaxUsage   uint      `gorm:"default:0"`
 	UsedCount  uint      `gorm:"default:0"`
 	MinTickets uint      `gorm:"default:1"`
+	// EventID    uint      `gorm:"not null;index"`
+	// Event      Event     `gorm:"-"`
+	EventID uint  `gorm:"not null"`
+	Event   Event `gorm:"foreignKey:EventID"`
 }

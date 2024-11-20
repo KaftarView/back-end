@@ -59,10 +59,12 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 		}
 	}
 
+	// categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+
 	eventDetailsModel := entities.Event{
-		Name:        eventDetails.Name,
-		Status:      enumStatus,
-		Category:    eventDetails.Category,
+		Name:   eventDetails.Name,
+		Status: enumStatus,
+		// Categories:  categories,
 		Description: eventDetails.Description,
 		FromDate:    eventDetails.FromDate,
 		ToDate:      eventDetails.ToDate,

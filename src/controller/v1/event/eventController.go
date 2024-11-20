@@ -42,7 +42,6 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 	type createEventParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`
 		Status      string                `form:"status"`
-		Category    string                `form:"category"` // you can put some validate for this one
 		Description string                `form:"description"`
 		FromDate    time.Time             `form:"from-date" validate:"required"`
 		ToDate      time.Time             `form:"to-date" validate:"required,gtfield=FromDate"`
@@ -51,6 +50,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 		VenueType   string                `form:"venue-type" validate:"required"`
 		Location    string                `form:"location"`
 		Banner      *multipart.FileHeader `form:"banner"`
+		Categories  []string              `form:"category"`
 	}
 	param := controller.Validated[createEventParams](c, &eventController.constants.Context)
 	eventController.eventService.ValidateEventCreationDetails(
@@ -60,7 +60,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 	eventDetails := dto.CreateEventDetails{
 		Name:        param.Name,
 		Status:      param.Status,
-		Category:    param.Category,
+		Categories:  param.Categories,
 		Description: param.Description,
 		FromDate:    param.FromDate,
 		ToDate:      param.ToDate,

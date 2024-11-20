@@ -5,7 +5,7 @@ import "time"
 type CreateEventDetails struct {
 	Name        string
 	Status      string
-	Category    string
+	Categories  []string
 	Description string
 	FromDate    time.Time
 	ToDate      time.Time

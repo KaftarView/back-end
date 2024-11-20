@@ -72,3 +72,16 @@ func (repo *EventRepository) CreateNewEvent(event entities.Event) entities.Event
 	}
 	return event
 }
+
+func (repo *EventRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
+	var categories []entities.Category
+
+	for _, categoryName := range categoryNames {
+		var category entities.Category
+		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
+			panic(err)
+		}
+		categories = append(categories, category)
+	}
+	return categories
+}
