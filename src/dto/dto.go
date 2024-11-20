@@ -14,3 +14,15 @@ type CreateEventDetails struct {
 	VenueType   string
 	Location    string
 }
+
+type CreateTicketDetails struct {
+	Name           string
+	Description    string
+	Price          float64
+	Quantity       uint
+	SoldCount      uint
+	IsAvailable    bool
+	AvailableFrom  time.Time
+	AvailableUntil time.Time
+	EventID        uint
+}

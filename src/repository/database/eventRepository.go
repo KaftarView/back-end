@@ -85,3 +85,36 @@ func (repo *EventRepository) FindCategoriesByNames(categoryNames []string) []ent
 	}
 	return categories
 }
+
+func (repo *EventRepository) FindEventByID(eventID uint) (entities.Event, bool) {
+	var event entities.Event
+	result := repo.db.First(&event, "id = ?", eventID)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return event, false
+		}
+		panic(result.Error)
+	}
+	return event, true
+}
+
+func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID uint) (entities.Ticket, bool) {
+	var ticket entities.Ticket
+	result := repo.db.First(&ticket, "name = ? AND event_id = ?", ticketName, eventID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return ticket, false
+		}
+		panic(result.Error)
+	}
+	return ticket, true
+}
+
+func (repo *EventRepository) CreateNewTicket(ticket entities.Ticket) entities.Ticket {
+	result := repo.db.Create(&ticket)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return ticket
+}

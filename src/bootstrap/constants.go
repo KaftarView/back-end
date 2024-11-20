@@ -28,6 +28,7 @@ type ErrorField struct {
 	OTP      string
 	Tittle   string
 	Location string
+	Event    string
 }
 
 type ErrorTag struct {
@@ -70,6 +71,7 @@ func NewConstants() *Constants {
 			OTP:      "OTP",
 			Tittle:   "tittle",
 			Location: "location",
+			Event:    "event",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",

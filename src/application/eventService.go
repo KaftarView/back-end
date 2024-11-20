@@ -59,12 +59,12 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 		}
 	}
 
-	// categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
 
 	eventDetailsModel := entities.Event{
-		Name:   eventDetails.Name,
-		Status: enumStatus,
-		// Categories:  categories,
+		Name:        eventDetails.Name,
+		Status:      enumStatus,
+		Categories:  categories,
 		Description: eventDetails.Description,
 		FromDate:    eventDetails.FromDate,
 		ToDate:      eventDetails.ToDate,
@@ -75,4 +75,38 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	}
 	event := eventService.eventRepository.CreateNewEvent(eventDetailsModel)
 	return event
+}
+
+func (eventService *EventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) entities.Ticket {
+	var conflictError exceptions.ConflictError
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	ticket, ticketExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
+	if ticketExist {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Tittle,
+			eventService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	return ticket
+}
+
+func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketDetails) entities.Ticket {
+	ticketDetailsModel := entities.Ticket{
+		Name:           ticketDetails.Name,
+		Description:    ticketDetails.Description,
+		Price:          ticketDetails.Price,
+		Quantity:       ticketDetails.Quantity,
+		SoldCount:      ticketDetails.SoldCount,
+		IsAvailable:    ticketDetails.IsAvailable,
+		AvailableFrom:  ticketDetails.AvailableFrom,
+		AvailableUntil: ticketDetails.AvailableUntil,
+		EventID:        ticketDetails.EventID,
+	}
+	ticket := eventService.eventRepository.CreateNewTicket(ticketDetailsModel)
+	return ticket
 }
