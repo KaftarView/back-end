@@ -27,28 +27,29 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	events := routerGroup.Group("/events")
 	{
 		read := events.Group("")
-		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ViewReports}))
-		{
-			read.GET("", eventController.ListEvents)
-			read.GET("/:id", eventController.GetEvent)
-		}
+		// read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ViewReports}))
+		// {
+		read.GET("", eventController.ListEvents)
+		read.GET("/:id", eventController.GetEvent)
+		// }
 
 		create := events.Group("")
-		create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
-		{
-			create.POST("/create", eventController.CreateEvent)
-			create.POST("/add-ticket", eventController.AddEventTicket)
-			create.POST("/add-discount", eventController.AddEventDiscount)
-		}
+		// create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
+		// {
+		create.POST("/create", eventController.CreateEvent)
+		create.POST("/add-ticket", eventController.AddEventTicket)
+		create.POST("/add-discount", eventController.AddEventDiscount)
+		// }
 
 		updateOrDelete := events.Group("")
-		updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
-		{
-			updateOrDelete.PUT("/:id", eventController.UpdateEvent)
-			updateOrDelete.DELETE("/:id", eventController.DeleteEvent)
-			updateOrDelete.POST("/:id/media", eventController.UploadEventMedia)
-			updateOrDelete.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
-		}
+		// updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		// {
+		updateOrDelete.PUT("/Update/:id", eventController.UpdateEvent)
+		updateOrDelete.GET("/Edit/:id", eventController.EditEvent)
+		updateOrDelete.DELETE("/:id", eventController.DeleteEvent)
+		updateOrDelete.POST("/:id/media", eventController.UploadEventMedia)
+		updateOrDelete.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
+		//}
 
 		publish := events.Group("")
 		publish.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.PublishEvent}))

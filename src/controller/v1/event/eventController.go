@@ -146,8 +146,67 @@ func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) EditEvent(c *gin.Context) {
+	type editEventParams struct {
+		EventID uint `uri:"id" binding:"required"`
+	}
+	param := controller.Validated[editEventParams](c, &eventController.constants.Context)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	event, found := eventController.eventService.GetEventById(param.EventID)
+	if !found {
+		message, _ := trans.T("errorMessage.notFoundError") // pass the id ?
+		controller.Response(c, 404, message, nil)
+		return
+	}
+	message, _ := trans.T("successMessage.getEvent")
+	controller.Response(c, 200, message, event)
+}
+
 func (eventController *EventController) UpdateEvent(c *gin.Context) {
-	// some code here ...
+	type updateEventParams struct {
+		Name        *string               `form:"name" validate:"omitempty,max=50"`
+		Status      *string               `form:"status"`
+		Description *string               `form:"description"`
+		FromDate    *time.Time            `form:"from-date" validate:"omitempty"`
+		ToDate      *time.Time            `form:"to-date" validate:"omitempty,gtfield=FromDate"`
+		MinCapacity *uint                 `form:"min-capacity" validate:"omitempty,min=1"`
+		MaxCapacity *uint                 `form:"max-capacity" validate:"omitempty,gtfield=MinCapacity"`
+		VenueType   *string               `form:"venue-type" validate:"omitempty"`
+		Location    *string               `form:"location"`
+		Banner      *multipart.FileHeader `form:"banner"`
+		Categories  *[]string             `form:"category"`
+	}
+
+	type uriParams struct {
+		EventID uint `uri:"id" binding:"required"`
+	}
+
+	uriParam := controller.Validated[uriParams](c, &eventController.constants.Context)
+
+	param := controller.Validated[updateEventParams](c, &eventController.constants.Context)
+
+	eventDetails := dto.UpdateEventDetails{
+		ID:          uriParam.EventID,
+		Name:        param.Name,
+		Status:      param.Status,
+		Description: param.Description,
+		FromDate:    param.FromDate,
+		ToDate:      param.ToDate,
+		MinCapacity: param.MinCapacity,
+		MaxCapacity: param.MaxCapacity,
+		VenueType:   param.VenueType,
+		Location:    param.Location,
+		Categories:  param.Categories,
+	}
+
+	eventController.eventService.UpdateEvent(eventDetails)
+
+	// banner should be handled
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateEvent")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) DeleteEvent(c *gin.Context) {

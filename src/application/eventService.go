@@ -145,3 +145,82 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	discount := eventService.eventRepository.CreateNewDiscount(discountDetailsModel)
 	return discount
 }
+
+func (eventService *EventService) GetEventById(id uint) (entities.Event, bool) {
+	event, eventExist := eventService.eventRepository.FindEventByID(id)
+	if !eventExist {
+		return entities.Event{}, false
+	}
+	return event, true
+}
+
+func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetails) entities.Event {
+	event, eventExist := eventService.eventRepository.FindEventByID(updateDetails.ID)
+	if !eventExist {
+		var notFoundError exceptions.NotFoundError
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	if updateDetails.Name != nil {
+		_, eventExist := eventService.eventRepository.FindEventByName(*updateDetails.Name)
+		if eventExist {
+			var conflictError exceptions.ConflictError
+			conflictError.AppendError(
+				eventService.constants.ErrorField.Tittle,
+				eventService.constants.ErrorTag.AlreadyExist)
+			panic(conflictError)
+		}
+	}
+
+	if updateDetails.Status != nil {
+		statusEnum := enums.Draft
+		for _, status := range enums.GetAllEventStatus() {
+			if status.String() == *updateDetails.Status {
+				statusEnum = status
+			}
+		}
+		event.Status = statusEnum
+	}
+
+	if updateDetails.Description != nil {
+		event.Description = *updateDetails.Description
+	}
+
+	if updateDetails.FromDate != nil {
+		event.FromDate = *updateDetails.FromDate
+	}
+
+	if updateDetails.ToDate != nil {
+		event.ToDate = *updateDetails.ToDate
+	}
+
+	if updateDetails.MinCapacity != nil {
+		event.MinCapacity = *updateDetails.MinCapacity
+	}
+
+	if updateDetails.MaxCapacity != nil {
+		event.MaxCapacity = *updateDetails.MaxCapacity
+	}
+
+	if updateDetails.VenueType != nil {
+		venueEnum := enums.Online
+		for _, venue := range enums.GetAllEventVenues() {
+			if venue.String() == *updateDetails.VenueType {
+				venueEnum = venue
+			}
+		}
+		event.VenueType = venueEnum
+	}
+
+	if updateDetails.Location != nil {
+		event.Location = *updateDetails.Location
+	}
+
+	if updateDetails.Categories != nil {
+		categories := eventService.eventRepository.FindCategoriesByNames(*updateDetails.Categories)
+		event.Categories = categories
+	}
+
+	updatedEvent := eventService.eventRepository.UpdateEvent(event)
+	return updatedEvent
+}

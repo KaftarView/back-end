@@ -46,6 +46,19 @@ func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location strin
 	return existingEvent, true
 }
 
+func (repo *EventRepository) FindEventByName(name string) (entities.Event, bool) {
+	var existingEvent entities.Event
+	query := repo.db.Where("name = ? AND status != ?", name, enums.Cancelled)
+	result := query.First(&existingEvent)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return existingEvent, false
+		}
+		panic(result.Error)
+	}
+	return existingEvent, true
+}
+
 func (repo *EventRepository) CreateNewEvent(event entities.Event) entities.Event {
 	result := repo.db.Create(&event)
 	if result.Error != nil {
@@ -118,4 +131,11 @@ func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entit
 		panic(result.Error)
 	}
 	return discount
+}
+
+func (repo *EventRepository) UpdateEvent(event entities.Event) entities.Event {
+	if err := repo.db.Save(&event).Error; err != nil {
+		panic(err)
+	}
+	return event
 }
