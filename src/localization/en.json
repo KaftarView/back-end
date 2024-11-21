@@ -21,6 +21,7 @@
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
+        "NewsCreation" : "News created successfully.",
         "emailVerification": "Email Verified.",
         "login": "Login successfully.",
         "forgotPassword": "Please check your email to enter OTP to reset your password.",
@@ -28,6 +29,7 @@
         "refreshToken": "Your session has been extended.",
         "uploadObjectToBucket": "Object added to bucket created successfully.",
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
-        "updateUSerRole": "Role added to user successfully."
+        "updateUSerRole": "Role added to user successfully.",
+        "NewsUpdated" : "News updated successfully."
     }
 }

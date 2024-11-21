@@ -53,6 +53,7 @@ func main() {
 		&entities.User{},
 		&entities.Role{},
 		&entities.Permission{},
+		&entities.News{},
 	)
 
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
