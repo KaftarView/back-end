@@ -118,3 +118,23 @@ func (repo *EventRepository) CreateNewTicket(ticket entities.Ticket) entities.Ti
 	}
 	return ticket
 }
+
+func (repo *EventRepository) FindEventDiscountByCode(discountCode string, eventID uint) (entities.Discount, bool) {
+	var discount entities.Discount
+	result := repo.db.First(&discount, "code = ? AND event_id = ?", discountCode, eventID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return discount, false
+		}
+		panic(result.Error)
+	}
+	return discount, true
+}
+
+func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entities.Discount {
+	result := repo.db.Create(&discount)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return discount
+}

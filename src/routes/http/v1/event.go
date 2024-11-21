@@ -37,7 +37,8 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
 		{
 			create.POST("/create", eventController.CreateEvent)
-			create.POST("/add-ticket/:id", eventController.AddEventTicket)
+			create.POST("/add-ticket", eventController.AddEventTicket)
+			create.POST("/add-discount", eventController.AddEventDiscount)
 		}
 
 		updateOrDelete := events.Group("")

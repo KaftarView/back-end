@@ -26,3 +26,15 @@ type CreateTicketDetails struct {
 	AvailableUntil time.Time
 	EventID        uint
 }
+
+type CreateDiscountDetails struct {
+	Code       string
+	Type       string
+	Value      float64
+	ValidFrom  time.Time
+	ValidUntil time.Time
+	Quantity   uint
+	UsedCount  uint
+	MinTickets uint
+	EventID    uint
+}

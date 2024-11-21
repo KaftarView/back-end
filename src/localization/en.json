@@ -31,6 +31,7 @@
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
         "updateUSerRole": "Role added to user successfully.",
         "createEvent": "Event added successfully.",
-        "addTicket": "Ticket added successfully."
+        "addTicket": "Ticket added successfully.",
+        "addDiscount": "Discount added successfully."
     }
 }

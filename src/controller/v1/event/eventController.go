@@ -89,7 +89,7 @@ func (eventController *EventController) AddEventTicket(c *gin.Context) {
 		IsAvailable    bool      `json:"is-available" validate:"required"`
 		AvailableFrom  time.Time `json:"available-from" validate:"required"`
 		AvailableUntil time.Time `json:"available-until" validate:"required,gtfield=AvailableFrom"`
-		EventID        uint      `uri:"event-id" validate:"required"`
+		EventID        uint      `json:"event-id" validate:"required"`
 	}
 	param := controller.Validated[addEventTicketParams](c, &eventController.constants.Context)
 	eventController.eventService.ValidateNewEventTicketDetails(param.Name, param.EventID)
@@ -109,6 +109,40 @@ func (eventController *EventController) AddEventTicket(c *gin.Context) {
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.addTicket")
+	controller.Response(c, 200, message, nil)
+}
+
+func (eventController *EventController) AddEventDiscount(c *gin.Context) {
+	type addEventDiscountParams struct {
+		Code       string    `json:"code" validate:"required,max=50"`
+		Type       string    `json:"type" validate:"required"`
+		Value      float64   `json:"value" validate:"required"`
+		ValidFrom  time.Time `json:"valid_from" validate:"required"`
+		ValidUntil time.Time `json:"valid_until" validate:"required,gtfield=ValidFrom"`
+		Quantity   uint      `json:"quantity" validate:"required"`
+		UsedCount  uint      `json:"used_count"`
+		MinTickets uint      `json:"min_tickets"`
+		EventID    uint      `json:"event_id" validate:"required"`
+	}
+
+	param := controller.Validated[addEventDiscountParams](c, &eventController.constants.Context)
+	eventController.eventService.ValidateNewEventDiscountDetails(param.Code, param.EventID)
+
+	discountDetails := dto.CreateDiscountDetails{
+		Code:       param.Code,
+		Type:       param.Type,
+		Value:      param.Value,
+		ValidFrom:  param.ValidFrom,
+		ValidUntil: param.ValidUntil,
+		Quantity:   param.Quantity,
+		UsedCount:  param.UsedCount,
+		MinTickets: param.MinTickets,
+		EventID:    param.EventID,
+	}
+	eventController.eventService.CreateEventDiscount(discountDetails)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.addDiscount")
 	controller.Response(c, 200, message, nil)
 }
 

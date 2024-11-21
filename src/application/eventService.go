@@ -88,7 +88,7 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
 	if ticketExist {
 		conflictError.AppendError(
-			eventService.constants.ErrorField.Tittle,
+			eventService.constants.ErrorField.Event,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
@@ -109,4 +109,46 @@ func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTick
 	}
 	ticket := eventService.eventRepository.CreateNewTicket(ticketDetailsModel)
 	return ticket
+}
+
+func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode string, eventID uint) entities.Discount {
+	var conflictError exceptions.ConflictError
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	discount, discountExist := eventService.eventRepository.FindEventDiscountByCode(discountCode, eventID)
+	if discountExist {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Event,
+			eventService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	return discount
+}
+
+func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountDetails) entities.Discount {
+	var enumDiscountType enums.DiscountType
+	discountTypes := enums.GetAllDiscountTypes()
+	for _, discountType := range discountTypes {
+		if discountType.String() == discountDetails.Type {
+			enumDiscountType = discountType
+		}
+	}
+
+	discountDetailsModel := entities.Discount{
+		Code:       discountDetails.Code,
+		Type:       enumDiscountType,
+		Value:      discountDetails.Value,
+		ValidFrom:  discountDetails.ValidFrom,
+		ValidUntil: discountDetails.ValidUntil,
+		Quantity:   discountDetails.Quantity,
+		UsedCount:  discountDetails.UsedCount,
+		MinTickets: discountDetails.MinTickets,
+		EventID:    discountDetails.EventID,
+	}
+	discount := eventService.eventRepository.CreateNewDiscount(discountDetailsModel)
+	return discount
 }
