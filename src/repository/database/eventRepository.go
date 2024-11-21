@@ -46,25 +46,6 @@ func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location strin
 	return existingEvent, true
 }
 
-func (repo *EventRepository) CheckVenueAvailability(venueType, location string, fromDate, toDate time.Time) (entities.Event, bool) {
-	var event entities.Event
-	if venueType == enums.Online.String() {
-		return event, true
-	}
-
-	result := repo.db.First(&event).
-		Where("location = ? AND status != ?", location, enums.Cancelled).
-		Where("(from_date, to_date) OVERLAPS (?, ?)", fromDate, toDate)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return event, true
-		}
-		panic(result.Error)
-	}
-	return event, false
-}
-
 func (repo *EventRepository) CreateNewEvent(event entities.Event) entities.Event {
 	result := repo.db.Create(&event)
 	if result.Error != nil {

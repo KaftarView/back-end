@@ -53,6 +53,8 @@ func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err erro
 		handleUnauthorizedError(c, recovery.constants.Translator)
 	} else if _, ok := err.(exceptions.RateLimitError); ok {
 		handleRateLimitError(c, recovery.constants.Translator)
+	} else if notFoundError, ok := err.(exceptions.NotFoundError); ok {
+		handleNotFoundError(c, notFoundError, recovery.constants.Translator)
 	} else {
 		unhandledErrors(c, err, recovery.constants.Translator)
 	}
@@ -135,6 +137,12 @@ func handleRateLimitError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.rateLimitExceed")
 	controller.Response(c, 429, message, nil)
+}
+
+func handleNotFoundError(c *gin.Context, notFoundError exceptions.NotFoundError, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.notFoundError", notFoundError.ErrorField)
+	controller.Response(c, 404, message, nil)
 }
 
 func unhandledErrors(c *gin.Context, err error, transKey string) {

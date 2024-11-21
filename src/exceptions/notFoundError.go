@@ -12,7 +12,3 @@ func (e NotFoundError) Error() string {
 	}
 	return fmt.Sprintf("404 %s Not Found", e.ErrorField)
 }
-
-func (e NotFoundError) FieldErrors() string {
-	return e.ErrorField
-}

@@ -33,13 +33,6 @@ func (eventService *EventService) ValidateEventCreationDetails(
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	_, available := eventService.eventRepository.CheckVenueAvailability(venueType, location, fromDate, toDate)
-	if !available {
-		conflictError.AppendError(
-			eventService.constants.ErrorField.Location,
-			eventService.constants.ErrorTag.AlreadyExist)
-		panic(conflictError)
-	}
 }
 
 func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetails) entities.Event {
@@ -88,7 +81,7 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
 	if ticketExist {
 		conflictError.AppendError(
-			eventService.constants.ErrorField.Event,
+			eventService.constants.ErrorField.Ticket,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
@@ -122,7 +115,7 @@ func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode s
 	discount, discountExist := eventService.eventRepository.FindEventDiscountByCode(discountCode, eventID)
 	if discountExist {
 		conflictError.AppendError(
-			eventService.constants.ErrorField.Event,
+			eventService.constants.ErrorField.Discount,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
