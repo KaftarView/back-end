@@ -17,7 +17,9 @@
         "rateLimitExceed": "Rate limit exceeded.",
         "forbidden": "Access Denied.",
         "unauthorized": "There was an issue with your authentication. Please try again.",
-        "fileRequired": "File is required."
+        "fileRequired": "File is required.",
+        "locationAlreadyTaken": "This location is already taken.",
+        "notFoundError": "`{0}` not found."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
@@ -28,6 +30,9 @@
         "refreshToken": "Your session has been extended.",
         "uploadObjectToBucket": "Object added to bucket created successfully.",
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
-        "updateUSerRole": "Role added to user successfully."
+        "updateUSerRole": "Role added to user successfully.",
+        "createEvent": "Event added successfully.",
+        "addTicket": "Ticket added successfully.",
+        "addDiscount": "Discount added successfully."
     }
 }

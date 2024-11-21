@@ -44,20 +44,23 @@ func (am *AuthMiddleware) Authentication(c *gin.Context) {
 	c.Next()
 }
 
-func (am *AuthMiddleware) RequirePermission(c *gin.Context, allowedPermissions []enums.PermissionType) {
-	userID, exist := c.Get(am.constants.Context.UserID)
-	if !exist {
-		unauthorizedError := exceptions.NewUnauthorizedError()
-		panic(unauthorizedError)
-	}
+func (am *AuthMiddleware) RequirePermission(allowedPermissions []enums.PermissionType) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exist := c.Get(am.constants.Context.UserID)
+		if !exist {
+			unauthorizedError := exceptions.NewUnauthorizedError()
+			panic(unauthorizedError)
+		}
 
-	roles := am.userRepository.FindUserRoleTypesByUserID(userID.(uint))
+		roles := am.userRepository.FindUserRoleTypesByUserID(userID.(uint))
 
-	if !am.isAllowRole(allowedPermissions, roles) {
-		authError := exceptions.NewForbiddenError()
-		panic(authError)
+		if !am.isAllowRole(allowedPermissions, roles) {
+			authError := exceptions.NewForbiddenError()
+			panic(authError)
+		}
+
+		c.Next()
 	}
-	c.Next()
 }
 
 func (am *AuthMiddleware) isAllowRole(allowedPermissions []enums.PermissionType, userRoles []entities.Role) bool {
