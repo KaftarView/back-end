@@ -145,3 +145,32 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	discount := eventService.eventRepository.CreateNewDiscount(discountDetailsModel)
 	return discount
 }
+
+func (eventService *EventService) GetListOfPublishedEvents() []entities.Event {
+	allowedStatus := []enums.EventStatus{enums.Published}
+	events := eventService.eventRepository.FindEventsByStatus(allowedStatus)
+	return events
+}
+
+func (eventService *EventService) GetPublicEventDetails(eventID uint) entities.Event {
+	var notFoundError exceptions.NotFoundError
+	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	isValidStatus := false
+	allowedStatus := []enums.EventStatus{enums.Published}
+	for _, status := range allowedStatus {
+		if event.Status == status {
+			isValidStatus = true
+			break
+		}
+	}
+	if !isValidStatus {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	event = eventService.eventRepository.FetchEventDetailsAfterFetching(event)
+	return event
+}

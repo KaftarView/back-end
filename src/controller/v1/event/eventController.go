@@ -169,3 +169,24 @@ func (eventController *EventController) PublishEvent(c *gin.Context) {
 func (eventController *EventController) UnpublishEvent(c *gin.Context) {
 	// some code here ...
 }
+func (eventController *EventController) ListPublicEvents(c *gin.Context) {
+	events := eventController.eventService.GetListOfPublishedEvents()
+	controller.Response(c, 200, "", events)
+}
+
+func (eventController *EventController) GetPublicEvent(c *gin.Context) {
+	type getPublicEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[getPublicEventParams](c, &eventController.constants.Context)
+	event := eventController.eventService.GetPublicEventDetails(param.EventID)
+	controller.Response(c, 200, "", event)
+}
+
+func (eventController *EventController) ListEventCategories(c *gin.Context) {
+	// some code here ...
+}
+
+func (eventController *EventController) SearchPublicEvents(c *gin.Context) {
+	// some code here ...
+}

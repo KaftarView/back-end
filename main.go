@@ -28,7 +28,7 @@ func main() {
 	config := cors.Config{
 		AllowOrigins:     []string{"http://localhost:5174", "https://7ab3-212-64-199-253.ngrok-free.app"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "ngrok-skip-browser-warning"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,

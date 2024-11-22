@@ -6,9 +6,11 @@ import (
 	"gorm.io/gorm"
 
 	"first-project/src/application"
+	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
+	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_general "first-project/src/controller/v1/general"
 	repository_database "first-project/src/repository/database"
 	repository_cache "first-project/src/repository/redis"
@@ -24,14 +26,21 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	jwtService := application_jwt.NewJWTToken()
 	userController := controller_v1_general.NewUserController(
 		di.Constants, userService, emailService, userCache, otpService, jwtService)
-
 	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
+
+	eventRepository := repository_database.NewEventRepository(db)
+	eventService := application.NewEventService(di.Constants, eventRepository)
+	awsService := application_aws.NewAWSS3(di.Constants, &di.Env.PrimaryBucket)
+	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService)
 
 	public := routerGroup.Group("/public")
 	{
 		events := public.Group("/events")
 		{
-			events.GET("") // some api here
+			events.GET("/published", eventController.ListPublicEvents)
+			events.GET("/:eventID", eventController.GetPublicEvent)
+			events.GET("/categories", eventController.ListEventCategories)
+			events.GET("/search", eventController.SearchPublicEvents)
 		}
 	}
 
