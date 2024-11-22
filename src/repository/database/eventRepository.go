@@ -146,3 +146,15 @@ func (repo *EventRepository) FetchEventDetailsAfterFetching(event entities.Event
 	}
 	return event
 }
+
+func (repo *EventRepository) FindAllCategories() []string {
+	var categoryNames []string
+	result := repo.db.Model(&entities.Category{}).Pluck("name", &categoryNames)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []string{}
+		}
+		panic(result.Error)
+	}
+	return categoryNames
+}

@@ -174,3 +174,8 @@ func (eventService *EventService) GetPublicEventDetails(eventID uint) entities.E
 	event = eventService.eventRepository.FetchEventDetailsAfterFetching(event)
 	return event
 }
+
+func (eventService *EventService) GetListOfCategories() []string {
+	categoryNames := eventService.eventRepository.FindAllCategories()
+	return categoryNames
+}

@@ -35,11 +35,12 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	public := routerGroup.Group("/public")
 	{
+		public.GET("/categories", eventController.ListCategories)
+
 		events := public.Group("/events")
 		{
 			events.GET("/published", eventController.ListPublicEvents)
 			events.GET("/:eventID", eventController.GetPublicEvent)
-			events.GET("/categories", eventController.ListEventCategories)
 			events.GET("/search", eventController.SearchPublicEvents)
 		}
 	}

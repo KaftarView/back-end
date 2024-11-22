@@ -43,11 +43,11 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 		Name        string                `form:"name" validate:"required,max=50"`
 		Status      string                `form:"status"`
 		Description string                `form:"description"`
-		FromDate    time.Time             `form:"from-date" validate:"required"`
-		ToDate      time.Time             `form:"to-date" validate:"required,gtfield=FromDate"`
-		MinCapacity uint                  `form:"min-capacity" validate:"required,min=1"`
-		MaxCapacity uint                  `form:"max-capacity" validate:"required,gtfield=MinCapacity"`
-		VenueType   string                `form:"venue-type" validate:"required"`
+		FromDate    time.Time             `form:"fromDate" validate:"required"`
+		ToDate      time.Time             `form:"toDate" validate:"required,gtfield=FromDate"`
+		MinCapacity uint                  `form:"minCapacity" validate:"required,min=1"`
+		MaxCapacity uint                  `form:"maxCapacity" validate:"required,gtfield=MinCapacity"`
+		VenueType   string                `form:"venueType" validate:"required"`
 		Location    string                `form:"location"`
 		Banner      *multipart.FileHeader `form:"banner"`
 		Categories  []string              `form:"category"`
@@ -76,7 +76,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createEvent")
-	controller.Response(c, 200, message, nil)
+	controller.Response(c, 200, message, event.ID)
 }
 
 func (eventController *EventController) AddEventTicket(c *gin.Context) {
@@ -85,11 +85,11 @@ func (eventController *EventController) AddEventTicket(c *gin.Context) {
 		Description    string    `json:"description"`
 		Price          float64   `json:"price" validate:"required"`
 		Quantity       uint      `json:"quantity" validate:"required"`
-		SoldCount      uint      `json:"sold-count"`
-		IsAvailable    bool      `json:"is-available" validate:"required"`
-		AvailableFrom  time.Time `json:"available-from" validate:"required"`
-		AvailableUntil time.Time `json:"available-until" validate:"required,gtfield=AvailableFrom"`
-		EventID        uint      `json:"event-id" validate:"required"`
+		SoldCount      uint      `json:"soldCount"`
+		IsAvailable    bool      `json:"isAvailable" validate:"required"`
+		AvailableFrom  time.Time `json:"availableFrom" validate:"required"`
+		AvailableUntil time.Time `json:"availableUntil" validate:"required,gtfield=AvailableFrom"`
+		EventID        uint      `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[addEventTicketParams](c, &eventController.constants.Context)
 	eventController.eventService.ValidateNewEventTicketDetails(param.Name, param.EventID)
@@ -117,12 +117,12 @@ func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 		Code       string    `json:"code" validate:"required,max=50"`
 		Type       string    `json:"type" validate:"required"`
 		Value      float64   `json:"value" validate:"required"`
-		ValidFrom  time.Time `json:"valid_from" validate:"required"`
-		ValidUntil time.Time `json:"valid_until" validate:"required,gtfield=ValidFrom"`
+		ValidFrom  time.Time `json:"validFrom" validate:"required"`
+		ValidUntil time.Time `json:"validUntil" validate:"required,gtfield=ValidFrom"`
 		Quantity   uint      `json:"quantity" validate:"required"`
-		UsedCount  uint      `json:"used_count"`
-		MinTickets uint      `json:"min_tickets"`
-		EventID    uint      `json:"event_id" validate:"required"`
+		UsedCount  uint      `json:"usedCount"`
+		MinTickets uint      `json:"minTickets"`
+		EventID    uint      `uri:"eventID" validate:"required"`
 	}
 
 	param := controller.Validated[addEventDiscountParams](c, &eventController.constants.Context)
@@ -183,8 +183,9 @@ func (eventController *EventController) GetPublicEvent(c *gin.Context) {
 	controller.Response(c, 200, "", event)
 }
 
-func (eventController *EventController) ListEventCategories(c *gin.Context) {
-	// some code here ...
+func (ec *EventController) ListCategories(c *gin.Context) {
+	categoryList := ec.eventService.GetListOfCategories()
+	controller.Response(c, 200, "", categoryList)
 }
 
 func (eventController *EventController) SearchPublicEvents(c *gin.Context) {
