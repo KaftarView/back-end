@@ -3,6 +3,7 @@ package repository_database
 import (
 	"first-project/src/entities"
 	"first-project/src/enums"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -118,4 +119,53 @@ func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entit
 		panic(result.Error)
 	}
 	return discount
+}
+
+func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) []entities.Event {
+	var events []entities.Event
+	result := repo.db.Where("status IN ?", allowedStatus).Find(&events)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return events
+		}
+		panic(result.Error)
+	}
+	return events
+}
+
+func (repo *EventRepository) FetchEventDetailsAfterFetching(event entities.Event) entities.Event {
+	err := repo.db.Model(&event).
+		Preload("Tickets.Purchasable").
+		Preload("Organizers").
+		Preload("Categories").
+		Preload("Commentable.Comments.User").
+		Find(&event).Error
+
+	if err != nil {
+		panic(fmt.Errorf("failed to preload event details: %w", err))
+	}
+	return event
+}
+
+func (repo *EventRepository) FindAllCategories() []string {
+	var categoryNames []string
+	result := repo.db.Model(&entities.Category{}).Pluck("name", &categoryNames)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []string{}
+		}
+		panic(result.Error)
+	}
+	return categoryNames
+}
+
+func (repo *EventRepository) DeleteEvent(eventID uint) bool {
+	result := repo.db.Delete(&entities.Event{}, eventID)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return false
+	}
+	return true
 }
