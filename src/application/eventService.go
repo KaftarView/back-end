@@ -179,3 +179,12 @@ func (eventService *EventService) GetListOfCategories() []string {
 	categoryNames := eventService.eventRepository.FindAllCategories()
 	return categoryNames
 }
+
+func (eventService *EventService) DeleteEvent(eventID uint) {
+	var notFoundError exceptions.NotFoundError
+	eventExist := eventService.eventRepository.DeleteEvent(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+}

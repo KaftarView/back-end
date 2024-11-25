@@ -151,7 +151,15 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 }
 
 func (eventController *EventController) DeleteEvent(c *gin.Context) {
-	// some code here ...
+	type deleteEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[deleteEventParams](c, &eventController.constants.Context)
+	eventController.eventService.DeleteEvent(param.EventID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteEvent")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) UploadEventMedia(c *gin.Context) {

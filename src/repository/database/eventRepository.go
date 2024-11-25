@@ -158,3 +158,14 @@ func (repo *EventRepository) FindAllCategories() []string {
 	}
 	return categoryNames
 }
+
+func (repo *EventRepository) DeleteEvent(eventID uint) bool {
+	result := repo.db.Delete(&entities.Event{}, eventID)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return false
+	}
+	return true
+}
