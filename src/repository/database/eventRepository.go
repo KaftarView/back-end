@@ -169,3 +169,10 @@ func (repo *EventRepository) DeleteEvent(eventID uint) bool {
 	}
 	return true
 }
+
+func (repo *EventRepository) UpdateEventBannerByEventID(mediaPath string, eventID uint) {
+	var event entities.Event
+	if err := repo.db.Model(&event).Where("id = ?", eventID).Update("banner_path", mediaPath).Error; err != nil {
+		panic(err)
+	}
+}

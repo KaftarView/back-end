@@ -21,7 +21,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	eventService := application.NewEventService(di.Constants, eventRepository)
-	awsService := application_aws.NewAWSS3(di.Constants, &di.Env.PrimaryBucket)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService)
 
 	events := routerGroup.Group("/events")

@@ -6,6 +6,8 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
+	"first-project/src/enums"
+	"fmt"
 	"mime/multipart"
 	"time"
 
@@ -15,13 +17,13 @@ import (
 type EventController struct {
 	constants    *bootstrap.Constants
 	eventService *application.EventService
-	awsService   *application_aws.AWSS3
+	awsService   *application_aws.S3service
 }
 
 func NewEventController(
 	constants *bootstrap.Constants,
 	eventService *application.EventService,
-	awsService *application_aws.AWSS3,
+	awsService *application_aws.S3service,
 ) *EventController {
 	return &EventController{
 		constants:    constants,
@@ -71,8 +73,9 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 	}
 
 	event := eventController.eventService.CreateEvent(eventDetails)
-
-	eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(event.ID))
+	objectPath := fmt.Sprintf("events/%d/banners/%s", event.ID, param.Banner.Filename)
+	eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	eventController.eventService.SetBannerPath(objectPath, event.ID)
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createEvent")

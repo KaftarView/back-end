@@ -188,3 +188,7 @@ func (eventService *EventService) DeleteEvent(eventID uint) {
 		panic(notFoundError)
 	}
 }
+
+func (eventService *EventService) SetBannerPath(mediaPath string, eventID uint) {
+	eventService.eventRepository.UpdateEventBannerByEventID(mediaPath, eventID)
+}

@@ -19,6 +19,7 @@ type Event struct {
 	MaxCapacity    uint                   `gorm:"not null"`
 	VenueType      enums.EventVenue       `gorm:"type:int;not null"`
 	Location       string                 `gorm:"type:text"`
+	BannerPath     string                 `gorm:"type:text"`
 	Communications map[string]interface{} `gorm:"-"`
 
 	Commentable Commentable `gorm:"foreignKey:ID"`
