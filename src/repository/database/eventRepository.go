@@ -150,6 +150,8 @@ func (repo *EventRepository) FetchEventDetailsAfterFetching(event entities.Event
 		Preload("Tickets.Purchasable").
 		Preload("Organizers").
 		Preload("Categories").
+		Preload("Discounts").
+		Preload("Media").
 		Preload("Commentable.Comments.User").
 		Find(&event).Error
 
