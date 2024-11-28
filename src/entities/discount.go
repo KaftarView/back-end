@@ -18,5 +18,5 @@ type Discount struct {
 	UsedCount  uint               `gorm:"default:0"`
 	MinTickets uint               `gorm:"default:1"`
 	EventID    uint               `gorm:"not null"`
-	Event      Event              `gorm:"foreignKey:EventID"`
+	Event      Event              `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

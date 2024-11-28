@@ -129,24 +129,24 @@ func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string
 	}
 }
 
-func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, objectName string) {
+func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string) {
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 
 	_, err := s3Service.clients[bucketType].DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(bucket.Name),
-		Key:    aws.String(objectName),
+		Key:    aws.String(key),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", objectName, bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %v", key, bucket.Name, err))
 	}
 
 	err = s3Service.clients[bucketType].WaitUntilObjectNotExists(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket.Name),
-		Key:    aws.String(objectName),
+		Key:    aws.String(key),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to open file %q, %v", objectName, err))
+		panic(fmt.Errorf("unable to open file %q, %v", key, err))
 	}
 }
 

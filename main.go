@@ -54,6 +54,7 @@ func main() {
 		&entities.Comment{},
 		&entities.Discount{},
 		&entities.Event{},
+		&entities.Media{},
 		&entities.Commentable{},
 		&entities.Organizer{},
 		&entities.Permission{},

@@ -93,6 +93,18 @@ func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID ui
 	return ticket, true
 }
 
+func (repo *EventRepository) FindEventMediaByName(mediaName string, eventID uint) (entities.Media, bool) {
+	var media entities.Media
+	result := repo.db.First(&media, "name = ? AND event_id = ?", mediaName, eventID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return media, false
+		}
+		panic(result.Error)
+	}
+	return media, true
+}
+
 func (repo *EventRepository) CreateNewTicket(ticket entities.Ticket) entities.Ticket {
 	result := repo.db.Create(&ticket)
 	if result.Error != nil {
@@ -170,9 +182,76 @@ func (repo *EventRepository) DeleteEvent(eventID uint) bool {
 	return true
 }
 
+func (repo *EventRepository) DeleteTicket(eventID, ticketID uint) bool {
+	var ticket entities.Ticket
+	result := repo.db.Where("id = ? AND event_id = ?", ticketID, eventID).First(&ticket)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return false
+		}
+		panic(result.Error)
+	}
+	if err := repo.db.Delete(&ticket).Error; err != nil {
+		panic(fmt.Errorf("failed to delete ticket: %w", err))
+	}
+	return true
+}
+
+func (repo *EventRepository) DeleteDiscount(eventID, discountID uint) bool {
+	var discount entities.Discount
+	result := repo.db.Where("id = ? AND event_id = ?", discountID, eventID).First(&discount)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return false
+		}
+		panic(result.Error)
+	}
+	if err := repo.db.Delete(&discount).Error; err != nil {
+		panic(fmt.Errorf("failed to delete discount: %w", err))
+	}
+	return true
+}
+
 func (repo *EventRepository) UpdateEventBannerByEventID(mediaPath string, eventID uint) {
 	var event entities.Event
 	if err := repo.db.Model(&event).Where("id = ?", eventID).Update("banner_path", mediaPath).Error; err != nil {
 		panic(err)
 	}
+}
+
+func (repo *EventRepository) ChangeStatusByEvent(event entities.Event, newStatus enums.EventStatus) {
+	event.Status = newStatus
+	repo.db.Save(&event)
+}
+
+func (repo *EventRepository) CreateNewMedia(media entities.Media) entities.Media {
+	result := repo.db.Create(&media)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return media
+}
+
+func (repo *EventRepository) FindMediaByIDAndEventID(mediaID, eventID uint) (entities.Media, bool) {
+	var media entities.Media
+	result := repo.db.Where("id = ? AND event_id = ?", mediaID, eventID).First(&media)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return media, false
+		}
+		panic(result.Error)
+	}
+	return media, true
+}
+
+func (repo *EventRepository) DeleteMedia(mediaID uint) bool {
+	result := repo.db.Delete(&entities.Media{}, mediaID)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return false
+	}
+	return true
 }

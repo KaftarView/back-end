@@ -30,7 +30,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ViewReports}))
 		{
 			read.GET("", eventController.ListEvents)
-			// read.GET("/:eventID", eventController.GetEvent)
+			read.GET("/:id", eventController.GetEvent)
 		}
 
 		create := events.Group("")
@@ -46,6 +46,8 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		{
 			updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
 			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
+			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
+			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
 			updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
 			updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
 		}

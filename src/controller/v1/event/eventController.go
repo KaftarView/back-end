@@ -33,11 +33,17 @@ func NewEventController(
 }
 
 func (eventController *EventController) ListEvents(c *gin.Context) {
-	// some code here ...
+	events := eventController.eventService.GetListOfEvents()
+	controller.Response(c, 200, "", events)
 }
 
 func (eventController *EventController) GetEvent(c *gin.Context) {
-	// some code here ...
+	type getEventParams struct {
+		EventID uint `uri:"id" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	event := eventController.eventService.GetEventDetails(param.EventID)
+	controller.Response(c, 200, "", event)
 }
 
 func (eventController *EventController) CreateEvent(c *gin.Context) {
@@ -165,21 +171,88 @@ func (eventController *EventController) DeleteEvent(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) DeleteTicket(c *gin.Context) {
+	type deleteTicketParams struct {
+		TicketID uint `uri:"ticketID" validate:"required"`
+		EventID  uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[deleteTicketParams](c, &eventController.constants.Context)
+	eventController.eventService.DeleteTicket(param.EventID, param.TicketID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteTicket")
+	controller.Response(c, 200, message, nil)
+}
+
+func (eventController *EventController) DeleteDiscount(c *gin.Context) {
+	type deleteDiscountParams struct {
+		DiscountID uint `uri:"discountID" validate:"required"`
+		EventID    uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[deleteDiscountParams](c, &eventController.constants.Context)
+	eventController.eventService.DeleteDiscount(param.EventID, param.DiscountID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteDiscount")
+	controller.Response(c, 200, message, nil)
+}
+
 func (eventController *EventController) UploadEventMedia(c *gin.Context) {
-	// some code here ...
+	type eventMedia struct {
+		Name    string                `form:"name" validate:"required,max=50"`
+		Media   *multipart.FileHeader `form:"media" validate:"required"`
+		EventID uint                  `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[eventMedia](c, &eventController.constants.Context)
+	eventController.eventService.ValidateNewEventMediaDetails(param.EventID, param.Name)
+	mediaPath := fmt.Sprintf("events/%d/sessions/%s", param.EventID, param.Media.Filename)
+	eventController.awsService.UploadObject(enums.SessionsBucket, mediaPath, param.Media)
+	eventController.eventService.CreateEventMedia(param.Name, mediaPath, param.EventID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.uploadMedia")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) DeleteEventMedia(c *gin.Context) {
-	// some code here ...
+	type eventMedia struct {
+		EventID uint `uri:"eventID" validate:"required"`
+		MediaID uint `uri:"mediaId" validate:"required"`
+	}
+	param := controller.Validated[eventMedia](c, &eventController.constants.Context)
+	media := eventController.eventService.GetEventMediaPath(param.MediaID, param.EventID)
+	eventController.awsService.DeleteObject(enums.SessionsBucket, media.Path)
+	eventController.eventService.DeleteEventMedia(param.MediaID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteMedia")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) PublishEvent(c *gin.Context) {
-	// some code here ...
+	type publishEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[publishEventParams](c, &eventController.constants.Context)
+	eventController.eventService.ChangeEventStatus(param.EventID, "Published")
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.publishEvent")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) UnpublishEvent(c *gin.Context) {
-	// some code here ...
+	type publishEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[publishEventParams](c, &eventController.constants.Context)
+	eventController.eventService.ChangeEventStatus(param.EventID, "Draft")
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.unpublishEvent")
+	controller.Response(c, 200, message, nil)
 }
+
 func (eventController *EventController) ListPublicEvents(c *gin.Context) {
 	events := eventController.eventService.GetListOfPublishedEvents()
 	controller.Response(c, 200, "", events)

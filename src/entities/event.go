@@ -26,6 +26,7 @@ type Event struct {
 
 	Tickets   []Ticket   `gorm:"foreignKey:EventID"`
 	Discounts []Discount `gorm:"foreignKey:EventID"`
+	Media     []Media    `gorm:"foreignKey:EventID"`
 
 	Organizers []Organizer `gorm:"many2many:event_organizers"`
 	Categories []Category  `gorm:"many2many:event_categories"`
