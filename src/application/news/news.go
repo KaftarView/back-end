@@ -14,13 +14,13 @@ func NewNewsService(newsRepo *repository_database.NewsRepository) *NewsService {
 	return &NewsService{newsRepo: newsRepo}
 }
 
-func (ns *NewsService) CreateNews(title, description, content, imageURL, category, author string) {
+func (ns *NewsService) CreateNews(title, description, content, category, author string) {
 	categoryType, err := enums.StringToCategoryType(category)
 	if err != nil {
-		panic(err) // Should be handled
+		panic(err)
 	}
 
-	ns.newsRepo.CreateNews(title, description, content, imageURL, categoryType, author)
+	ns.newsRepo.CreateNews(title, description, content, categoryType, author)
 }
 
 func (ns *NewsService) GetNewsByID(newsID uint) (*entities.News, bool) {
@@ -28,13 +28,13 @@ func (ns *NewsService) GetNewsByID(newsID uint) (*entities.News, bool) {
 	return &news, found
 }
 
-func (ns *NewsService) UpdateNews(newsID uint, title, description, content, imageURL, category, author string) (*entities.News, bool) {
+func (ns *NewsService) UpdateNews(newsID uint, title, description, content, category, author string) (*entities.News, bool) {
 	categoryType, err := enums.StringToCategoryType(category)
 	if err != nil {
 		panic(err)
 	}
 
-	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, imageURL, categoryType, author)
+	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, categoryType, author)
 	if err != nil {
 		panic(err)
 	}

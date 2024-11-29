@@ -5,6 +5,8 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/enums"
+	"log"
+	"mime/multipart"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -24,20 +26,19 @@ func NewNewsController(constants *bootstrap.Constants, newsService *application_
 
 func (nc *NewsController) CreateNews(c *gin.Context) {
 	type createParams struct {
-		Title       string `json:"title" validate:"required"`
-		Description string `json:"description"`
-		Content     string `json:"content"`
-		ImageURL    string `json:"image_url"`
-		Category    string `json:"category" validate:"required"`
-		Author      string `json:"author" validate:"required"`
+		Title       string                `json:"title" validate:"required"`
+		Description string                `json:"description"`
+		Content     string                `json:"content"`
+		Banner      *multipart.FileHeader `json:"banner"`
+		Category    string                `json:"category" validate:"required"`
+		Author      string                `json:"author" validate:"required"`
 	}
 	param := controller.Validated[createParams](c, &nc.constants.Context)
-
+	log.Printf("Received parameters: %+v", param)
 	nc.newsService.CreateNews(
 		param.Title,
 		param.Description,
 		param.Content,
-		param.ImageURL,
 		param.Category,
 		param.Author,
 	)
@@ -56,12 +57,12 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 	}
 
 	type editParams struct {
-		Title       string `json:"title" validate:"required"`
-		Description string `json:"description"`
-		Content     string `json:"content"`
-		ImageURL    string `json:"image_url"`
-		Category    string `json:"category" validate:"required"`
-		Author      string `json:"author" validate:"required"`
+		Title       string                `json:"title" validate:"required"`
+		Description string                `json:"description"`
+		Content     string                `json:"content"`
+		Banner      *multipart.FileHeader `json:"banner"`
+		Category    string                `json:"category" validate:"required"`
+		Author      string                `json:"author" validate:"required"`
 	}
 
 	param := controller.Validated[editParams](c, &nc.constants.Context)
@@ -71,7 +72,6 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		param.Title,
 		param.Description,
 		param.Content,
-		param.ImageURL,
 		param.Category,
 		param.Author,
 	)

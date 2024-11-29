@@ -18,12 +18,11 @@ func NewNewsRepository(db *gorm.DB) *NewsRepository {
 	}
 }
 
-func (repo *NewsRepository) CreateNews(title, description, content, imageURL string, category enums.CategoryType, author string) entities.News {
+func (repo *NewsRepository) CreateNews(title, description, content string, category enums.CategoryType, author string) entities.News {
 	news := entities.News{
 		Title:       title,
 		Description: description,
 		Content:     content,
-		ImageURL:    imageURL,
 		Category:    category,
 		Author:      author,
 	}
@@ -48,7 +47,7 @@ func (repo *NewsRepository) GetNewsByID(id uint) (entities.News, bool) {
 	return news, true
 }
 
-func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content, imageURL string, category enums.CategoryType, author string) (*entities.News, error) {
+func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content string, category enums.CategoryType, author string) (*entities.News, error) {
 	var news entities.News
 	query := repo.db.Where("id = ?", newsID).First(&news)
 	if query.Error != nil {
@@ -61,7 +60,6 @@ func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content,
 	news.Title = title
 	news.Description = description
 	news.Content = content
-	news.ImageURL = imageURL
 	news.Category = category
 	news.Author = author
 
