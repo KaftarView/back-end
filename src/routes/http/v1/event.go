@@ -21,16 +21,18 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	eventService := application.NewEventService(di.Constants, eventRepository)
-	awsService := application_aws.NewAWSS3(di.Constants, &di.Env.PrimaryBucket)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService)
 
 	events := routerGroup.Group("/events")
 	{
 		read := events.Group("")
-		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ViewReports}))
+		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageEvent}))
 		{
-			read.GET("", eventController.ListEvents)
-			// read.GET("/:eventID", eventController.GetEvent)
+			read.GET("", eventController.GetEventsListForAdmin)
+			read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
+			read.GET("/ticket-details/:id", eventController.GetTicketDetails)
+			read.GET("/discount-details/:id", eventController.GetDiscountDetails)
 		}
 
 		create := events.Group("")
@@ -46,6 +48,8 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		{
 			updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
 			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
+			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
+			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
 			updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
 			updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
 		}

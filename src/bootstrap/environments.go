@@ -8,13 +8,15 @@ import (
 )
 
 type Env struct {
-	PRIMARY_DB    Database
-	PrimaryRedis  RedisDB
-	PrimaryBucket Bucket
-	Applications  AppInfo
-	Email         EmailInfo
-	Admin         UserInfo
-	Moderator     UserInfo
+	PRIMARY_DB     Database
+	PrimaryRedis   RedisDB
+	BannersBucket  Bucket
+	SessionsBucket Bucket
+	PodcastsBucket Bucket
+	Applications   AppInfo
+	Email          EmailInfo
+	Admin          UserInfo
+	Moderator      UserInfo
 }
 
 type Database struct {
@@ -77,12 +79,26 @@ func NewEnvironments() *Env {
 			Password: os.Getenv("REDIS_PASSWORD"),
 			DB:       os.Getenv("REDIS_DB"),
 		},
-		PrimaryBucket: Bucket{
-			Name:      os.Getenv("BUCKET_NAME"),
-			Region:    os.Getenv("BUCKET_REGION"),
-			AccessKey: os.Getenv("BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("BUCKET_ENDPOINT"),
+		BannersBucket: Bucket{
+			Name:      os.Getenv("BANNERS_BUCKET_NAME"),
+			Region:    os.Getenv("BANNERS_BUCKET_REGION"),
+			AccessKey: os.Getenv("BANNERS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("BANNERS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("BANNERS_BUCKET_ENDPOINT"),
+		},
+		SessionsBucket: Bucket{
+			Name:      os.Getenv("SESSIONS_BUCKET_NAME"),
+			Region:    os.Getenv("SESSIONS_BUCKET_REGION"),
+			AccessKey: os.Getenv("SESSIONS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("SESSIONS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("SESSIONS_BUCKET_ENDPOINT"),
+		},
+		PodcastsBucket: Bucket{
+			Name:      os.Getenv("PODCAST_BUCKET_NAME"),
+			Region:    os.Getenv("PODCAST_BUCKET_REGION"),
+			AccessKey: os.Getenv("PODCAST_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("PODCAST_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("PODCAST_BUCKET_ENDPOINT"),
 		},
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),

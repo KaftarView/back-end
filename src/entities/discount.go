@@ -9,7 +9,7 @@ import (
 
 type Discount struct {
 	gorm.Model
-	Code       string             `gorm:"type:varchar(50);uniqueIndex"`
+	Code       string             `gorm:"type:varchar(50);not null"`
 	Type       enums.DiscountType `gorm:"type:int;not null"`
 	Value      float64            `gorm:"not null"`
 	ValidFrom  time.Time          `gorm:"not null"`
@@ -18,5 +18,5 @@ type Discount struct {
 	UsedCount  uint               `gorm:"default:0"`
 	MinTickets uint               `gorm:"default:1"`
 	EventID    uint               `gorm:"not null"`
-	Event      Event              `gorm:"foreignKey:EventID"`
+	Event      Event              `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

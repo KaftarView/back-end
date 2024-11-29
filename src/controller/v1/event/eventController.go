@@ -6,6 +6,8 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
+	"first-project/src/enums"
+	"fmt"
 	"mime/multipart"
 	"time"
 
@@ -15,13 +17,13 @@ import (
 type EventController struct {
 	constants    *bootstrap.Constants
 	eventService *application.EventService
-	awsService   *application_aws.AWSS3
+	awsService   *application_aws.S3service
 }
 
 func NewEventController(
 	constants *bootstrap.Constants,
 	eventService *application.EventService,
-	awsService *application_aws.AWSS3,
+	awsService *application_aws.S3service,
 ) *EventController {
 	return &EventController{
 		constants:    constants,
@@ -30,12 +32,38 @@ func NewEventController(
 	}
 }
 
-func (eventController *EventController) ListEvents(c *gin.Context) {
-	// some code here ...
+func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	events := eventController.eventService.GetEventsList(allowedStatus)
+	controller.Response(c, 200, "", events)
 }
 
-func (eventController *EventController) GetEvent(c *gin.Context) {
-	// some code here ...
+func (eventController *EventController) GetEventDetailsForAdmin(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"id" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	eventDetails := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
+	controller.Response(c, 200, "", eventDetails)
+}
+
+func (eventController *EventController) GetTicketDetails(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"id" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	ticketDetails := eventController.eventService.GetEventTickets(param.EventID)
+	controller.Response(c, 200, "", ticketDetails)
+}
+
+func (eventController *EventController) GetDiscountDetails(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"id" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	discountDetails := eventController.eventService.GetEventDiscounts(param.EventID)
+	controller.Response(c, 200, "", discountDetails)
 }
 
 func (eventController *EventController) CreateEvent(c *gin.Context) {
@@ -71,8 +99,9 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 	}
 
 	event := eventController.eventService.CreateEvent(eventDetails)
-
-	eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(event.ID))
+	objectPath := fmt.Sprintf("events/%d/banners/%s", event.ID, param.Banner.Filename)
+	eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	eventController.eventService.SetBannerPath(objectPath, event.ID)
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createEvent")
@@ -162,23 +191,91 @@ func (eventController *EventController) DeleteEvent(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) DeleteTicket(c *gin.Context) {
+	type deleteTicketParams struct {
+		TicketID uint `uri:"ticketID" validate:"required"`
+		EventID  uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[deleteTicketParams](c, &eventController.constants.Context)
+	eventController.eventService.DeleteTicket(param.EventID, param.TicketID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteTicket")
+	controller.Response(c, 200, message, nil)
+}
+
+func (eventController *EventController) DeleteDiscount(c *gin.Context) {
+	type deleteDiscountParams struct {
+		DiscountID uint `uri:"discountID" validate:"required"`
+		EventID    uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[deleteDiscountParams](c, &eventController.constants.Context)
+	eventController.eventService.DeleteDiscount(param.EventID, param.DiscountID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteDiscount")
+	controller.Response(c, 200, message, nil)
+}
+
 func (eventController *EventController) UploadEventMedia(c *gin.Context) {
-	// some code here ...
+	type eventMedia struct {
+		Name    string                `form:"name" validate:"required,max=50"`
+		Media   *multipart.FileHeader `form:"media" validate:"required"`
+		EventID uint                  `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[eventMedia](c, &eventController.constants.Context)
+	eventController.eventService.ValidateNewEventMediaDetails(param.EventID, param.Name)
+	mediaPath := fmt.Sprintf("events/%d/sessions/%s", param.EventID, param.Media.Filename)
+	eventController.awsService.UploadObject(enums.SessionsBucket, mediaPath, param.Media)
+	eventController.eventService.CreateEventMedia(param.Name, mediaPath, param.EventID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.uploadMedia")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) DeleteEventMedia(c *gin.Context) {
-	// some code here ...
+	type eventMedia struct {
+		EventID uint `uri:"eventID" validate:"required"`
+		MediaID uint `uri:"mediaId" validate:"required"`
+	}
+	param := controller.Validated[eventMedia](c, &eventController.constants.Context)
+	media := eventController.eventService.GetEventMediaPath(param.MediaID, param.EventID)
+	eventController.awsService.DeleteObject(enums.SessionsBucket, media.Path)
+	eventController.eventService.DeleteEventMedia(param.MediaID)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteMedia")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) PublishEvent(c *gin.Context) {
-	// some code here ...
+	type publishEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[publishEventParams](c, &eventController.constants.Context)
+	eventController.eventService.ChangeEventStatus(param.EventID, "Published")
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.publishEvent")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) UnpublishEvent(c *gin.Context) {
-	// some code here ...
+	type publishEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[publishEventParams](c, &eventController.constants.Context)
+	eventController.eventService.ChangeEventStatus(param.EventID, "Draft")
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.unpublishEvent")
+	controller.Response(c, 200, message, nil)
 }
+
 func (eventController *EventController) ListPublicEvents(c *gin.Context) {
-	events := eventController.eventService.GetListOfPublishedEvents()
+	allowedStatus := []enums.EventStatus{enums.Published}
+	events := eventController.eventService.GetEventsList(allowedStatus)
 	controller.Response(c, 200, "", events)
 }
 
@@ -187,7 +284,8 @@ func (eventController *EventController) GetPublicEvent(c *gin.Context) {
 		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getPublicEventParams](c, &eventController.constants.Context)
-	event := eventController.eventService.GetPublicEventDetails(param.EventID)
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
+	event := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
 	controller.Response(c, 200, "", event)
 }
 

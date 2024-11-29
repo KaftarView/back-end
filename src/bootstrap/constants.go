@@ -22,15 +22,17 @@ type Context struct {
 }
 
 type ErrorField struct {
-	Username string
-	Password string
-	Email    string
-	OTP      string
-	Tittle   string
-	Location string
-	Event    string
-	Ticket   string
-	Discount string
+	Username    string
+	Password    string
+	Email       string
+	OTP         string
+	Tittle      string
+	Location    string
+	Event       string
+	Ticket      string
+	Discount    string
+	EventStatus string
+	Media       string
 }
 
 type ErrorTag struct {
@@ -67,15 +69,17 @@ func NewConstants() *Constants {
 			UserID:                       "userID",
 		},
 		ErrorField: ErrorField{
-			Username: "username",
-			Password: "password",
-			Email:    "email",
-			OTP:      "OTP",
-			Tittle:   "tittle",
-			Location: "location",
-			Event:    "event",
-			Ticket:   "ticket",
-			Discount: "discount",
+			Username:    "username",
+			Password:    "password",
+			Email:       "email",
+			OTP:         "OTP",
+			Tittle:      "tittle",
+			Location:    "location",
+			Event:       "event",
+			Ticket:      "ticket",
+			Discount:    "discount",
+			EventStatus: "event status",
+			Media:       "media",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
