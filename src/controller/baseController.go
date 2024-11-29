@@ -15,6 +15,6 @@ func GetTranslator(c *gin.Context, key string) ut.Translator {
 }
 
 func SetAuthCookies(c *gin.Context, accessToken, refreshToken, accessTokenKey, refreshTokenKey string) {
-	c.SetCookie(accessTokenKey, accessToken, 60, "/", "localhost", true, true)
-	c.SetCookie(refreshTokenKey, refreshToken, 3600*24*7, "/", "localhost", true, true)
+	c.SetCookie(accessTokenKey, accessToken, 60*15, "/", c.Request.Host, false, true)
+	c.SetCookie(refreshTokenKey, refreshToken, 3600*24*7, "/", c.Request.Host, false, true)
 }

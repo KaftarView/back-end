@@ -57,6 +57,8 @@ func (rs *RoleSeeder) SeedRoles() {
 		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
 		permission, _ = rs.userRepository.FindPermissionByType(enums.CreateEvent)
 		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
+		permission, _ = rs.userRepository.FindPermissionByType(enums.ManageEvent)
+		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
 		permission, _ = rs.userRepository.FindPermissionByType(enums.EditEvent)
 		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
 		permission, _ = rs.userRepository.FindPermissionByType(enums.PublishEvent)

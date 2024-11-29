@@ -51,7 +51,7 @@ func (userCache *UserCache) SetUser(userID uint, username, email string) {
 		panic(err)
 	}
 
-	// TODO set label for 3600 ttl of redis -> sync it with jwt
+	// TODO set label for 3600 ttl of redis
 	err = userCache.rdb.Set(ctx, key, userDataJSON, 3600).Err()
 	if err != nil {
 		panic(err)

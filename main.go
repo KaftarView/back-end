@@ -28,7 +28,7 @@ func main() {
 	config := cors.Config{
 		AllowOrigins:     []string{"http://localhost:5174", "https://7ab3-212-64-199-253.ngrok-free.app"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "ngrok-skip-browser-warning"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -50,10 +50,21 @@ func main() {
 		log.Fatal("Error connecting to database:", err)
 	}
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(
-		&entities.User{},
-		&entities.Role{},
+		&entities.Category{},
+		&entities.Comment{},
+		&entities.Discount{},
+		&entities.Event{},
+		&entities.Media{},
+		&entities.Commentable{},
+		&entities.Organizer{},
 		&entities.Permission{},
 		&entities.News{},
+		&entities.Purchasable{},
+		&entities.Role{},
+		&entities.Ticket{},
+		&entities.Transaction{},
+		// &entities.Wallet{},
+		&entities.User{},
 	)
 
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)

@@ -22,10 +22,17 @@ type Context struct {
 }
 
 type ErrorField struct {
-	Username string
-	Password string
-	Email    string
-	OTP      string
+	Username    string
+	Password    string
+	Email       string
+	OTP         string
+	Tittle      string
+	Location    string
+	Event       string
+	Ticket      string
+	Discount    string
+	EventStatus string
+	Media       string
 }
 
 type ErrorTag struct {
@@ -42,6 +49,7 @@ type ErrorTag struct {
 	LoginFailed             string
 	EmailNotExist           string
 	Required                string
+	LocationAlreadyTaken    string
 }
 
 type Redis struct {
@@ -61,10 +69,17 @@ func NewConstants() *Constants {
 			UserID:                       "userID",
 		},
 		ErrorField: ErrorField{
-			Username: "username",
-			Password: "password",
-			Email:    "email",
-			OTP:      "OTP",
+			Username:    "username",
+			Password:    "password",
+			Email:       "email",
+			OTP:         "OTP",
+			Tittle:      "tittle",
+			Location:    "location",
+			Event:       "event",
+			Ticket:      "ticket",
+			Discount:    "discount",
+			EventStatus: "event status",
+			Media:       "media",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
@@ -80,6 +95,7 @@ func NewConstants() *Constants {
 			LoginFailed:             "loginFailed",
 			EmailNotExist:           "emailNotExist",
 			Required:                "required",
+			LocationAlreadyTaken:    "locationAlreadyTaken",
 		},
 		Redis: Redis{},
 	}
