@@ -29,8 +29,10 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		read := events.Group("")
 		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ViewReports}))
 		{
-			read.GET("", eventController.ListEvents)
-			read.GET("/:id", eventController.GetEvent)
+			read.GET("", eventController.GetEventsListForAdmin)
+			read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
+			read.GET("/ticket-details/:id", eventController.GetTicketDetails)
+			read.GET("/discount-details/:id", eventController.GetDiscountDetails)
 		}
 
 		create := events.Group("")

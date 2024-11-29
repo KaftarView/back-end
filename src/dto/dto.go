@@ -38,3 +38,41 @@ type CreateDiscountDetails struct {
 	MinTickets uint
 	EventID    uint
 }
+
+type EventDetailsResponse struct {
+	ID          uint      `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	Name        string    `json:"name"`
+	Status      string    `json:"status"`
+	Description string    `json:"description"`
+	FromDate    time.Time `json:"from_date"`
+	ToDate      time.Time `json:"to_date"`
+	VenueType   string    `json:"venue_type"`
+	Categories  []string  `json:"categories"`
+	Location    string    `json:"location"`
+}
+
+type TicketDetailsResponse struct {
+	ID             uint      `json:"id"`
+	CreatedAt      time.Time `json:"created_at"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Price          float64   `json:"price"`
+	Quantity       uint      `json:"quantity"`
+	IsAvailable    bool      `json:"is_available"`
+	AvailableFrom  time.Time `json:"available_from"`
+	AvailableUntil time.Time `json:"available_until"`
+}
+
+type DiscountDetailsResponse struct {
+	ID             uint      `json:"id"`
+	CreatedAt      time.Time `json:"created_at"`
+	Code           string    `json:"code"`
+	Type           string    `json:"type"`
+	Value          float64   `json:"value"`
+	AvailableFrom  time.Time `json:"available_from"`
+	AvailableUntil time.Time `json:"available_until"`
+	Quantity       uint      `json:"quantity"`
+	UsedCount      uint      `json:"used_count"`
+	MinTickets     uint      `json:"min_tickets"`
+}

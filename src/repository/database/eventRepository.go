@@ -19,6 +19,8 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 	}
 }
 
+const queryByIDAndEventID = "id = ? AND event_id = ?"
+
 func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location string, fromDate, toDate time.Time) (entities.Event, bool) {
 	var existingEvent entities.Event
 	query := repo.db.Where("name = ? AND status != ?", name, enums.Cancelled)
@@ -81,6 +83,39 @@ func (repo *EventRepository) FindEventByID(eventID uint) (entities.Event, bool) 
 	return event, true
 }
 
+func (repo *EventRepository) FindEventCategoriesByEvent(event entities.Event) entities.Event {
+	if err := repo.db.Model(&event).Association("Categories").Find(&event.Categories); err != nil {
+		panic(err)
+	}
+	return event
+}
+
+func (repo *EventRepository) FindTicketsByEventID(eventID uint) ([]entities.Ticket, bool) {
+	var tickets []entities.Ticket
+	result := repo.db.Where("event_id = ?", eventID).Find(&tickets)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return tickets, false
+		}
+		panic(result.Error)
+	}
+	return tickets, true
+}
+
+func (repo *EventRepository) FindDiscountsByEventID(eventID uint) ([]entities.Discount, bool) {
+	var discounts []entities.Discount
+	result := repo.db.Where("event_id = ?", eventID).Find(&discounts)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return discounts, false
+		}
+		panic(result.Error)
+	}
+	return discounts, true
+}
+
 func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID uint) (entities.Ticket, bool) {
 	var ticket entities.Ticket
 	result := repo.db.First(&ticket, "name = ? AND event_id = ?", ticketName, eventID)
@@ -133,32 +168,16 @@ func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entit
 	return discount
 }
 
-func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) []entities.Event {
+func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]entities.Event, bool) {
 	var events []entities.Event
 	result := repo.db.Where("status IN ?", allowedStatus).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return events
+			return events, false
 		}
 		panic(result.Error)
 	}
-	return events
-}
-
-func (repo *EventRepository) FetchEventDetailsAfterFetching(event entities.Event) entities.Event {
-	err := repo.db.Model(&event).
-		Preload("Tickets.Purchasable").
-		Preload("Organizers").
-		Preload("Categories").
-		Preload("Discounts").
-		Preload("Media").
-		Preload("Commentable.Comments.User").
-		Find(&event).Error
-
-	if err != nil {
-		panic(fmt.Errorf("failed to preload event details: %w", err))
-	}
-	return event
+	return events, true
 }
 
 func (repo *EventRepository) FindAllCategories() []string {
@@ -186,7 +205,7 @@ func (repo *EventRepository) DeleteEvent(eventID uint) bool {
 
 func (repo *EventRepository) DeleteTicket(eventID, ticketID uint) bool {
 	var ticket entities.Ticket
-	result := repo.db.Where("id = ? AND event_id = ?", ticketID, eventID).First(&ticket)
+	result := repo.db.Where(queryByIDAndEventID, ticketID, eventID).First(&ticket)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return false
@@ -201,7 +220,7 @@ func (repo *EventRepository) DeleteTicket(eventID, ticketID uint) bool {
 
 func (repo *EventRepository) DeleteDiscount(eventID, discountID uint) bool {
 	var discount entities.Discount
-	result := repo.db.Where("id = ? AND event_id = ?", discountID, eventID).First(&discount)
+	result := repo.db.Where(queryByIDAndEventID, discountID, eventID).First(&discount)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return false
@@ -236,7 +255,7 @@ func (repo *EventRepository) CreateNewMedia(media entities.Media) entities.Media
 
 func (repo *EventRepository) FindMediaByIDAndEventID(mediaID, eventID uint) (entities.Media, bool) {
 	var media entities.Media
-	result := repo.db.Where("id = ? AND event_id = ?", mediaID, eventID).First(&media)
+	result := repo.db.Where(queryByIDAndEventID, mediaID, eventID).First(&media)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

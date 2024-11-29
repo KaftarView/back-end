@@ -32,18 +32,38 @@ func NewEventController(
 	}
 }
 
-func (eventController *EventController) ListEvents(c *gin.Context) {
-	events := eventController.eventService.GetListOfEvents()
+func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	events := eventController.eventService.GetEventsList(allowedStatus)
 	controller.Response(c, 200, "", events)
 }
 
-func (eventController *EventController) GetEvent(c *gin.Context) {
+func (eventController *EventController) GetEventDetailsForAdmin(c *gin.Context) {
 	type getEventParams struct {
 		EventID uint `uri:"id" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
-	event := eventController.eventService.GetEventDetails(param.EventID)
-	controller.Response(c, 200, "", event)
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	eventDetails := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
+	controller.Response(c, 200, "", eventDetails)
+}
+
+func (eventController *EventController) GetTicketDetails(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"id" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	ticketDetails := eventController.eventService.GetEventTickets(param.EventID)
+	controller.Response(c, 200, "", ticketDetails)
+}
+
+func (eventController *EventController) GetDiscountDetails(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"id" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	discountDetails := eventController.eventService.GetEventDiscounts(param.EventID)
+	controller.Response(c, 200, "", discountDetails)
 }
 
 func (eventController *EventController) CreateEvent(c *gin.Context) {
@@ -254,7 +274,8 @@ func (eventController *EventController) UnpublishEvent(c *gin.Context) {
 }
 
 func (eventController *EventController) ListPublicEvents(c *gin.Context) {
-	events := eventController.eventService.GetListOfPublishedEvents()
+	allowedStatus := []enums.EventStatus{enums.Published}
+	events := eventController.eventService.GetEventsList(allowedStatus)
 	controller.Response(c, 200, "", events)
 }
 
@@ -263,7 +284,8 @@ func (eventController *EventController) GetPublicEvent(c *gin.Context) {
 		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getPublicEventParams](c, &eventController.constants.Context)
-	event := eventController.eventService.GetPublicEventDetails(param.EventID)
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
+	event := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
 	controller.Response(c, 200, "", event)
 }
 

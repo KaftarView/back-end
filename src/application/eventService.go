@@ -70,6 +70,10 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	return event
 }
 
+func (eventService *EventService) SetBannerPath(mediaPath string, eventID uint) {
+	eventService.eventRepository.UpdateEventBannerByEventID(mediaPath, eventID)
+}
+
 func (eventService *EventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
@@ -78,7 +82,7 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	_, mediaExist := eventService.eventRepository.FindEventMediaByName(ticketName, eventID)
+	_, mediaExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
 	if mediaExist {
 		conflictError.AppendError(
 			eventService.constants.ErrorField.Media,
@@ -144,62 +148,119 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-func (eventService *EventService) GetListOfPublishedEvents() []entities.Event {
-	allowedStatus := []enums.EventStatus{enums.Published}
-	events := eventService.eventRepository.FindEventsByStatus(allowedStatus)
-	return events
+func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus)
+	eventsDetails := make([]dto.EventDetailsResponse, len(events))
+	for i, event := range events {
+		eventsDetails[i] = dto.EventDetailsResponse{
+			ID:          event.ID,
+			CreatedAt:   event.CreatedAt,
+			Name:        event.Name,
+			Status:      event.Status.String(),
+			Description: event.Description,
+			FromDate:    event.FromDate,
+			ToDate:      event.ToDate,
+			VenueType:   event.VenueType.String(),
+		}
+	}
+	return eventsDetails
 }
 
-func (eventService *EventService) GetListOfEvents() []entities.Event {
-	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
-	events := eventService.eventRepository.FindEventsByStatus(allowedStatus)
-	return events
-}
-
-func (eventService *EventService) GetEventDetails(eventID uint) entities.Event {
+func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	isValidStatus := false
-	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	isAllowStatus := false
 	for _, status := range allowedStatus {
 		if event.Status == status {
-			isValidStatus = true
-			break
+			isAllowStatus = true
 		}
 	}
-	if !isValidStatus {
+	if !isAllowStatus {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	event = eventService.eventRepository.FetchEventDetailsAfterFetching(event)
-	return event
+	event = eventService.eventRepository.FindEventCategoriesByEvent(event)
+	categoryNames := make([]string, len(event.Categories))
+	for i, category := range event.Categories {
+		categoryNames[i] = category.Name
+	}
+
+	eventDetails := dto.EventDetailsResponse{
+		ID:          event.ID,
+		CreatedAt:   event.CreatedAt,
+		Name:        event.Name,
+		Status:      event.Status.String(),
+		Description: event.Description,
+		FromDate:    event.FromDate,
+		ToDate:      event.ToDate,
+		VenueType:   event.VenueType.String(),
+		Location:    event.Location,
+		Categories:  categoryNames,
+	}
+	return eventDetails
 }
 
-func (eventService *EventService) GetPublicEventDetails(eventID uint) entities.Event {
+func (eventService *EventService) GetEventTickets(eventID uint) []dto.TicketDetailsResponse {
 	var notFoundError exceptions.NotFoundError
-	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	isValidStatus := false
-	allowedStatus := []enums.EventStatus{enums.Published}
-	for _, status := range allowedStatus {
-		if event.Status == status {
-			isValidStatus = true
-			break
+
+	tickets, ticketExist := eventService.eventRepository.FindTicketsByEventID(eventID)
+	if !ticketExist {
+		return []dto.TicketDetailsResponse{}
+	}
+	ticketsDetails := make([]dto.TicketDetailsResponse, len(tickets))
+	for i, ticket := range tickets {
+		ticketsDetails[i] = dto.TicketDetailsResponse{
+			ID:             ticket.ID,
+			CreatedAt:      ticket.CreatedAt,
+			Name:           ticket.Name,
+			Description:    ticket.Description,
+			Price:          ticket.Price,
+			Quantity:       ticket.Quantity,
+			IsAvailable:    ticket.IsAvailable,
+			AvailableFrom:  ticket.AvailableFrom,
+			AvailableUntil: ticket.AvailableUntil,
 		}
 	}
-	if !isValidStatus {
+	return ticketsDetails
+}
+
+func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	event = eventService.eventRepository.FetchEventDetailsAfterFetching(event)
-	return event
+
+	discounts, discountExist := eventService.eventRepository.FindDiscountsByEventID(eventID)
+	if !discountExist {
+		return []dto.DiscountDetailsResponse{}
+	}
+	discountsDetails := make([]dto.DiscountDetailsResponse, len(discounts))
+	for i, discount := range discounts {
+		discountsDetails[i] = dto.DiscountDetailsResponse{
+			ID:             discount.ID,
+			CreatedAt:      discount.CreatedAt,
+			Code:           discount.Code,
+			Type:           discount.Type.String(),
+			Value:          discount.Value,
+			AvailableFrom:  discount.ValidFrom,
+			AvailableUntil: discount.ValidUntil,
+			Quantity:       discount.Quantity,
+			UsedCount:      discount.UsedCount,
+			MinTickets:     discount.MinTickets,
+		}
+	}
+	return discountsDetails
 }
 
 func (eventService *EventService) GetListOfCategories() []string {
@@ -234,6 +295,25 @@ func (eventService *EventService) DeleteDiscount(eventID, discountID uint) {
 	}
 }
 
+func (eventService *EventService) GetEventMediaPath(mediaID, eventID uint) entities.Media {
+	var notFoundError exceptions.NotFoundError
+	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+	return media
+}
+
+func (eventService *EventService) DeleteEventMedia(mediaID uint) {
+	var notFoundError exceptions.NotFoundError
+	eventExist := eventService.eventRepository.DeleteMedia(mediaID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+}
+
 func (eventService *EventService) ChangeEventStatus(eventID uint, newStatus string) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
@@ -256,10 +336,6 @@ func (eventService *EventService) ChangeEventStatus(eventID uint, newStatus stri
 		panic(conflictError)
 	}
 	eventService.eventRepository.ChangeStatusByEvent(event, enumNewStatus)
-}
-
-func (eventService *EventService) SetBannerPath(mediaPath string, eventID uint) {
-	eventService.eventRepository.UpdateEventBannerByEventID(mediaPath, eventID)
 }
 
 func (eventService *EventService) ValidateNewEventMediaDetails(eventID uint, mediaName string) {
@@ -287,23 +363,4 @@ func (eventService *EventService) CreateEventMedia(mediaName, mediaPath string, 
 	}
 	media := eventService.eventRepository.CreateNewMedia(eventMediaModel)
 	return media
-}
-
-func (eventService *EventService) GetEventMediaPath(mediaID, eventID uint) entities.Media {
-	var notFoundError exceptions.NotFoundError
-	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
-	if !mediaExist {
-		notFoundError.ErrorField = eventService.constants.ErrorField.Media
-		panic(notFoundError)
-	}
-	return media
-}
-
-func (eventService *EventService) DeleteEventMedia(mediaID uint) {
-	var notFoundError exceptions.NotFoundError
-	eventExist := eventService.eventRepository.DeleteMedia(mediaID)
-	if !eventExist {
-		notFoundError.ErrorField = eventService.constants.ErrorField.Media
-		panic(notFoundError)
-	}
 }
