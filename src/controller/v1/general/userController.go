@@ -97,15 +97,14 @@ func (userController *UserController) Login(c *gin.Context) {
 	user := userController.userService.AuthenticateUser(param.Username, param.Password)
 	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
 	accessToken, refreshToken := userController.jwtService.GenerateJWT(user.ID)
-	controller.SetAuthCookies(
-		c, accessToken, refreshToken,
-		userController.constants.Context.AccessToken,
-		userController.constants.Context.RefreshToken,
-	)
+	type tokens struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
 	userController.userCache.SetUser(user.ID, user.Name, user.Email)
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")
-	controller.Response(c, 200, message, nil)
+	controller.Response(c, 200, message, tokens{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
 func (userController *UserController) ForgotPassword(c *gin.Context) {
@@ -131,8 +130,14 @@ func (userController *UserController) ConfirmOTP(c *gin.Context) {
 		OTP   string `json:"otp" validate:"required"`
 	}
 	param := controller.Validated[confirmOTPParams](c, &userController.constants.Context)
-	userController.userService.ValidateUserOTP(param.Email, param.OTP)
-	controller.Response(c, 200, "", nil)
+	userID := userController.userService.ValidateUserOTP(param.Email, param.OTP)
+	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	accessToken, refreshToken := userController.jwtService.GenerateJWT(userID)
+	type tokens struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+	controller.Response(c, 200, "", tokens{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
 func (userController *UserController) ResetPassword(c *gin.Context) {

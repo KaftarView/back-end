@@ -20,7 +20,6 @@ func (jt *JWTToken) GenerateJWT(userID uint) (string, string) {
 	accessTokenClaims := jwt.MapClaims{
 		"iss": "test",
 		"sub": userID,
-		// "exp": time.Now().Add(time.Hour * 1).Unix(),
 		"exp": time.Now().Add(time.Minute * 15).Unix(),
 		"iat": time.Now().Unix(),
 	}
