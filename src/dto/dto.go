@@ -7,6 +7,7 @@ type CreateEventDetails struct {
 	Status      string
 	Categories  []string
 	Description string
+	BasePrice   float64
 	FromDate    time.Time
 	ToDate      time.Time
 	MinCapacity uint
@@ -45,6 +46,9 @@ type EventDetailsResponse struct {
 	Name        string    `json:"name"`
 	Status      string    `json:"status"`
 	Description string    `json:"description"`
+	BasePrice   float64   `json:"base-price"`
+	MinCapacity uint      `json:"min_capacity"`
+	MaxCapacity uint      `json:"max_capacity"`
 	FromDate    time.Time `json:"from_date"`
 	ToDate      time.Time `json:"to_date"`
 	VenueType   string    `json:"venue_type"`

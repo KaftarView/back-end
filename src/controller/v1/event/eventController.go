@@ -71,6 +71,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 		Name        string                `form:"name" validate:"required,max=50"`
 		Status      string                `form:"status"`
 		Description string                `form:"description"`
+		BasePrice   float64               `form:"basePrice" validate:"required"`
 		FromDate    time.Time             `form:"fromDate" validate:"required"`
 		ToDate      time.Time             `form:"toDate" validate:"required,gtfield=FromDate"`
 		MinCapacity uint                  `form:"minCapacity" validate:"required,min=1"`
@@ -90,6 +91,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 		Status:      param.Status,
 		Categories:  param.Categories,
 		Description: param.Description,
+		BasePrice:   param.BasePrice,
 		FromDate:    param.FromDate,
 		ToDate:      param.ToDate,
 		MinCapacity: param.MinCapacity,
