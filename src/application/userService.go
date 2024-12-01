@@ -155,7 +155,7 @@ func (userService *UserService) UpdateUserOTPIfExists(email, otp string) {
 	userService.userRepository.UpdateUserToken(user, otp)
 }
 
-func (userService *UserService) ValidateUserOTP(email, otp string) {
+func (userService *UserService) ValidateUserOTP(email, otp string) uint {
 	var registrationError exceptions.UserRegistrationError
 	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !verifiedUserExist {
@@ -168,6 +168,7 @@ func (userService *UserService) ValidateUserOTP(email, otp string) {
 		user, otp, userService.constants.ErrorField.OTP,
 		userService.constants.ErrorTag.ExpiredToken,
 		userService.constants.ErrorTag.InvalidToken)
+	return user.ID
 }
 
 func (userService *UserService) ResetPasswordService(email, password, confirmPassword string) {

@@ -31,8 +31,8 @@ func NewAuthMiddleware(
 }
 
 func (am *AuthMiddleware) Authentication(c *gin.Context) {
-	tokenString, err := c.Cookie(am.constants.Context.AccessToken)
-	if err != nil {
+	tokenString := c.GetHeader("Authorization")
+	if tokenString != "" {
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
