@@ -32,7 +32,7 @@
         "uploadObjectToBucket": "Object added to bucket created successfully.",
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
         "updateUSerRole": "Role added to user successfully.",
-        "NewsUpdated" : "News updated successfully."
+        "NewsUpdated" : "News updated successfully.",
         "createEvent": "Event added successfully.",
         "addTicket": "Ticket added successfully.",
         "addDiscount": "Discount added successfully.",
