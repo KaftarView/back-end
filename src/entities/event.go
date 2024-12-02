@@ -24,10 +24,10 @@ type Event struct {
 
 	Commentable Commentable `gorm:"foreignKey:ID"`
 
-	Tickets   []Ticket   `gorm:"foreignKey:EventID"`
-	Discounts []Discount `gorm:"foreignKey:EventID"`
-	Media     []Media    `gorm:"foreignKey:EventID"`
+	Tickets    []Ticket    `gorm:"foreignKey:EventID"`
+	Discounts  []Discount  `gorm:"foreignKey:EventID"`
+	Media      []Media     `gorm:"foreignKey:EventID"`
+	Organizers []Organizer `gorm:"foreignKey:EventID"`
 
-	Organizers []Organizer `gorm:"many2many:event_organizers"`
-	Categories []Category  `gorm:"many2many:event_categories"`
+	Categories []Category `gorm:"many2many:event_categories"`
 }

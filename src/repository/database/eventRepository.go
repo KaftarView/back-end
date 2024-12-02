@@ -168,6 +168,38 @@ func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entit
 	return discount
 }
 
+func (repo *EventRepository) FindActiveOrVerifiedOrganizerByEmail(eventID uint, email string) (entities.Organizer, bool) {
+	var organizer entities.Organizer
+	result := repo.db.Where("email = ? AND event_id = ?", email, eventID).First(&organizer)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return organizer, false
+		}
+		panic(result.Error)
+	}
+	if organizer.Verified || time.Since(organizer.UpdatedAt) < 8*time.Hour {
+		return organizer, true
+	}
+	repo.db.Delete(&organizer)
+	return organizer, false
+}
+
+func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email, description, token string, verified bool) entities.Organizer {
+	organizer := entities.Organizer{
+		Name:        name,
+		Email:       email,
+		Description: description,
+		Token:       token,
+		Verified:    verified,
+		EventID:     eventID,
+	}
+	result := repo.db.Create(&organizer)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return organizer
+}
+
 func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]entities.Event, bool) {
 	var events []entities.Event
 	result := repo.db.Where("status IN ?", allowedStatus).Find(&events)

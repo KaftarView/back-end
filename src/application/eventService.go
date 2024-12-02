@@ -149,6 +149,25 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
+func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email, description, token string) uint {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	_, organizerExist := eventService.eventRepository.FindActiveOrVerifiedOrganizerByEmail(eventID, email)
+	if organizerExist {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Organizer,
+			eventService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	organizer := eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, token, false)
+	return organizer.ID
+}
+
 func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus)
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
