@@ -4,6 +4,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	repository_database "first-project/src/repository/database"
+	"log"
 )
 
 type NewsService struct {
@@ -14,27 +15,27 @@ func NewNewsService(newsRepo *repository_database.NewsRepository) *NewsService {
 	return &NewsService{newsRepo: newsRepo}
 }
 
-func (ns *NewsService) CreateNews(title, description, content, category, author string) {
-	categoryType, err := enums.StringToCategoryType(category)
-	if err != nil {
-		panic(err)
-	}
-
-	ns.newsRepo.CreateNews(title, description, content, categoryType, author)
+func (ns *NewsService) CreateNews(title, description, content string, author string, category []string) entities.News {
+	//categoryType, err := enums.StringToCategoryType(category)
+	categories := ns.newsRepo.FindCategoriesByNames(category)
+	log.Printf("Categories: %v\n", categories)
+	res := ns.newsRepo.CreateNews(title, description, content, categories, author)
+	return res
 }
-
+func (ns *NewsService) SetBannerPath(mediaPaths []string, eventID uint) {
+	ns.newsRepo.UpdateNewsBannerByNewsID(mediaPaths, eventID)
+}
 func (ns *NewsService) GetNewsByID(newsID uint) (*entities.News, bool) {
 	news, found := ns.newsRepo.GetNewsByID(newsID)
-	return &news, found
+	cat := ns.newsRepo.FindNewsCategories(*news)
+	news.Categories = cat.Categories
+	return news, found
 }
 
-func (ns *NewsService) UpdateNews(newsID uint, title, description, content, category, author string) (*entities.News, bool) {
-	categoryType, err := enums.StringToCategoryType(category)
-	if err != nil {
-		panic(err)
-	}
+func (ns *NewsService) UpdateNews(newsID uint, title, description, content, author string, category []string) (*entities.News, bool) {
+	categories := ns.newsRepo.FindCategoriesByNames(category)
 
-	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, categoryType, author)
+	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, categories, author)
 	if err != nil {
 		panic(err)
 	}
@@ -50,8 +51,12 @@ func (ns *NewsService) DeleteNews(newsID uint) bool {
 	return true
 }
 
-func (ns *NewsService) GetAllNews(categories []enums.CategoryType, limit int, offset int) []entities.News {
+func (ns *NewsService) GetAllNews(categories []string, limit int, offset int) []entities.News {
 	news, err := ns.newsRepo.GetAllNews(categories, limit, offset)
+	for i, job := range news {
+		cat := ns.newsRepo.FindNewsCategories(job)
+		news[i].Categories = cat.Categories
+	}
 	if err != nil {
 		panic(err)
 	}
