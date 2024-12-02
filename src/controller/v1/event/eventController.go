@@ -218,8 +218,8 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 		param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
-	message, _ := trans.T("successMessage.userRegistration")
-	controller.Response(c, 201, message, nil)
+	message, _ := trans.T("successMessage.organizerRegistration")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) UpdateEvent(c *gin.Context) {
