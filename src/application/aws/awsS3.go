@@ -16,27 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-// type S3service struct {
-// constants *bootstrap.Constants
-// 	bucket    *bootstrap.Bucket // has to change to 3 different bucket names
-// 	session   *session.Session
-// 	s3Client  *s3.S3
-// }
-
-// func NewAWSS3(constants *bootstrap.Constants, bucket *bootstrap.Bucket) *S3service {
-// 	return &S3service{
-// 		constants: constants,
-// 		bucket:    bucket,
-// 	}
-// }
-
-// type S3service struct {
-// 	constants   *bootstrap.Constants
-// 	bucketConfigs map[enums.BucketType]*bootstrap.Bucket
-// 	clients     map[enums.BucketType]*s3.S3
-// 	uploader    map[enums.BucketType]*s3manager.Uploader
-// }
-
 type S3service struct {
 	constants *bootstrap.Constants
 	buckets   map[enums.BucketType]*bootstrap.Bucket

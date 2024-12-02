@@ -54,6 +54,7 @@ type EventDetailsResponse struct {
 	VenueType   string    `json:"venue_type"`
 	Categories  []string  `json:"categories"`
 	Location    string    `json:"location"`
+	Banner      string    `json:"banner"`
 }
 
 type TicketDetailsResponse struct {
