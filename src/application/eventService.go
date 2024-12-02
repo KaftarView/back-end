@@ -162,6 +162,7 @@ func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatu
 			FromDate:    event.FromDate,
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
+			Banner:      event.BannerPath,
 		}
 	}
 	return eventsDetails
@@ -204,6 +205,7 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		VenueType:   event.VenueType.String(),
 		Location:    event.Location,
 		Categories:  categoryNames,
+		Banner:      event.BannerPath,
 	}
 	return eventDetails
 }

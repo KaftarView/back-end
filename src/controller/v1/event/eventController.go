@@ -35,6 +35,9 @@ func NewEventController(
 func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
 	events := eventController.eventService.GetEventsList(allowedStatus)
+	for i := range events {
+		events[i].Banner = eventController.awsService.GetPresignedURL(enums.BannersBucket, events[i].Banner, 8*time.Hour)
+	}
 	controller.Response(c, 200, "", events)
 }
 
@@ -45,6 +48,7 @@ func (eventController *EventController) GetEventDetailsForAdmin(c *gin.Context) 
 	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
 	eventDetails := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
+	eventDetails.Banner = eventController.awsService.GetPresignedURL(enums.BannersBucket, eventDetails.Banner, 8*time.Hour)
 	controller.Response(c, 200, "", eventDetails)
 }
 
@@ -278,6 +282,9 @@ func (eventController *EventController) UnpublishEvent(c *gin.Context) {
 func (eventController *EventController) ListPublicEvents(c *gin.Context) {
 	allowedStatus := []enums.EventStatus{enums.Published}
 	events := eventController.eventService.GetEventsList(allowedStatus)
+	for i := range events {
+		events[i].Banner = eventController.awsService.GetPresignedURL(enums.BannersBucket, events[i].Banner, 8*time.Hour)
+	}
 	controller.Response(c, 200, "", events)
 }
 
@@ -287,8 +294,9 @@ func (eventController *EventController) GetPublicEvent(c *gin.Context) {
 	}
 	param := controller.Validated[getPublicEventParams](c, &eventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
-	event := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
-	controller.Response(c, 200, "", event)
+	eventDetails := eventController.eventService.GetEventDetails(allowedStatus, param.EventID)
+	eventDetails.Banner = eventController.awsService.GetPresignedURL(enums.BannersBucket, eventDetails.Banner, 8*time.Hour)
+	controller.Response(c, 200, "", eventDetails)
 }
 
 func (ec *EventController) ListCategories(c *gin.Context) {

@@ -32,7 +32,7 @@ func NewAuthMiddleware(
 
 func (am *AuthMiddleware) Authentication(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
-	if tokenString != "" {
+	if tokenString == "" {
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)
 	}
