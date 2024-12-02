@@ -1,12 +1,10 @@
 package controller_v1_general
 
 import (
-	application_aws "first-project/src/application/aws"
 	application_news "first-project/src/application/news"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/enums"
-	"fmt"
 	"log"
 	"mime/multipart"
 	"strconv"
@@ -17,15 +15,12 @@ import (
 type NewsController struct {
 	constants   *bootstrap.Constants
 	newsService *application_news.NewsService
-	awsService  *application_aws.S3service
 }
 
-func NewNewsController(constants *bootstrap.Constants, newsService *application_news.NewsService,
-	awsService *application_aws.S3service) *NewsController {
+func NewNewsController(constants *bootstrap.Constants, newsService *application_news.NewsService) *NewsController {
 	return &NewsController{
 		constants:   constants,
 		newsService: newsService,
-		awsService:  awsService,
 	}
 }
 
@@ -35,23 +30,18 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 		Description string                `json:"description"`
 		Content     string                `json:"content"`
 		Banner      *multipart.FileHeader `json:"banner"`
-		Category    []string              `json:"category" validate:"required"`
+		Category    string                `json:"category" validate:"required"`
 		Author      string                `json:"author" validate:"required"`
 	}
 	param := controller.Validated[createParams](c, &nc.constants.Context)
 	log.Printf("Received parameters: %+v", param)
-
-	news := nc.newsService.CreateNews(
+	nc.newsService.CreateNews(
 		param.Title,
 		param.Description,
 		param.Content,
-		param.Author,
 		param.Category,
+		param.Author,
 	)
-
-	objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
-	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	nc.newsService.SetBannerPath([]string{objectPath}, news.ID)
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsCreation")
@@ -71,7 +61,7 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		Description string                `json:"description"`
 		Content     string                `json:"content"`
 		Banner      *multipart.FileHeader `json:"banner"`
-		Category    []string              `json:"category" validate:"required"`
+		Category    string                `json:"category" validate:"required"`
 		Author      string                `json:"author" validate:"required"`
 	}
 
@@ -82,20 +72,14 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		param.Title,
 		param.Description,
 		param.Content,
-		param.Author,
 		param.Category,
+		param.Author,
 	)
 
 	if !found {
 		controller.Response(c, 400, "No news with this id", nil)
 		return
 	}
-
-	nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[0])
-
-	objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
-	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	nc.newsService.SetBannerPath([]string{objectPath}, uint(id))
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsUpdated")
@@ -128,7 +112,6 @@ func (nc *NewsController) GetNewsByID(c *gin.Context) {
 	}
 
 	news, found := nc.newsService.GetNewsByID(uint(id))
-
 	if !found {
 		controller.Response(c, 400, "No news with this id", nil)
 		return
@@ -138,6 +121,15 @@ func (nc *NewsController) GetNewsByID(c *gin.Context) {
 }
 func (nc *NewsController) GetNewsList(c *gin.Context) {
 	categories := c.QueryArray("categories")
+	var parsedCategories []enums.CategoryType
+	for _, category := range categories {
+		parsedCategory, err := strconv.Atoi(category)
+		if err != nil {
+			controller.Response(c, 400, "Invalid category", nil)
+			return
+		}
+		parsedCategories = append(parsedCategories, enums.CategoryType(parsedCategory))
+	}
 
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if err != nil || limit <= 0 {
@@ -151,7 +143,7 @@ func (nc *NewsController) GetNewsList(c *gin.Context) {
 		return
 	}
 
-	newsList := nc.newsService.GetAllNews(categories, limit, offset)
+	newsList := nc.newsService.GetAllNews(parsedCategories, limit, offset)
 
 	controller.Response(c, 200, "Success", newsList)
 }
@@ -184,11 +176,25 @@ func (nc *NewsController) GetTopKNews(c *gin.Context) {
 }
 
 func (nc *NewsController) GetNewsByCategory(c *gin.Context) {
-	type requestBody struct {
+	var requestBody struct {
 		Categories []string `json:"categories"`
 	}
 
-	categgories := controller.Validated[requestBody](c, &nc.constants.Context)
-	newsList := nc.newsService.GetAllNews(categgories.Categories, 10, 0)
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		controller.Response(c, 400, "Invalid input", nil)
+		return
+	}
+
+	var categories []enums.CategoryType
+	for _, categoryName := range requestBody.Categories {
+		category, err := enums.GetCategoryTypeByName(categoryName)
+		if err != nil {
+			controller.Response(c, 400, "Invalid category name: "+categoryName, nil)
+			return
+		}
+		categories = append(categories, category)
+	}
+
+	newsList := nc.newsService.GetAllNews(categories, 10, 0)
 	controller.Response(c, 200, "Success", newsList)
 }
