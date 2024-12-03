@@ -30,7 +30,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	eventRepository := repository_database.NewEventRepository(db)
 	eventService := application.NewEventService(di.Constants, eventRepository)
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
 
 	public := routerGroup.Group("/public")

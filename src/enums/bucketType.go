@@ -6,6 +6,7 @@ const (
 	BannersBucket BucketType = iota + 1
 	SessionsBucket
 	PodcastsBucket
+	ProfileBucket
 )
 
 // possibly do not need to this at all maybe
@@ -17,7 +18,8 @@ func (bt BucketType) String() string {
 		return "SessionsBucket"
 	case PodcastsBucket:
 		return "PodcastsBucket"
-
+	case ProfileBucket:
+		return "ProfileBucket"
 	}
 	return ""
 }
@@ -27,5 +29,6 @@ func GetAllBucketTypes() []BucketType {
 		BannersBucket,
 		SessionsBucket,
 		PodcastsBucket,
+		ProfileBucket,
 	}
 }
