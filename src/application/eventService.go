@@ -1,6 +1,7 @@
 package application
 
 import (
+	"encoding/base64"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
@@ -149,7 +150,7 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email, description, token string) uint {
+func (eventService *EventService) UpdateOrCreateEventOrganizer(eventID uint, name, email, description, token string) uint {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -164,8 +165,53 @@ func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	organizer := eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, token, false)
+	organizer, organizerExist := eventService.eventRepository.FindOrganizerByEventIDAndEmailAndVerified(eventID, email, false)
+	if organizerExist {
+		eventService.eventRepository.UpdateOrganizerToken(organizer, token)
+		return organizer.ID
+	}
+	organizer = eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, token, false)
 	return organizer.ID
+}
+
+func (eventService *EventService) ActivateUser(encodedOrganizerID, encodedEventID, token string) {
+	decodedOrganizerID, err := base64.StdEncoding.DecodeString(encodedOrganizerID)
+	if err != nil {
+		panic(err)
+	}
+	decodedEventID, err := base64.StdEncoding.DecodeString(encodedEventID)
+	if err != nil {
+		panic(err)
+	}
+	organizerID := uint(decodedOrganizerID[0])
+	eventID := uint(decodedEventID[0])
+	var registrationError exceptions.UserRegistrationError
+	var notFoundError exceptions.NotFoundError
+	_, organizerExist := eventService.eventRepository.FindOrganizerByIDAndEventIDAndVerified(organizerID, eventID, true)
+	if organizerExist {
+		registrationError.AppendError(
+			eventService.constants.ErrorField.Organizer,
+			eventService.constants.ErrorTag.AlreadyVerified)
+		panic(registrationError)
+	}
+	organizer, organizerExist := eventService.eventRepository.FindOrganizerByIDAndEventIDAndVerified(organizerID, eventID, false)
+	if !organizerExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Organizer
+		panic(notFoundError)
+	}
+	if organizer.Token != token {
+		registrationError.AppendError(
+			eventService.constants.ErrorField.Organizer,
+			eventService.constants.ErrorTag.InvalidToken)
+		panic(registrationError)
+	}
+	if time.Since(organizer.UpdatedAt) > 8*time.Hour {
+		registrationError.AppendError(
+			eventService.constants.ErrorField.Token,
+			eventService.constants.ErrorTag.ExpiredToken)
+		panic(registrationError)
+	}
+	eventService.eventRepository.ActivateOrganizer(organizer)
 }
 
 func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {

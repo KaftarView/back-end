@@ -7,7 +7,7 @@ import (
 type Organizer struct {
 	gorm.Model
 	Name        string `gorm:"type:varchar(50);not null"`
-	Email       string `gorm:"type:varchar(50);unique;not null"`
+	Email       string `gorm:"type:varchar(50);not null"`
 	ProfilePath string `gorm:"type:text"`
 	Description string `gorm:"type:text"`
 	Verified    bool   `gorm:"default:false"`

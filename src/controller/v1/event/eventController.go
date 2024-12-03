@@ -204,14 +204,15 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	}
 	param := controller.Validated[addEventOrganizerParams](c, &eventController.constants.Context)
 	token := application.GenerateSecureToken(32)
-	organizerID := eventController.eventService.CreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, token)
-	encodedID := base64.StdEncoding.EncodeToString([]byte(string(organizerID)))
+	organizerID := eventController.eventService.UpdateOrCreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, token)
+	encodedOrganizerID := base64.StdEncoding.EncodeToString([]byte(string(organizerID)))
+	encodedEventID := base64.StdEncoding.EncodeToString([]byte(string(param.EventID)))
 	emailTemplateData := struct {
 		Name string
 		Link string
 	}{
 		Name: param.Name,
-		Link: encodedID + "/" + token,
+		Link: encodedOrganizerID + "/" + encodedEventID + "/" + token,
 	}
 	templatePath := getTemplatePath(c, eventController.constants.Context.Translator)
 	eventController.emailService.SendEmail(
@@ -219,6 +220,20 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.organizerRegistration")
+	controller.Response(c, 200, message, nil)
+}
+
+func (eventController *EventController) VerifyEmail(c *gin.Context) {
+	type verifyEmailParams struct {
+		EncodedOrganizerID string `json:"encodedOrganizerID" validate:"required"`
+		EncodedEventID     string `json:"encodedEventID" validate:"required"`
+		Token              string `json:"token" validate:"required"`
+	}
+	param := controller.Validated[verifyEmailParams](c, &eventController.constants.Context)
+	eventController.eventService.ActivateUser(param.EncodedOrganizerID, param.EncodedEventID, param.Token)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.organizerActivated")
 	controller.Response(c, 200, message, nil)
 }
 

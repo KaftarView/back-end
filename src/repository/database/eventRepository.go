@@ -83,6 +83,37 @@ func (repo *EventRepository) FindEventByID(eventID uint) (entities.Event, bool) 
 	return event, true
 }
 
+func (repo *EventRepository) FindOrganizerByEventIDAndEmailAndVerified(eventID uint, email string, verified bool) (entities.Organizer, bool) {
+	var organizer entities.Organizer
+	result := repo.db.First(&organizer, "event_id = ? AND email = ? AND verified = ?", eventID, email, verified)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return organizer, false
+		}
+		panic(result.Error)
+	}
+	return organizer, true
+}
+
+func (repo *EventRepository) UpdateOrganizerToken(organizer entities.Organizer, token string) {
+	organizer.Token = token
+	repo.db.Save(&organizer)
+}
+
+func (repo *EventRepository) FindOrganizerByIDAndEventIDAndVerified(organizerID, eventID uint, verified bool) (entities.Organizer, bool) {
+	var organizer entities.Organizer
+	result := repo.db.First(&organizer, "id = ? AND event_id = ? AND verified = ?", organizerID, eventID, verified)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return organizer, false
+		}
+		panic(result.Error)
+	}
+	return organizer, true
+}
+
 func (repo *EventRepository) FindEventCategoriesByEvent(event entities.Event) entities.Event {
 	if err := repo.db.Model(&event).Association("Categories").Find(&event.Categories); err != nil {
 		panic(err)
@@ -198,6 +229,14 @@ func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email
 		panic(result.Error)
 	}
 	return organizer
+}
+
+func (repo *EventRepository) ActivateOrganizer(organizer entities.Organizer) {
+	organizer.Verified = true
+	organizer.Token = ""
+	if err := repo.db.Save(&organizer).Error; err != nil {
+		panic(err)
+	}
 }
 
 func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]entities.Event, bool) {
