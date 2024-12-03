@@ -8,6 +8,7 @@ import (
 	"first-project/src/exceptions"
 	jwt_keys "first-project/src/jwtKeys"
 	repository_database "first-project/src/repository/database"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +32,19 @@ func NewAuthMiddleware(
 }
 
 func (am *AuthMiddleware) Authentication(c *gin.Context) {
-	tokenString := c.GetHeader("Authorization")
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		unauthorizedError := exceptions.NewUnauthorizedError()
+		panic(unauthorizedError)
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		unauthorizedError := exceptions.NewUnauthorizedError()
+		panic(unauthorizedError)
+	}
+
+	tokenString := parts[1]
 	if tokenString == "" {
 		unauthorizedError := exceptions.NewUnauthorizedError()
 		panic(unauthorizedError)

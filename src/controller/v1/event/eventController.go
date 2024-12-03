@@ -1,8 +1,10 @@
 package controller_v1_event
 
 import (
+	"encoding/base64"
 	"first-project/src/application"
 	application_aws "first-project/src/application/aws"
+	application_communication "first-project/src/application/communication/emailService"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
@@ -18,18 +20,29 @@ type EventController struct {
 	constants    *bootstrap.Constants
 	eventService *application.EventService
 	awsService   *application_aws.S3service
+	emailService *application_communication.EmailService
 }
 
 func NewEventController(
 	constants *bootstrap.Constants,
 	eventService *application.EventService,
 	awsService *application_aws.S3service,
+	emailService *application_communication.EmailService,
 ) *EventController {
 	return &EventController{
 		constants:    constants,
 		eventService: eventService,
 		awsService:   awsService,
+		emailService: emailService,
 	}
+}
+
+func getTemplatePath(c *gin.Context, transKey string) string {
+	trans := controller.GetTranslator(c, transKey)
+	if trans.Locale() == "fa_IR" {
+		return "fa.html"
+	}
+	return "en.html"
 }
 
 func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
@@ -178,6 +191,49 @@ func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.addDiscount")
+	controller.Response(c, 200, message, nil)
+}
+
+func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
+	type addEventOrganizerParams struct {
+		Name        string                `form:"name" validate:"required,max=50"`
+		Email       string                `form:"email" validate:"required,email"`
+		Description string                `form:"description"`
+		Profile     *multipart.FileHeader `form:"profile"`
+		EventID     uint                  `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[addEventOrganizerParams](c, &eventController.constants.Context)
+	token := application.GenerateSecureToken(32)
+	organizerID := eventController.eventService.UpdateOrCreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, token)
+	encodedOrganizerID := base64.StdEncoding.EncodeToString([]byte(string(organizerID)))
+	encodedEventID := base64.StdEncoding.EncodeToString([]byte(string(param.EventID)))
+	emailTemplateData := struct {
+		Name string
+		Link string
+	}{
+		Name: param.Name,
+		Link: encodedOrganizerID + "/" + encodedEventID + "/" + token,
+	}
+	templatePath := getTemplatePath(c, eventController.constants.Context.Translator)
+	eventController.emailService.SendEmail(
+		param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.organizerRegistration")
+	controller.Response(c, 200, message, nil)
+}
+
+func (eventController *EventController) VerifyEmail(c *gin.Context) {
+	type verifyEmailParams struct {
+		EncodedOrganizerID string `json:"encodedOrganizerID" validate:"required"`
+		EncodedEventID     string `json:"encodedEventID" validate:"required"`
+		Token              string `json:"token" validate:"required"`
+	}
+	param := controller.Validated[verifyEmailParams](c, &eventController.constants.Context)
+	eventController.eventService.ActivateUser(param.EncodedOrganizerID, param.EncodedEventID, param.Token)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.organizerActivated")
 	controller.Response(c, 200, message, nil)
 }
 

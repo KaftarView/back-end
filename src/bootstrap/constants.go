@@ -33,6 +33,8 @@ type ErrorField struct {
 	Discount    string
 	EventStatus string
 	Media       string
+	Organizer   string
+	Token       string
 }
 
 type ErrorTag struct {
@@ -80,6 +82,8 @@ func NewConstants() *Constants {
 			Discount:    "discount",
 			EventStatus: "event status",
 			Media:       "media",
+			Organizer:   "organizer",
+			Token:       "token",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",

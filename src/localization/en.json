@@ -42,6 +42,8 @@
         "publishEvent": "Event published successfully.",
         "unpublishEvent": "Event set to unpublished.",
         "deleteTicket": "Ticket deleted successfully.",
-        "deleteDiscount": "Discount deleted successfully."
+        "deleteDiscount": "Discount deleted successfully.",
+        "organizerRegistration": "Successfully! After Email verification, organizer will be activated.",
+        "organizerActivated": "Successfully! Your credits has been registered as an event organizer."
     }
 }

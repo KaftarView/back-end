@@ -3,6 +3,7 @@ package routes_http_v1
 import (
 	"first-project/src/application"
 	application_aws "first-project/src/application/aws"
+	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
@@ -22,7 +23,8 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	eventService := application.NewEventService(di.Constants, eventRepository)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket)
-	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService)
+	emailService := application_communication.NewEmailService(&di.Env.Email)
+	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
 
 	events := routerGroup.Group("/events")
 	{
@@ -41,6 +43,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			create.POST("/create", eventController.CreateEvent)
 			create.POST("/add-ticket/:eventID", eventController.AddEventTicket)
 			create.POST("/add-discount/:eventID", eventController.AddEventDiscount)
+			create.POST("/add-organizer/:eventID", eventController.AddEventOrganizer)
 		}
 
 		updateOrDelete := events.Group("")
