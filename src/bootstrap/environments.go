@@ -13,6 +13,7 @@ type Env struct {
 	BannersBucket  Bucket
 	SessionsBucket Bucket
 	PodcastsBucket Bucket
+	ProfileBucket  Bucket
 	Applications   AppInfo
 	Email          EmailInfo
 	Admin          UserInfo
@@ -99,6 +100,13 @@ func NewEnvironments() *Env {
 			AccessKey: os.Getenv("PODCAST_BUCKET_ACCESS_key"),
 			SecretKey: os.Getenv("PODCAST_BUCKET_SECRET_key"),
 			Endpoint:  os.Getenv("PODCAST_BUCKET_ENDPOINT"),
+		},
+		ProfileBucket: Bucket{
+			Name:      os.Getenv("PROFILE_BUCKET_NAME"),
+			Region:    os.Getenv("PROFILE_BUCKET_REGION"),
+			AccessKey: os.Getenv("PROFILE_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("PROFILE_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("PROFILE_BUCKET_ENDPOINT"),
 		},
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),

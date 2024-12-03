@@ -22,7 +22,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	eventService := application.NewEventService(di.Constants, eventRepository)
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
 

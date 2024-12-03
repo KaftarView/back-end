@@ -204,15 +204,20 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	}
 	param := controller.Validated[addEventOrganizerParams](c, &eventController.constants.Context)
 	token := application.GenerateSecureToken(32)
+	objectPath := fmt.Sprintf("events/%d/organizers/profiles/%s", param.EventID, param.Profile.Filename)
+	eventController.awsService.UploadObject(enums.ProfileBucket, objectPath, param.Profile)
 	organizerID := eventController.eventService.UpdateOrCreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, token)
+	eventName := eventController.eventService.GetEventName(param.EventID)
 	encodedOrganizerID := base64.StdEncoding.EncodeToString([]byte(string(organizerID)))
 	encodedEventID := base64.StdEncoding.EncodeToString([]byte(string(param.EventID)))
 	emailTemplateData := struct {
-		Name string
-		Link string
+		Name      string
+		EventName string
+		Link      string
 	}{
-		Name: param.Name,
-		Link: encodedOrganizerID + "/" + encodedEventID + "/" + token,
+		Name:      param.Name,
+		EventName: eventName,
+		Link:      encodedOrganizerID + "/" + encodedEventID + "/" + token,
 	}
 	templatePath := getTemplatePath(c, eventController.constants.Context.Translator)
 	eventController.emailService.SendEmail(

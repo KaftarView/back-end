@@ -174,6 +174,11 @@ func (eventService *EventService) UpdateOrCreateEventOrganizer(eventID uint, nam
 	return organizer.ID
 }
 
+func (eventService *EventService) GetEventName(eventID uint) string {
+	event, _ := eventService.eventRepository.FindEventByID(eventID)
+	return event.Name
+}
+
 func (eventService *EventService) ActivateUser(encodedOrganizerID, encodedEventID, token string) {
 	decodedOrganizerID, err := base64.StdEncoding.DecodeString(encodedOrganizerID)
 	if err != nil {

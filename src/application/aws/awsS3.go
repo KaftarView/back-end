@@ -28,12 +28,14 @@ func NewS3Service(
 	bannerBucket *bootstrap.Bucket,
 	sessionsBucket *bootstrap.Bucket,
 	podcastsBucket *bootstrap.Bucket,
+	profileBucket *bootstrap.Bucket,
 
 ) *S3service {
 	buckets := make(map[enums.BucketType]*bootstrap.Bucket)
 	buckets[enums.BannersBucket] = bannerBucket
 	buckets[enums.SessionsBucket] = sessionsBucket
 	buckets[enums.PodcastsBucket] = podcastsBucket
+	buckets[enums.ProfileBucket] = profileBucket
 	return &S3service{
 		constants: constants,
 		buckets:   buckets,
