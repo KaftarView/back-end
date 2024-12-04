@@ -12,14 +12,20 @@ import (
 )
 
 type EventService struct {
-	constants       *bootstrap.Constants
-	eventRepository *repository_database.EventRepository
+	constants         *bootstrap.Constants
+	eventRepository   *repository_database.EventRepository
+	commentRepository *repository_database.CommentRepository
 }
 
-func NewEventService(constants *bootstrap.Constants, eventRepository *repository_database.EventRepository) *EventService {
+func NewEventService(
+	constants *bootstrap.Constants,
+	eventRepository *repository_database.EventRepository,
+	commentRepository *repository_database.CommentRepository,
+) *EventService {
 	return &EventService{
-		constants:       constants,
-		eventRepository: eventRepository,
+		constants:         constants,
+		eventRepository:   eventRepository,
+		commentRepository: commentRepository,
 	}
 }
 
@@ -54,10 +60,10 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	}
 
 	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
-	commentable := eventService.eventRepository.CreateNewCommentable()
+	commentable := eventService.commentRepository.CreateNewCommentable()
 
 	eventDetailsModel := entities.Event{
-		ID:          commentable.CommentableID,
+		ID:          commentable.CID,
 		Name:        eventDetails.Name,
 		Status:      enumStatus,
 		Categories:  categories,

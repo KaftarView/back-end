@@ -35,6 +35,8 @@ type ErrorField struct {
 	Media       string
 	Organizer   string
 	Token       string
+	User        string
+	Post        string
 }
 
 type ErrorTag struct {
@@ -84,6 +86,8 @@ func NewConstants() *Constants {
 			Media:       "media",
 			Organizer:   "organizer",
 			Token:       "token",
+			User:        "user",
+			Post:        "post",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",

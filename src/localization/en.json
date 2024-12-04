@@ -44,6 +44,7 @@
         "deleteTicket": "Ticket deleted successfully.",
         "deleteDiscount": "Discount deleted successfully.",
         "organizerRegistration": "Successfully! After Email verification, organizer will be activated.",
-        "organizerActivated": "Successfully! Your credits has been registered as an event organizer."
+        "organizerActivated": "Successfully! Your credits has been registered as an event organizer.",
+        "addComment": "Comment added successfully."
     }
 }

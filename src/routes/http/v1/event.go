@@ -19,9 +19,10 @@ import (
 func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
 	eventRepository := repository_database.NewEventRepository(db)
+	commentRepository := repository_database.NewCommentRepository(db)
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
-	eventService := application.NewEventService(di.Constants, eventRepository)
+	eventService := application.NewEventService(di.Constants, eventRepository, commentRepository)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
