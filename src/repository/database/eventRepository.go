@@ -49,6 +49,15 @@ func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location strin
 	return existingEvent, true
 }
 
+func (repo *EventRepository) CreateNewCommentable() entities.Commentable {
+	commentable := entities.Commentable{}
+	result := repo.db.Create(&commentable)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return commentable
+}
+
 func (repo *EventRepository) CreateNewEvent(event entities.Event) entities.Event {
 	result := repo.db.Create(&event)
 	if result.Error != nil {

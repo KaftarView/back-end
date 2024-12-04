@@ -9,6 +9,7 @@ import (
 
 type Event struct {
 	gorm.Model
+	ID             uint                   `gorm:"primarykey"`
 	Name           string                 `gorm:"type:varchar(50);not null"`
 	Status         enums.EventStatus      `gorm:"type:int;not null"`
 	Description    string                 `gorm:"type:text"`
@@ -22,7 +23,7 @@ type Event struct {
 	BannerPath     string                 `gorm:"type:text"`
 	Communications map[string]interface{} `gorm:"-"`
 
-	Commentable Commentable `gorm:"foreignKey:ID"`
+	Commentable Commentable `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE;"`
 
 	Tickets    []Ticket    `gorm:"foreignKey:EventID"`
 	Discounts  []Discount  `gorm:"foreignKey:EventID"`

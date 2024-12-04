@@ -54,8 +54,10 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	}
 
 	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+	commentable := eventService.eventRepository.CreateNewCommentable()
 
 	eventDetailsModel := entities.Event{
+		ID:          commentable.CommentableID,
 		Name:        eventDetails.Name,
 		Status:      enumStatus,
 		Categories:  categories,
