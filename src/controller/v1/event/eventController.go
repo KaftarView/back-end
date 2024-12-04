@@ -6,6 +6,7 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
+	"fmt"
 	"log"
 	"mime/multipart"
 	"time"
@@ -156,7 +157,7 @@ func (eventController *EventController) EditEvent(c *gin.Context) {
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	event, found := eventController.eventService.GetEventById(param.EventID)
 	if !found {
-		message, _ := trans.T("errorMessage.notFoundError") // pass the id ?
+		message, _ := trans.T("errorMessage.notFoundError")
 		controller.Response(c, 404, message, nil)
 		return
 	}
@@ -242,6 +243,9 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 
 	if param.Banner != nil {
 		log.Printf("Banner file received: %+v\n", param.Banner.Filename)
+		objectPath := fmt.Sprintf("Events/Banners/%d", int(uriParam.EventID))
+		eventController.awsService.DeleteObject(objectPath)
+		eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(uriParam.EventID))
 	}
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
