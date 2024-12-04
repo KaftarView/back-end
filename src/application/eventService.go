@@ -170,6 +170,7 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 				eventService.constants.ErrorTag.AlreadyExist)
 			panic(conflictError)
 		}
+		event.Name = *updateDetails.Name
 	}
 
 	if updateDetails.Status != nil {
