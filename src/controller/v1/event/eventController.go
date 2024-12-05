@@ -170,19 +170,21 @@ func (eventController *EventController) UpdateEventTicket(c *gin.Context) {
 		IsAvailable    *bool      `json:"isAvailable" `
 		AvailableFrom  *time.Time `json:"availableFrom" `
 		AvailableUntil *time.Time `json:"availableUntil" `
+		EventID        uint       `uri:"eventID" validate:"required"`
+		TicketID       uint       `uri:"ticketID" validate:"required"`
 	}
 	param := controller.Validated[EditEventTicketParams](c, &eventController.constants.Context)
-	log.Printf("INPUTS HALF DONE ")
-	type uriParams struct {
-		EventID  uint `uri:"eventID" validate:"required"`
-		TicketID uint `uri:"ticketID" validate:"required"`
-	}
-	var uriParam uriParams
-	if err := c.ShouldBindUri(&uriParam); err != nil {
-		log.Printf("Error binding URI params: %v", err)
-		//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URI parameters"})
-		return
-	}
+	// log.Printf("INPUTS HALF DONE ")
+	// type uriParams struct {
+	// 	EventID  uint `uri:"eventID" validate:"required"`
+	// 	TicketID uint `uri:"ticketID" validate:"required"`
+	// }
+	// var uriParam uriParams
+	// if err := c.ShouldBindUri(&uriParam); err != nil {
+	// 	log.Printf("Error binding URI params: %v", err)
+	// 	//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URI parameters"})
+	// 	return
+	// }
 	// log.Printf("INPUTS DONE %d , %d", uriParam.EventID, uriParam.TicketID)
 	// uriParam = controller.Validated[uriParams](c, &eventController.constants.Context)
 	// log.Printf("INPUTS DONE ")
@@ -195,10 +197,10 @@ func (eventController *EventController) UpdateEventTicket(c *gin.Context) {
 		IsAvailable:    param.IsAvailable,
 		AvailableFrom:  param.AvailableFrom,
 		AvailableUntil: param.AvailableUntil,
-		EventID:        uriParam.EventID,
-		TicketID:       uriParam.TicketID,
+		EventID:        param.EventID,
+		TicketID:       param.TicketID,
 	}
-
+	log.Printf("INPUTS DONE %d , %d ", param.EventID, param.TicketID)
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	eventController.eventService.UpdateEventTicket(ticketDetails)
 	message, _ := trans.T("successMessage.addDiscount")
@@ -257,19 +259,21 @@ func (eventController *EventController) UpdateEventDiscount(c *gin.Context) {
 		Quantity   *uint      `json:"quantity"`
 		UsedCount  *uint      `json:"usedCount"`
 		MinTickets *uint      `json:"minTickets"`
+		EventID    uint       `uri:"eventID" validate:"required"`
+		DiscountID uint       `uri:"discountID" validate:"required"`
 	}
 	param := controller.Validated[updateEventDiscountParams](c, &eventController.constants.Context)
 
-	type EditDiscountUriParams struct {
-		EventID    uint `uri:"eventID" validate:"required"`
-		DiscountID uint `uri:"discountID" validate:"required"`
-	}
-	var uriParam EditDiscountUriParams
-	if err := c.ShouldBindUri(&uriParam); err != nil {
-		log.Printf("Error binding URI params: %v", err)
-		//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URI parameters"})
-		return
-	}
+	// type EditDiscountUriParams struct {
+	// 	EventID    uint `uri:"eventID" validate:"required"`
+	// 	DiscountID uint `uri:"discountID" validate:"required"`
+	// }
+	// var uriParam EditDiscountUriParams
+	// if err := c.ShouldBindUri(&uriParam); err != nil {
+	// 	log.Printf("Error binding URI params: %v", err)
+	// 	//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URI parameters"})
+	// 	return
+	// }
 	// uriparam := controller.Validated[EditDiscountUriParams](c, &eventController.constants.Context)
 
 	discountDetails := dto.EditDiscountDetails{
@@ -281,8 +285,8 @@ func (eventController *EventController) UpdateEventDiscount(c *gin.Context) {
 		Quantity:       param.Quantity,
 		UsedCount:      param.UsedCount,
 		MinTickets:     param.MinTickets,
-		EventID:        uriParam.EventID,
-		DiscountID:     uriParam.DiscountID,
+		EventID:        param.EventID,
+		DiscountID:     param.DiscountID,
 	}
 	eventController.eventService.UpdateEventDiscount(discountDetails)
 
