@@ -269,6 +269,16 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		categoryNames[i] = category.Name
 	}
 
+	comments := eventService.commentRepository.GetCommentsByEventID(eventID)
+	var commentDetails []dto.CommentDetails
+	for _, comment := range comments {
+		commentDetails = append(commentDetails, dto.CommentDetails{
+			Content:     comment.Content,
+			IsModerated: comment.IsModerated,
+			AuthorName:  comment.Author.Name,
+		})
+	}
+
 	eventDetails := dto.EventDetailsResponse{
 		ID:          event.ID,
 		CreatedAt:   event.CreatedAt,
@@ -284,6 +294,7 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		Location:    event.Location,
 		Categories:  categoryNames,
 		Banner:      event.BannerPath,
+		Comments:    commentDetails,
 	}
 	return eventDetails
 }

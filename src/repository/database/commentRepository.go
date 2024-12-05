@@ -16,6 +16,19 @@ func NewCommentRepository(db *gorm.DB) *CommentRepository {
 	}
 }
 
+func (repo *CommentRepository) GetCommentsByEventID(eventID uint) []entities.Comment {
+	var comments []entities.Comment
+
+	result := repo.db.Where("commentable_id = ?", eventID).Preload("Author").Find(&comments)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return comments
+		}
+		panic(result.Error)
+	}
+	return comments
+}
+
 func (repo *CommentRepository) CreateNewCommentable() entities.Commentable {
 	commentable := entities.Commentable{}
 	result := repo.db.Create(&commentable)
