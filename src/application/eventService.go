@@ -108,6 +108,68 @@ func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTick
 	return ticket
 }
 
+func (eventService *EventService) UpdateEventTicket(TicketDetails dto.EditTicketDetaitls) entities.Ticket {
+	eventID := TicketDetails.EventID
+
+	TicketID := TicketDetails.TicketID
+	//var conflictError exceptions.ConflictError
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+
+	Ticket, TicketExist := eventService.eventRepository.FindEvenetTicketByID(TicketID)
+	if !TicketExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Ticket
+		panic(notFoundError)
+	}
+
+	if TicketDetails.Name != nil {
+		ticketName := *TicketDetails.Name
+		// _, mediaExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
+		// if mediaExist {
+		// 	conflictError.AppendError(
+		// 		eventService.constants.ErrorField.Media,
+		// 		eventService.constants.ErrorTag.AlreadyExist)
+		// 	panic(conflictError)
+		// }
+		Ticket.Name = ticketName
+	}
+
+	if TicketDetails.Description != nil {
+		Ticket.Description = *TicketDetails.Description
+	}
+
+	if TicketDetails.Price != nil {
+		Ticket.Price = *TicketDetails.Price
+	}
+
+	if TicketDetails.Quantity != nil {
+		Ticket.Quantity = *TicketDetails.Quantity
+	}
+
+	if TicketDetails.SoldCount != nil {
+		Ticket.SoldCount = *TicketDetails.SoldCount
+	}
+
+	if TicketDetails.IsAvailable != nil {
+		Ticket.IsAvailable = *TicketDetails.IsAvailable
+	}
+
+	if TicketDetails.AvailableFrom != nil {
+		Ticket.AvailableFrom = *TicketDetails.AvailableFrom
+	}
+
+	if TicketDetails.AvailableUntil != nil {
+		Ticket.AvailableUntil = *TicketDetails.AvailableUntil
+	}
+
+	eventService.eventRepository.UpdateEventTicket(Ticket)
+	return Ticket
+}
+
 func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
@@ -149,6 +211,60 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
+func (eventService *EventService) UpdateEventDiscount(discountDetails dto.EditDiscountDetails) entities.Discount {
+	eventID := discountDetails.EventID
+	discountID := discountDetails.DiscountID
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	discount, discountExist := eventService.eventRepository.FindDiscountByDiscountID(discountID)
+	if !discountExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Discount
+		panic(notFoundError)
+	}
+
+	if discountDetails.Code != nil {
+		discount.Code = *discountDetails.Code
+	}
+
+	if discountDetails.Type != nil {
+		var enumDiscountType enums.DiscountType
+		discountTypes := enums.GetAllDiscountTypes()
+		for _, discountType := range discountTypes {
+			if discountType.String() == *discountDetails.Type {
+				enumDiscountType = discountType
+			}
+		}
+		discount.Type = enumDiscountType
+	}
+
+	if discountDetails.Value != nil {
+		discount.Value = *discountDetails.Value
+	}
+
+	if discountDetails.AvailableFrom != nil {
+		discount.ValidFrom = *discountDetails.AvailableFrom
+	}
+
+	if discountDetails.AvailableUntil != nil {
+		discount.ValidUntil = *discountDetails.AvailableUntil
+	}
+
+	if discountDetails.Quantity != nil {
+		discount.Quantity = *discountDetails.Quantity
+	}
+
+	if discountDetails.UsedCount != nil {
+		discount.UsedCount = *discountDetails.UsedCount
+	}
+
+	eventService.eventRepository.UpdateEventDiscount(discount)
+	return discount
+
+}
 func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus)
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
@@ -239,6 +355,23 @@ func (eventService *EventService) GetEventTickets(eventID uint) []dto.TicketDeta
 	return ticketsDetails
 }
 
+func (eventService *EventService) GetTicketDetails(ticketID uint) dto.TicketDetailsResponse {
+	ticket, ticketExist := eventService.eventRepository.FindEvenetTicketByID(ticketID)
+	if !ticketExist {
+		return dto.TicketDetailsResponse{}
+	}
+	var ticketDetails dto.TicketDetailsResponse
+	ticketDetails.ID = ticket.ID
+	ticketDetails.CreatedAt = ticket.CreatedAt
+	ticketDetails.Name = ticket.Name
+	ticketDetails.Description = ticket.Description
+	ticketDetails.Price = ticket.Price
+	ticketDetails.Quantity = ticket.Quantity
+	ticketDetails.AvailableFrom = ticket.AvailableFrom
+	ticketDetails.AvailableUntil = ticket.AvailableUntil
+	return ticketDetails
+}
+
 func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -269,6 +402,24 @@ func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.Discount
 	return discountsDetails
 }
 
+func (eventService *EventService) GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse {
+	discount, discountExist := eventService.eventRepository.FindDiscountByDiscountID(discountID)
+	if !discountExist {
+		return dto.DiscountDetailsResponse{}
+	}
+	var discountDetails dto.DiscountDetailsResponse
+	discountDetails.ID = discount.ID
+	discountDetails.CreatedAt = discount.CreatedAt
+	discountDetails.Code = discount.Code
+	discountDetails.Type = discount.Type.String()
+	discountDetails.Value = discount.Value
+	discountDetails.AvailableFrom = discount.ValidFrom
+	discountDetails.AvailableUntil = discount.ValidUntil
+	discountDetails.Quantity = discount.Quantity
+	discountDetails.UsedCount = discount.UsedCount
+	discountDetails.MinTickets = discount.MinTickets
+	return discountDetails
+}
 func (eventService *EventService) GetListOfCategories() []string {
 	categoryNames := eventService.eventRepository.FindAllCategories()
 	return categoryNames

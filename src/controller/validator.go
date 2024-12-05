@@ -3,6 +3,7 @@ package controller
 import (
 	"first-project/src/bootstrap"
 	"first-project/src/exceptions"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -29,9 +30,10 @@ func setupTranslation(c *gin.Context, constants *bootstrap.Context) {
 
 func Validated[T any](c *gin.Context, constants *bootstrap.Context) T {
 	setupTranslation(c, constants)
-
+	log.Printf("GOES in")
 	var params T
 	if err := c.ShouldBindUri(&params); err != nil {
+		log.Printf("wtf?")
 		bindingError := exceptions.BindingError{Err: err}
 		panic(bindingError)
 	}
@@ -49,6 +51,6 @@ func Validated[T any](c *gin.Context, constants *bootstrap.Context) T {
 	if err := validate.Struct(params); err != nil {
 		panic(err)
 	}
-
+	log.Printf("DONE VALIDING")
 	return params
 }

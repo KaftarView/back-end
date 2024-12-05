@@ -28,6 +28,32 @@ type CreateTicketDetails struct {
 	EventID        uint
 }
 
+type EditTicketDetaitls struct {
+	Name           *string
+	Description    *string
+	Price          *float64
+	Quantity       *uint
+	SoldCount      *uint
+	IsAvailable    *bool
+	AvailableFrom  *time.Time
+	AvailableUntil *time.Time
+	EventID        uint
+	TicketID       uint
+}
+
+type EditDiscountDetails struct {
+	Code           *string
+	Type           *string
+	Value          *float64
+	AvailableFrom  *time.Time
+	AvailableUntil *time.Time
+	Quantity       *uint
+	UsedCount      *uint
+	MinTickets     *uint
+	EventID        uint
+	DiscountID     uint
+}
+
 type CreateDiscountDetails struct {
 	Code       string
 	Type       string

@@ -115,10 +115,32 @@ func (repo *EventRepository) FindDiscountsByEventID(eventID uint) ([]entities.Di
 	}
 	return discounts, true
 }
-
+func (repo *EventRepository) FindDiscountByDiscountID(discountID uint) (entities.Discount, bool) {
+	var discount entities.Discount
+	result := repo.db.First(&discount, "id = ?", discountID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return discount, false
+		}
+		panic(result.Error)
+	}
+	return discount, true
+}
 func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID uint) (entities.Ticket, bool) {
 	var ticket entities.Ticket
 	result := repo.db.First(&ticket, "name = ? AND event_id = ?", ticketName, eventID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return ticket, false
+		}
+		panic(result.Error)
+	}
+	return ticket, true
+}
+func (repo *EventRepository) FindEvenetTicketByID(ticketID uint) (entities.Ticket, bool) {
+	var ticket entities.Ticket
+	result := repo.db.First(&ticket, "id = ?", ticketID)
+
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return ticket, false
@@ -275,4 +297,19 @@ func (repo *EventRepository) DeleteMedia(mediaID uint) bool {
 		return false
 	}
 	return true
+}
+
+func (repo *EventRepository) UpdateEventTicket(ticket entities.Ticket) entities.Ticket {
+	result := repo.db.Save(&ticket)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return ticket
+}
+
+func (repo *EventRepository) UpdateEventDiscount(discount entities.Discount) {
+	result := repo.db.Save(&discount)
+	if result.Error != nil {
+		panic(result.Error)
+	}
 }
