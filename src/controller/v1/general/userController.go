@@ -168,16 +168,43 @@ func (userController *UserController) ResetPassword(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
-func (userController *UserController) UpdateUserRoles(c *gin.Context) {
+func (userController *UserController) CreateRole(c *gin.Context) {
 	type userRolesParams struct {
-		Email string   `json:"email" validate:"required"`
-		Roles []string `json:"roles" validate:"required"`
+		Permissions []string `json:"permissions" validate:"required"`
+		RoleName    string   `json:"role" validate:"required"`
 	}
 	param := controller.Validated[userRolesParams](c, &userController.constants.Context)
-	userController.userService.UpdateUserRolesIfExists(param.Email, param.Roles)
+	role := userController.userService.CreateNewRole(param.RoleName)
+	userController.userService.AssignPermissionsToRole(role.ID, param.Permissions)
 
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
-	message, _ := trans.T("successMessage.updateUSerRole")
+	message, _ := trans.T("successMessage.createRole")
+	controller.Response(c, 200, message, nil)
+}
+
+func (userController *UserController) UpdateRole(c *gin.Context) {
+	type userRolesParams struct {
+		Permissions []string `json:"permissions" validate:"required"`
+		RoleID      uint     `uri:"roleID" validate:"required"`
+	}
+	param := controller.Validated[userRolesParams](c, &userController.constants.Context)
+	userController.userService.AssignPermissionsToRole(param.RoleID, param.Permissions)
+
+	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateRole")
+	controller.Response(c, 200, message, nil)
+}
+
+func (userController *UserController) UpdateUserRoles(c *gin.Context) {
+	type userRolesParams struct {
+		Roles  []string `json:"roles" validate:"required"`
+		UserID uint     `uri:"userID" validate:"required"`
+	}
+	param := controller.Validated[userRolesParams](c, &userController.constants.Context)
+	userController.userService.UpdateUserRoles(param.UserID, param.Roles)
+
+	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateUserRole")
 	controller.Response(c, 200, message, nil)
 }
 

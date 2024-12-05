@@ -34,11 +34,11 @@ func (rs *RoleSeeder) SeedRoles() {
 
 	roleTypes := enums.GetAllRoleTypes()
 	for _, roleType := range roleTypes {
-		_, roleExist := rs.userRepository.FindRoleByType(roleType)
+		_, roleExist := rs.userRepository.FindRoleByType(roleType.String())
 		if roleExist {
 			continue
 		}
-		rs.userRepository.CreateNewRole(roleType)
+		rs.userRepository.CreateNewRole(roleType.String())
 	}
 
 	_, superAdminExist := rs.userRepository.FindActiveOrVerifiedUserByUsername("Admin")
@@ -48,26 +48,10 @@ func (rs *RoleSeeder) SeedRoles() {
 			panic(err)
 		}
 		superAdminUser := rs.userRepository.CreateNewUser("Admin", rs.admin.EmailAddress, string(bytes), "", true)
-		superAdminRole, _ := rs.userRepository.FindRoleByType(enums.SuperAdmin)
+		superAdminRole, _ := rs.userRepository.FindRoleByType(enums.SuperAdmin.String())
 		rs.userRepository.AssignRoleToUser(superAdminUser, superAdminRole)
 
-		permission, _ := rs.userRepository.FindPermissionByType(enums.ManageUsers)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.ManageRoles)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.CreateEvent)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.ManageEvent)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.EditEvent)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.PublishEvent)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.ManageNewsAndBlogs)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.ModerateComments)
-		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
-		permission, _ = rs.userRepository.FindPermissionByType(enums.ViewReports)
+		permission, _ := rs.userRepository.FindPermissionByType(enums.All)
 		rs.userRepository.AssignPermissionToRole(superAdminRole, permission)
 	}
 }

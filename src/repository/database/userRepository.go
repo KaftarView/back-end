@@ -135,9 +135,21 @@ func (repo *UserRepository) FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeek
 	return users
 }
 
-func (repo *UserRepository) FindRoleByType(roleType enums.RoleType) (entities.Role, bool) {
+func (repo *UserRepository) FindRoleByType(roleType string) (entities.Role, bool) {
 	var role entities.Role
 	result := repo.db.Where("type = ?", roleType).First(&role)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return role, false
+		}
+		panic(result.Error)
+	}
+	return role, true
+}
+
+func (repo *UserRepository) FindRoleByID(roleID uint) (entities.Role, bool) {
+	var role entities.Role
+	result := repo.db.First(&role, roleID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return role, false
@@ -159,7 +171,7 @@ func (repo *UserRepository) FindPermissionByType(permissionType enums.Permission
 	return permission, true
 }
 
-func (repo *UserRepository) CreateNewRole(roleType enums.RoleType) entities.Role {
+func (repo *UserRepository) CreateNewRole(roleType string) entities.Role {
 	role := entities.Role{
 		Type: roleType,
 	}
