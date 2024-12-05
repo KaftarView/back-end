@@ -49,11 +49,11 @@ func (commentController *CommentController) EditComment(c *gin.Context) {
 }
 
 func (commentController *CommentController) DeleteCommentByUser(c *gin.Context) {
-	type editCommentParams struct {
+	type deleteCommentParams struct {
 		AuthorID  uint `json:"userID" validate:"required"`
 		CommentID uint `uri:"commentID" validate:"required"`
 	}
-	param := controller.Validated[editCommentParams](c, &commentController.constants.Context)
+	param := controller.Validated[deleteCommentParams](c, &commentController.constants.Context)
 	commentController.commentService.DeleteComment(param.AuthorID, param.CommentID, false)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
@@ -62,11 +62,11 @@ func (commentController *CommentController) DeleteCommentByUser(c *gin.Context) 
 }
 
 func (commentController *CommentController) DeleteCommentByAdmin(c *gin.Context) {
-	type editCommentParams struct {
+	type deleteCommentParams struct {
 		AuthorID  uint `json:"userID" validate:"required"`
 		CommentID uint `uri:"commentID" validate:"required"`
 	}
-	param := controller.Validated[editCommentParams](c, &commentController.constants.Context)
+	param := controller.Validated[deleteCommentParams](c, &commentController.constants.Context)
 	commentController.commentService.DeleteComment(param.AuthorID, param.CommentID, true)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
