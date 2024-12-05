@@ -40,21 +40,28 @@ type CreateDiscountDetails struct {
 	EventID    uint
 }
 
+type CommentDetails struct {
+	Content     string
+	IsModerated bool
+	AuthorName  string
+}
+
 type EventDetailsResponse struct {
-	ID          uint      `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	Name        string    `json:"name"`
-	Status      string    `json:"status"`
-	Description string    `json:"description"`
-	BasePrice   float64   `json:"base-price"`
-	MinCapacity uint      `json:"min_capacity"`
-	MaxCapacity uint      `json:"max_capacity"`
-	FromDate    time.Time `json:"from_date"`
-	ToDate      time.Time `json:"to_date"`
-	VenueType   string    `json:"venue_type"`
-	Categories  []string  `json:"categories"`
-	Location    string    `json:"location"`
-	Banner      string    `json:"banner"`
+	ID          uint             `json:"id"`
+	CreatedAt   time.Time        `json:"created_at"`
+	Name        string           `json:"name"`
+	Status      string           `json:"status"`
+	Description string           `json:"description"`
+	BasePrice   float64          `json:"base-price"`
+	MinCapacity uint             `json:"min_capacity"`
+	MaxCapacity uint             `json:"max_capacity"`
+	FromDate    time.Time        `json:"from_date"`
+	ToDate      time.Time        `json:"to_date"`
+	VenueType   string           `json:"venue_type"`
+	Categories  []string         `json:"categories"`
+	Location    string           `json:"location"`
+	Banner      string           `json:"banner"`
+	Comments    []CommentDetails `json:"comments"`
 }
 
 type TicketDetailsResponse struct {

@@ -12,14 +12,20 @@ import (
 )
 
 type EventService struct {
-	constants       *bootstrap.Constants
-	eventRepository *repository_database.EventRepository
+	constants         *bootstrap.Constants
+	eventRepository   *repository_database.EventRepository
+	commentRepository *repository_database.CommentRepository
 }
 
-func NewEventService(constants *bootstrap.Constants, eventRepository *repository_database.EventRepository) *EventService {
+func NewEventService(
+	constants *bootstrap.Constants,
+	eventRepository *repository_database.EventRepository,
+	commentRepository *repository_database.CommentRepository,
+) *EventService {
 	return &EventService{
-		constants:       constants,
-		eventRepository: eventRepository,
+		constants:         constants,
+		eventRepository:   eventRepository,
+		commentRepository: commentRepository,
 	}
 }
 
@@ -54,8 +60,10 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	}
 
 	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+	commentable := eventService.commentRepository.CreateNewCommentable()
 
 	eventDetailsModel := entities.Event{
+		ID:          commentable.CID,
 		Name:        eventDetails.Name,
 		Status:      enumStatus,
 		Categories:  categories,
@@ -261,6 +269,16 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		categoryNames[i] = category.Name
 	}
 
+	comments := eventService.commentRepository.GetCommentsByEventID(eventID)
+	var commentDetails []dto.CommentDetails
+	for _, comment := range comments {
+		commentDetails = append(commentDetails, dto.CommentDetails{
+			Content:     comment.Content,
+			IsModerated: comment.IsModerated,
+			AuthorName:  comment.Author.Name,
+		})
+	}
+
 	eventDetails := dto.EventDetailsResponse{
 		ID:          event.ID,
 		CreatedAt:   event.CreatedAt,
@@ -276,6 +294,7 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		Location:    event.Location,
 		Categories:  categoryNames,
 		Banner:      event.BannerPath,
+		Comments:    commentDetails,
 	}
 	return eventDetails
 }
