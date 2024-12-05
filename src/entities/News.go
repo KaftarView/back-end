@@ -21,3 +21,14 @@ type NewsDTO struct {
 	Author      string     `json:"author" binding:"required"`
 	Categories  []Category `gorm:"many2many:news_categories"`
 }
+
+type NewsResponse struct {
+	Title       string     `json:"title" binding:"required"`
+	Description string     `json:"description"`
+	Content     string     `json:"content" binding:"required"`
+	Content2    string     `json:"content2"`
+	Author      string     `json:"author" binding:"required"`
+	Categories  []Category `gorm:"many2many:news_categories"`
+	BannerPath  string     `json:"bannerpath1"`
+	BannerPath2 string     `json:"bannerpath2"`
+}
