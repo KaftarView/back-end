@@ -56,6 +56,14 @@ func (repo *CommentRepository) UpdateCommentContent(comment entities.Comment, ne
 	repo.db.Save(&comment)
 }
 
+func (repo *CommentRepository) DeleteCommentContent(comment entities.Comment) {
+	err := repo.db.Unscoped().Delete(&comment).Error
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func (repo *CommentRepository) CreateNewComment(authorID, commentableID uint, content string) entities.Comment {
 	comment := entities.Comment{
 		AuthorID:      authorID,

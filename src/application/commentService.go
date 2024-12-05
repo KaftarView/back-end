@@ -57,3 +57,22 @@ func (commentService *CommentService) EditComment(authorID, commentID uint, newC
 	}
 	commentService.commentRepository.UpdateCommentContent(comment, newContent)
 }
+
+func (commentService *CommentService) DeleteCommentForUser(authorID, commentID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, authorExist := commentService.userRepository.FindByUserID(authorID)
+	if !authorExist {
+		notFoundError.ErrorField = commentService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+	comment, commentExist := commentService.commentRepository.FindCommentByID(commentID)
+	if !commentExist {
+		notFoundError.ErrorField = commentService.constants.ErrorField.Comment
+		panic(notFoundError)
+	}
+	if comment.AuthorID != authorID {
+		authError := exceptions.NewForbiddenError()
+		panic(authError)
+	}
+	commentService.commentRepository.DeleteCommentContent(comment)
+}
