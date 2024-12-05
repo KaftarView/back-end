@@ -218,3 +218,17 @@ func (userService *UserService) UpdateUserRolesIfExists(email string, roles []st
 		}
 	}
 }
+
+func (userService *UserService) FindUserRolesAndPermissions(userID uint) ([]string, []string) {
+	var roleTypes []string
+	var permissionTypes []string
+	roles := userService.userRepository.FindUserRoleTypesByUserID(userID)
+	for _, role := range roles {
+		roleTypes = append(roleTypes, role.Type.String())
+		permissions := userService.userRepository.FindPermissionsByRole(role.ID)
+		for _, permission := range permissions {
+			permissionTypes = append(permissionTypes, permission.String())
+		}
+	}
+	return roleTypes, permissionTypes
+}

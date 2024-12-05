@@ -97,14 +97,28 @@ func (userController *UserController) Login(c *gin.Context) {
 	user := userController.userService.AuthenticateUser(param.Username, param.Password)
 	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
 	accessToken, refreshToken := userController.jwtService.GenerateJWT(user.ID)
-	type tokens struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-	}
 	userController.userCache.SetUser(user.ID, user.Name, user.Email)
+	roles, permissions := userController.userService.FindUserRolesAndPermissions(user.ID)
+	userDataResponse := struct {
+		AccessToken  string   `json:"access_token"`
+		RefreshToken string   `json:"refresh_token"`
+		ID           uint     `json:"id"`
+		Name         string   `json:"username"`
+		Email        string   `json:"email"`
+		Roles        []string `json:"roles"`
+		Permissions  []string `json:"permissions"`
+	}{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ID:           user.ID,
+		Name:         user.Name,
+		Email:        user.Email,
+		Roles:        roles,
+		Permissions:  permissions,
+	}
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")
-	controller.Response(c, 200, message, tokens{AccessToken: accessToken, RefreshToken: refreshToken})
+	controller.Response(c, 200, message, userDataResponse)
 }
 
 func (userController *UserController) ForgotPassword(c *gin.Context) {
