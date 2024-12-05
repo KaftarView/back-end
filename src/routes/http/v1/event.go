@@ -30,7 +30,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	events := routerGroup.Group("/events")
 	{
 		read := events.Group("")
-		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageEvent}))
+		// read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageEvent}))
 		{
 			read.GET("", eventController.GetEventsListForAdmin)
 			read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
@@ -39,7 +39,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		}
 
 		create := events.Group("")
-		create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
+		// create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
 		{
 			create.POST("/create", eventController.CreateEvent)
 			create.POST("/add-ticket/:eventID", eventController.AddEventTicket)
@@ -48,7 +48,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		}
 
 		updateOrDelete := events.Group("")
-		updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		// updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
 		{
 			updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
 			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)

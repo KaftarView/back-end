@@ -20,7 +20,7 @@ func NewCommentController(constants *bootstrap.Constants, commentService *applic
 	}
 }
 
-func (commentController *CommentController) CreateEvent(c *gin.Context) {
+func (commentController *CommentController) CreateComment(c *gin.Context) {
 	type createCommentParams struct {
 		AuthorID uint   `json:"userID" validate:"required"`
 		PostID   uint   `uri:"postID" validate:"required"`
@@ -28,6 +28,20 @@ func (commentController *CommentController) CreateEvent(c *gin.Context) {
 	}
 	param := controller.Validated[createCommentParams](c, &commentController.constants.Context)
 	commentController.commentService.CreateComment(param.AuthorID, param.PostID, param.Content)
+
+	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.addComment")
+	controller.Response(c, 200, message, nil)
+}
+
+func (commentController *CommentController) EditComment(c *gin.Context) {
+	type editCommentParams struct {
+		AuthorID  uint   `json:"userID" validate:"required"`
+		CommentID uint   `uri:"commentID" validate:"required"`
+		Content   string `json:"content" validate:"required"`
+	}
+	param := controller.Validated[editCommentParams](c, &commentController.constants.Context)
+	commentController.commentService.EditComment(param.AuthorID, param.CommentID, param.Content)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.addComment")

@@ -25,8 +25,8 @@ func SetupCommentRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	{
 		crudUser := comments.Group("")
 		{
-			crudUser.POST("/post/:postID", commentController.CreateEvent)
-			crudUser.PUT("/:commentID")
+			crudUser.POST("/post/:postID", commentController.CreateComment)
+			crudUser.PUT("/:commentID", commentController.EditComment)
 			crudUser.DELETE("/:commentID")
 		}
 
