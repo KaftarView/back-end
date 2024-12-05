@@ -27,13 +27,13 @@ func SetupCommentRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		{
 			crudUser.POST("/post/:postID", commentController.CreateComment)
 			crudUser.PUT("/:commentID", commentController.EditComment)
-			crudUser.DELETE("/:commentID", commentController.DeleteComment)
+			crudUser.DELETE("/:commentID", commentController.DeleteCommentByUser)
 		}
 
-		crudAdmin := comments.Group("")
-		crudAdmin.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ModerateComments}))
+		moderateComments := comments.Group("")
+		moderateComments.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ModerateComments}))
 		{
-			crudUser.DELETE("/admin/:id")
+			moderateComments.DELETE("/moderator/:commentID", commentController.DeleteCommentByAdmin)
 		}
 	}
 }

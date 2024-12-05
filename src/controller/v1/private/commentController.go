@@ -48,13 +48,26 @@ func (commentController *CommentController) EditComment(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
-func (commentController *CommentController) DeleteComment(c *gin.Context) {
+func (commentController *CommentController) DeleteCommentByUser(c *gin.Context) {
 	type editCommentParams struct {
 		AuthorID  uint `json:"userID" validate:"required"`
 		CommentID uint `uri:"commentID" validate:"required"`
 	}
 	param := controller.Validated[editCommentParams](c, &commentController.constants.Context)
-	commentController.commentService.DeleteCommentForUser(param.AuthorID, param.CommentID)
+	commentController.commentService.DeleteComment(param.AuthorID, param.CommentID, false)
+
+	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteComment")
+	controller.Response(c, 200, message, nil)
+}
+
+func (commentController *CommentController) DeleteCommentByAdmin(c *gin.Context) {
+	type editCommentParams struct {
+		AuthorID  uint `json:"userID" validate:"required"`
+		CommentID uint `uri:"commentID" validate:"required"`
+	}
+	param := controller.Validated[editCommentParams](c, &commentController.constants.Context)
+	commentController.commentService.DeleteComment(param.AuthorID, param.CommentID, true)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteComment")
