@@ -34,7 +34,9 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 		Title       string                `json:"title" validate:"required"`
 		Description string                `json:"description"`
 		Content     string                `json:"content"`
+		Content2    string                `json:"content2"`
 		Banner      *multipart.FileHeader `json:"banner"`
+		Banner2     *multipart.FileHeader `json:"banner2"`
 		Category    []string              `json:"category" validate:"required"`
 		Author      string                `json:"author" validate:"required"`
 	}
@@ -45,13 +47,22 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 		param.Title,
 		param.Description,
 		param.Content,
+		param.Content2,
 		param.Author,
 		param.Category,
 	)
 
 	objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
 	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	nc.newsService.SetBannerPath([]string{objectPath}, news.ID)
+	BannerPaths := []string{objectPath}
+
+	if param.Banner2 != nil {
+		objectPath = fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner2.Filename)
+		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+		BannerPaths = append(BannerPaths, objectPath)
+	}
+
+	nc.newsService.SetBannerPath(BannerPaths, news.ID)
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsCreation")
@@ -70,7 +81,9 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		Title       string                `json:"title" validate:"required"`
 		Description string                `json:"description"`
 		Content     string                `json:"content"`
+		Content2    string                `json:"content2"`
 		Banner      *multipart.FileHeader `json:"banner"`
+		Banner2     *multipart.FileHeader `json:"banner2"`
 		Category    []string              `json:"category" validate:"required"`
 		Author      string                `json:"author" validate:"required"`
 	}
@@ -82,6 +95,7 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		param.Title,
 		param.Description,
 		param.Content,
+		param.Content2,
 		param.Author,
 		param.Category,
 	)
@@ -95,7 +109,18 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 
 	objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
 	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	nc.newsService.SetBannerPath([]string{objectPath}, uint(id))
+	BannerPaths := []string{objectPath}
+
+	if len(updatedNewsPointer.BannerPaths) > 1 {
+		nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[1])
+	}
+
+	if param.Banner2 != nil {
+		objectPath = fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
+		BannerPaths = append(BannerPaths, objectPath)
+	}
+
+	nc.newsService.SetBannerPath(BannerPaths, uint(id))
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsUpdated")

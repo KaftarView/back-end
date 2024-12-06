@@ -15,11 +15,11 @@ func NewNewsService(newsRepo *repository_database.NewsRepository) *NewsService {
 	return &NewsService{newsRepo: newsRepo}
 }
 
-func (ns *NewsService) CreateNews(title, description, content string, author string, category []string) entities.News {
+func (ns *NewsService) CreateNews(title, description, content, content2 string, author string, category []string) entities.News {
 	//categoryType, err := enums.StringToCategoryType(category)
 	categories := ns.newsRepo.FindCategoriesByNames(category)
 	log.Printf("Categories: %v\n", categories)
-	res := ns.newsRepo.CreateNews(title, description, content, categories, author)
+	res := ns.newsRepo.CreateNews(title, description, content, content2, categories, author)
 	return res
 }
 func (ns *NewsService) SetBannerPath(mediaPaths []string, eventID uint) {
@@ -32,10 +32,10 @@ func (ns *NewsService) GetNewsByID(newsID uint) (*entities.News, bool) {
 	return news, found
 }
 
-func (ns *NewsService) UpdateNews(newsID uint, title, description, content, author string, category []string) (*entities.News, bool) {
+func (ns *NewsService) UpdateNews(newsID uint, title, description, content, content2, author string, category []string) (*entities.News, bool) {
 	categories := ns.newsRepo.FindCategoriesByNames(category)
 
-	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, categories, author)
+	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, content2, categories, author)
 	if err != nil {
 		panic(err)
 	}
