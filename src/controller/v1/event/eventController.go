@@ -205,24 +205,13 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 		Location    *string               `form:"address"`
 		Banner      *multipart.FileHeader `form:"banner"`
 		Categories  *[]string             `form:"category"`
+		EventID     uint                  `uri:"id" binding:"required"`
 	}
-
-	type uriParams struct {
-		EventID uint `uri:"id" binding:"required"`
-	}
-
-	log.Println("UpdateEvent handler started")
-
-	uriParam := controller.Validated[uriParams](c, &eventController.constants.Context)
-
-	log.Printf("URI parameters: %+v\n", uriParam)
 
 	param := controller.Validated[updateEventParams](c, &eventController.constants.Context)
 
-	log.Printf("Form parameters: أGGGG %+v\n", param)
-
 	eventDetails := dto.UpdateEventDetails{
-		ID:          uriParam.EventID,
+		ID:          param.EventID,
 		Name:        param.Name,
 		Status:      param.Status,
 		Description: param.Description,
@@ -235,17 +224,13 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 		Categories:  param.Categories,
 	}
 
-	log.Printf("Event details prepared for update: %+v\n", eventDetails)
-
 	eventController.eventService.UpdateEvent(eventDetails)
-
-	log.Println("Event updated successfully")
 
 	if param.Banner != nil {
 		log.Printf("Banner file received: %+v\n", param.Banner.Filename)
-		objectPath := fmt.Sprintf("Events/Banners/%d", int(uriParam.EventID))
+		objectPath := fmt.Sprintf("Events/Banners/%d", int(param.EventID))
 		eventController.awsService.DeleteObject(objectPath)
-		eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(uriParam.EventID))
+		eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(param.EventID))
 	}
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
