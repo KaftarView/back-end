@@ -1,10 +1,13 @@
 package routes
 
 import (
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
+	middleware_authentication "first-project/src/middleware/Authentication"
 	middleware_exceptions "first-project/src/middleware/exceptions"
 	middleware_i18n "first-project/src/middleware/i18n"
 	middleware_rate_limit "first-project/src/middleware/rateLimit"
+	repository_database "first-project/src/repository/database"
 	routes_http_v1 "first-project/src/routes/http/v1"
 
 	"github.com/gin-gonic/gin"
@@ -34,11 +37,11 @@ func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, r
 }
 
 func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
-	// userRepository := repository_database.NewUserRepository(db)
-	// jwtService := application_jwt.NewJWTToken()
-	// authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+	userRepository := repository_database.NewUserRepository(db)
+	jwtService := application_jwt.NewJWTToken()
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	protected := v1.Group("")
-	//protected.Use(authMiddleware.Authentication)
+	protected.Use(authMiddleware.Authentication)
 
 	routes_http_v1.SetupUserRoutes(protected, di, db, rdb)
 	routes_http_v1.SetupEventRoutes(protected, di, db, rdb)
