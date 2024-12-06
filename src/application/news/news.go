@@ -20,6 +20,7 @@ func (ns *NewsService) CreateNews(title, description, content, content2 string, 
 	categories := ns.newsRepo.FindCategoriesByNames(category)
 	log.Printf("Categories: %v\n", categories)
 	res := ns.newsRepo.CreateNews(title, description, content, content2, categories, author)
+	log.Printf("Created news: %v\n", res)
 	return res
 }
 func (ns *NewsService) SetBannerPath(mediaPaths []string, eventID uint) {

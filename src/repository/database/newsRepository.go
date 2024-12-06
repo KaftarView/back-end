@@ -36,6 +36,7 @@ func (repo *NewsRepository) CreateNews(title, description, content, content2 str
 	log.Printf("Creating news with title: %s, author: %s, categories: %v", title, author, categoryNames)
 
 	err := repo.db.Create(&news).Error
+
 	if err != nil {
 		log.Printf("Error while creating news: %v", err)
 		panic(err)

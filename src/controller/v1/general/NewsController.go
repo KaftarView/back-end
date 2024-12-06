@@ -43,7 +43,8 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 	param := controller.Validated[createParams](c, &nc.constants.Context)
 	log.Printf("Received parameters: %+v", param)
 
-	news := nc.newsService.CreateNews(
+	//news :=
+	nc.newsService.CreateNews(
 		param.Title,
 		param.Description,
 		param.Content,
@@ -52,17 +53,17 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 		param.Category,
 	)
 
-	objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
-	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	BannerPaths := []string{objectPath}
+	// objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
+	// nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	// BannerPaths := []string{objectPath}
 
-	if param.Banner2 != nil {
-		objectPath = fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner2.Filename)
-		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-		BannerPaths = append(BannerPaths, objectPath)
-	}
+	// if param.Banner2 != nil {
+	// 	objectPath = fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner2.Filename)
+	// 	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	// 	BannerPaths = append(BannerPaths, objectPath)
+	// }
 
-	nc.newsService.SetBannerPath(BannerPaths, news.ID)
+	// nc.newsService.SetBannerPath(BannerPaths, news.ID)
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsCreation")
