@@ -27,36 +27,36 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	events := routerGroup.Group("/events")
 	{
 		read := events.Group("")
-		read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageEvent}))
-		{
-			read.GET("", eventController.GetEventsListForAdmin)
-			read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
-			read.GET("/ticket-details/:id", eventController.GetTicketDetails)
-			read.GET("/discount-details/:id", eventController.GetDiscountDetails)
-			read.GET("/:eventID/ticket/:ticketID", eventController.EditEventTicket)
-			read.GET("/:eventID/discount/:discountID", eventController.EditEventDiscount)
-		}
+		// read.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageEvent}))
+		// {
+		read.GET("", eventController.GetEventsListForAdmin)
+		read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
+		read.GET("/ticket-details/:id", eventController.GetTicketDetails)
+		read.GET("/discount-details/:id", eventController.GetDiscountDetails)
+		read.GET("/:eventID/ticket/:ticketID", eventController.EditEventTicket)
+		read.GET("/:eventID/discount/:discountID", eventController.EditEventDiscount)
+		//}
 
 		create := events.Group("")
-		create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
-		{
-			create.POST("/create", eventController.CreateEvent)
-			create.POST("/add-ticket/:eventID", eventController.AddEventTicket)
-			create.POST("/add-discount/:eventID", eventController.AddEventDiscount)
-		}
+		// create.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
+		// {
+		create.POST("/create", eventController.CreateEvent)
+		create.POST("/add-ticket/:eventID", eventController.AddEventTicket)
+		create.POST("/add-discount/:eventID", eventController.AddEventDiscount)
+		//}
 
 		updateOrDelete := events.Group("")
-		updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
-		{
-			updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
-			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
-			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
-			updateOrDelete.PUT("/:eventID/ticket/:ticketID", eventController.UpdateEventTicket)
-			updateOrDelete.PUT("/:eventID/discount/:discountID", eventController.UpdateEventDiscount)
-			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
-			updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
-			updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
-		}
+		// updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		// {
+		updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
+		updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
+		updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
+		updateOrDelete.PUT("/:eventID/ticket/:ticketID", eventController.UpdateEventTicket)
+		updateOrDelete.PUT("/:eventID/discount/:discountID", eventController.UpdateEventDiscount)
+		updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
+		updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
+		updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
+		//}
 
 		publish := events.Group("")
 		publish.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.PublishEvent}))
