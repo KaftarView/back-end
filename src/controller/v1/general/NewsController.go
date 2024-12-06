@@ -6,7 +6,6 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/enums"
-	"fmt"
 	"log"
 	"mime/multipart"
 	"strconv"
@@ -106,22 +105,22 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		return
 	}
 
-	nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[0])
+	// nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[0])
 
-	objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
-	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	BannerPaths := []string{objectPath}
+	// objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
+	// nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	// BannerPaths := []string{objectPath}
 
 	if len(updatedNewsPointer.BannerPaths) > 1 {
 		nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[1])
 	}
 
-	if param.Banner2 != nil {
-		objectPath = fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
-		BannerPaths = append(BannerPaths, objectPath)
-	}
+	// if param.Banner2 != nil {
+	// 	objectPath = fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
+	// 	BannerPaths = append(BannerPaths, objectPath)
+	// }
 
-	nc.newsService.SetBannerPath(BannerPaths, uint(id))
+	// nc.newsService.SetBannerPath(BannerPaths, uint(id))
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsUpdated")
