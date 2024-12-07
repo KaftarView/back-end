@@ -118,7 +118,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 	}
 
 	event := eventController.eventService.CreateEvent(eventDetails)
-	objectPath := fmt.Sprintf("events/%d/banners/%s", event.ID, param.Banner.Filename)
+	objectPath := fmt.Sprintf("banners/events/%d/images/%s", event.ID, param.Banner.Filename)
 	eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
 	eventController.eventService.SetBannerPathForEvent(objectPath, event.ID)
 
@@ -204,7 +204,7 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	}
 	param := controller.Validated[addEventOrganizerParams](c, &eventController.constants.Context)
 	token := application.GenerateSecureToken(32)
-	objectPath := fmt.Sprintf("events/%d/organizers/profiles/%s", param.EventID, param.Profile.Filename)
+	objectPath := fmt.Sprintf("profiles/organizers/%d/images/%s", param.EventID, param.Profile.Filename)
 	eventController.awsService.UploadObject(enums.ProfileBucket, objectPath, param.Profile)
 	organizerID := eventController.eventService.UpdateOrCreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, token)
 	eventName := eventController.eventService.GetEventByID(param.EventID).Name
@@ -314,7 +314,7 @@ func (eventController *EventController) UploadEventMedia(c *gin.Context) {
 	}
 	param := controller.Validated[eventMedia](c, &eventController.constants.Context)
 	eventController.eventService.ValidateNewEventMediaDetails(param.EventID, param.Name)
-	mediaPath := fmt.Sprintf("events/%d/sessions/%s", param.EventID, param.Media.Filename)
+	mediaPath := fmt.Sprintf("media/events/%d/resources/%s", param.EventID, param.Media.Filename)
 	eventController.awsService.UploadObject(enums.SessionsBucket, mediaPath, param.Media)
 	eventController.eventService.CreateEventMedia(param.Name, mediaPath, param.EventID)
 
