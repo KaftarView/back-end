@@ -80,8 +80,12 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	return event
 }
 
-func (eventService *EventService) SetBannerPath(mediaPath string, eventID uint) {
+func (eventService *EventService) SetBannerPathForEvent(mediaPath string, eventID uint) {
 	eventService.eventRepository.UpdateEventBannerByEventID(mediaPath, eventID)
+}
+
+func (eventService *EventService) SetProfilePathForOrganizer(mediaPath string, organizerID uint) {
+	eventService.eventRepository.UpdateOrganizerProfileByID(mediaPath, organizerID)
 }
 
 func (eventService *EventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) {
@@ -182,9 +186,9 @@ func (eventService *EventService) UpdateOrCreateEventOrganizer(eventID uint, nam
 	return organizer.ID
 }
 
-func (eventService *EventService) GetEventName(eventID uint) string {
+func (eventService *EventService) GetEventByID(eventID uint) entities.Event {
 	event, _ := eventService.eventRepository.FindEventByID(eventID)
-	return event.Name
+	return event
 }
 
 func (eventService *EventService) ActivateUser(encodedOrganizerID, encodedEventID, token string) {
@@ -358,6 +362,16 @@ func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.Discount
 	return discountsDetails
 }
 
+func (eventService *EventService) GetListEventMedia(eventID uint) []entities.Media {
+	var notFoundError exceptions.NotFoundError
+	media, mediaExist := eventService.eventRepository.FindAllEventMedia(eventID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+	return media
+}
+
 func (eventService *EventService) GetListOfCategories() []string {
 	categoryNames := eventService.eventRepository.FindAllCategories()
 	return categoryNames
@@ -374,8 +388,13 @@ func (eventService *EventService) DeleteEvent(eventID uint) {
 
 func (eventService *EventService) DeleteTicket(eventID, ticketID uint) {
 	var notFoundError exceptions.NotFoundError
-	eventExist := eventService.eventRepository.DeleteTicket(eventID, ticketID)
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	ticketExist := eventService.eventRepository.DeleteTicket(eventID, ticketID)
+	if !ticketExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Ticket
 		panic(notFoundError)
 	}
@@ -383,14 +402,33 @@ func (eventService *EventService) DeleteTicket(eventID, ticketID uint) {
 
 func (eventService *EventService) DeleteDiscount(eventID, discountID uint) {
 	var notFoundError exceptions.NotFoundError
-	eventExist := eventService.eventRepository.DeleteDiscount(eventID, discountID)
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	discountExist := eventService.eventRepository.DeleteDiscount(eventID, discountID)
+	if !discountExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Discount
 		panic(notFoundError)
 	}
 }
 
-func (eventService *EventService) GetEventMediaPath(mediaID, eventID uint) entities.Media {
+func (eventService *EventService) DeleteOrganizer(eventID, organizerID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	organizerExist := eventService.eventRepository.DeleteOrganizer(eventID, organizerID)
+	if !organizerExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Organizer
+		panic(notFoundError)
+	}
+}
+
+func (eventService *EventService) GetEventMediaDetails(mediaID, eventID uint) entities.Media {
 	var notFoundError exceptions.NotFoundError
 	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
 	if !mediaExist {
@@ -398,6 +436,16 @@ func (eventService *EventService) GetEventMediaPath(mediaID, eventID uint) entit
 		panic(notFoundError)
 	}
 	return media
+}
+
+func (eventService *EventService) GetOrganizerProfilePath(organizerID uint) string {
+	var notFoundError exceptions.NotFoundError
+	organizer, organizerExist := eventService.eventRepository.FindOrganizerByID(organizerID)
+	if !organizerExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Organizer
+		panic(notFoundError)
+	}
+	return organizer.ProfilePath
 }
 
 func (eventService *EventService) DeleteEventMedia(mediaID uint) {

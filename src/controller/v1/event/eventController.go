@@ -120,7 +120,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 	event := eventController.eventService.CreateEvent(eventDetails)
 	objectPath := fmt.Sprintf("events/%d/banners/%s", event.ID, param.Banner.Filename)
 	eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	eventController.eventService.SetBannerPath(objectPath, event.ID)
+	eventController.eventService.SetBannerPathForEvent(objectPath, event.ID)
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createEvent")
@@ -207,7 +207,7 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	objectPath := fmt.Sprintf("events/%d/organizers/profiles/%s", param.EventID, param.Profile.Filename)
 	eventController.awsService.UploadObject(enums.ProfileBucket, objectPath, param.Profile)
 	organizerID := eventController.eventService.UpdateOrCreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, token)
-	eventName := eventController.eventService.GetEventName(param.EventID)
+	eventName := eventController.eventService.GetEventByID(param.EventID).Name
 	encodedOrganizerID := base64.StdEncoding.EncodeToString([]byte(string(organizerID)))
 	encodedEventID := base64.StdEncoding.EncodeToString([]byte(string(param.EventID)))
 	emailTemplateData := struct {
@@ -219,6 +219,7 @@ func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 		EventName: eventName,
 		Link:      encodedOrganizerID + "/" + encodedEventID + "/" + token,
 	}
+	eventController.eventService.SetProfilePathForOrganizer(objectPath, organizerID)
 	templatePath := getTemplatePath(c, eventController.constants.Context.Translator)
 	eventController.emailService.SendEmail(
 		param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
@@ -251,7 +252,13 @@ func (eventController *EventController) DeleteEvent(c *gin.Context) {
 		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[deleteEventParams](c, &eventController.constants.Context)
+	event := eventController.eventService.GetEventByID(param.EventID)
 	eventController.eventService.DeleteEvent(param.EventID)
+	eventController.awsService.DeleteObject(enums.BannersBucket, event.BannerPath)
+	listEventMedia := eventController.eventService.GetListEventMedia(param.EventID)
+	for _, media := range listEventMedia {
+		eventController.awsService.DeleteObject(enums.SessionsBucket, media.Path)
+	}
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteEvent")
@@ -284,6 +291,21 @@ func (eventController *EventController) DeleteDiscount(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) DeleteOrganizer(c *gin.Context) {
+	type deleteOrganizerParams struct {
+		OrganizerID uint `uri:"organizerID" validate:"required"`
+		EventID     uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[deleteOrganizerParams](c, &eventController.constants.Context)
+	profilePath := eventController.eventService.GetOrganizerProfilePath(param.OrganizerID)
+	eventController.eventService.DeleteOrganizer(param.EventID, param.OrganizerID)
+	eventController.awsService.DeleteObject(enums.ProfileBucket, profilePath)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteOrganizer")
+	controller.Response(c, 200, message, nil)
+}
+
 func (eventController *EventController) UploadEventMedia(c *gin.Context) {
 	type eventMedia struct {
 		Name    string                `form:"name" validate:"required,max=50"`
@@ -307,9 +329,10 @@ func (eventController *EventController) DeleteEventMedia(c *gin.Context) {
 		MediaID uint `uri:"mediaId" validate:"required"`
 	}
 	param := controller.Validated[eventMedia](c, &eventController.constants.Context)
-	media := eventController.eventService.GetEventMediaPath(param.MediaID, param.EventID)
+	media := eventController.eventService.GetEventMediaDetails(param.MediaID, param.EventID)
 	eventController.awsService.DeleteObject(enums.SessionsBucket, media.Path)
 	eventController.eventService.DeleteEventMedia(param.MediaID)
+	eventController.awsService.DeleteObject(enums.SessionsBucket, media.Path)
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteMedia")

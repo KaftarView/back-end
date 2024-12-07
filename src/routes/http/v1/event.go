@@ -54,6 +54,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
 			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
 			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
+			updateOrDelete.DELETE("/:eventID/organizer/:organizerID", eventController.DeleteOrganizer)
 			updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
 			updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
 		}
