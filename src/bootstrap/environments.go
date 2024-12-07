@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -61,10 +60,7 @@ type UserInfo struct {
 }
 
 func NewEnvironments() *Env {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load(".env")
 
 	return &Env{
 		PRIMARY_DB: Database{
