@@ -46,6 +46,12 @@ type CommentDetails struct {
 	AuthorName  string
 }
 
+type EventMediaDetails struct {
+	CreatedAt time.Time `json:"created_at"`
+	Size      string    `json:"media_size"`
+	MediaPath string    `json:"media_path"`
+}
+
 type EventDetailsResponse struct {
 	ID          uint             `json:"id"`
 	CreatedAt   time.Time        `json:"created_at"`
