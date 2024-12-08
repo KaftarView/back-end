@@ -8,6 +8,7 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
+	"log"
 	"first-project/src/enums"
 	"fmt"
 	"mime/multipart"
@@ -194,6 +195,48 @@ func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) EditEvent(c *gin.Context) {
+	type editEventParams struct {
+		EventID uint `uri:"id" binding:"required"`
+	}
+	param := controller.Validated[editEventParams](c, &eventController.constants.Context)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	event, found := eventController.eventService.GetEventById(param.EventID)
+	if !found {
+		message, _ := trans.T("errorMessage.notFoundError")
+		controller.Response(c, 404, message, nil)
+		return
+	}
+
+	type responseStruct struct {
+		Name        string    `json:"name"`
+		Status      string    `json:"status"`
+		Description string    `json:"description"`
+		FromDate    time.Time `json:"fromDate"`
+		ToDate      time.Time `json:"toDate"`
+		MinCapacity uint      `json:"minCapacity"`
+		MaxCapacity uint      `json:"maxCapacity"`
+		VenueType   string    `json:"eventType"`
+		Categories  []string  `json:"category"`
+		Address     string    `json:"address"`
+	}
+
+	response := responseStruct{
+		Name:        event.Name,
+		Status:      event.Status.String(),
+		Description: event.Description,
+		FromDate:    event.FromDate,
+		ToDate:      event.ToDate,
+		MinCapacity: event.MinCapacity,
+		MaxCapacity: event.MaxCapacity,
+		VenueType:   event.VenueType.String(),
+		Categories:  []string{"Music", "Workshop", "Tech"},
+		Address:     event.Location,
+	}
+
+	message, _ := trans.T("successMessage.getEvent")
+	controller.Response(c, 200, message, response)
 func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	type addEventOrganizerParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`
@@ -244,7 +287,50 @@ func (eventController *EventController) VerifyEmail(c *gin.Context) {
 }
 
 func (eventController *EventController) UpdateEvent(c *gin.Context) {
-	// some code here ...
+	type updateEventParams struct {
+		Name        *string               `form:"name" validate:"omitempty,max=50"`
+		Status      *string               `form:"status"`
+		Description *string               `form:"description"`
+		FromDate    *time.Time            `form:"fromDate" validate:"omitempty"`
+		ToDate      *time.Time            `form:"toDate" validate:"omitempty,gtfield=FromDate"`
+		MinCapacity *uint                 `form:"minCapacity" validate:"omitempty,min=1"`
+		MaxCapacity *uint                 `form:"maxCapacity" validate:"omitempty,gtfield=MinCapacity"`
+		VenueType   *string               `form:"eventType" validate:"omitempty"`
+		Location    *string               `form:"address"`
+		Banner      *multipart.FileHeader `form:"banner"`
+		Categories  *[]string             `form:"category"`
+		EventID     uint                  `uri:"id" binding:"required"`
+	}
+
+	param := controller.Validated[updateEventParams](c, &eventController.constants.Context)
+
+	eventDetails := dto.UpdateEventDetails{
+		ID:          param.EventID,
+		Name:        param.Name,
+		Status:      param.Status,
+		Description: param.Description,
+		FromDate:    param.FromDate,
+		ToDate:      param.ToDate,
+		MinCapacity: param.MinCapacity,
+		MaxCapacity: param.MaxCapacity,
+		VenueType:   param.VenueType,
+		Location:    param.Location,
+		Categories:  param.Categories,
+	}
+
+	eventController.eventService.UpdateEvent(eventDetails)
+
+	if param.Banner != nil {
+		log.Printf("Banner file received: %+v\n", param.Banner.Filename)
+		objectPath := fmt.Sprintf("Events/Banners/%d", int(param.EventID))
+		eventController.awsService.DeleteObject(objectPath)
+		eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(param.EventID))
+	}
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateEvent")
+	log.Println("Sending success response")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) DeleteEvent(c *gin.Context) {

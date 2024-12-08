@@ -38,6 +38,10 @@
         "createEvent": "Event added successfully.",
         "addTicket": "Ticket added successfully.",
         "addDiscount": "Discount added successfully.",
+
+        "getEvent": "Event Found successfully",
+        "updateEvent" : "Event Updated successfully"
+
         "deleteEvent": "Event removed successfully.",
         "uploadMedia": "Media added successfully.",
         "deleteMedia": "Media deleted successfully.",

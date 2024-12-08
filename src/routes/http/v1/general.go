@@ -1,6 +1,9 @@
 package routes_http_v1
 
 import (
+	application_aws "first-project/src/application/aws"
+	controller_v1_event "first-project/src/controller/v1/event"
+
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -40,10 +43,15 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		events := public.Group("/events")
 		{
+
+			events.PUT("/Update/:id", eventController.UpdateEvent)
+			events.GET("/Edit/:id", eventController.EditEvent)
+
 			events.GET("/published", eventController.ListPublicEvents)
 			events.GET("/:eventID", eventController.GetPublicEvent)
 			events.GET("/search", eventController.SearchPublicEvents)
 			events.POST("/register/verify-organizer", eventController.VerifyEmail)
+
 		}
 	}
 

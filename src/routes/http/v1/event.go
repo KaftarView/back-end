@@ -50,7 +50,12 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		updateOrDelete := events.Group("")
 		updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
 		{
-			updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
+
+			updateOrDelete.PUT("/Update/:id", eventController.UpdateEvent)
+			updateOrDelete.GET("/Edit/:id", eventController.EditEvent)
+			updateOrDelete.DELETE("/:id", eventController.DeleteEvent)
+			updateOrDelete.POST("/:id/media", eventController.UploadEventMedia)
+			updateOrDelete.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
 			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
 			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
 			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
