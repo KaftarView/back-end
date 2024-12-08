@@ -1,6 +1,7 @@
 package application
 
 import (
+	"encoding/base64"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
@@ -11,14 +12,20 @@ import (
 )
 
 type EventService struct {
-	constants       *bootstrap.Constants
-	eventRepository *repository_database.EventRepository
+	constants         *bootstrap.Constants
+	eventRepository   *repository_database.EventRepository
+	commentRepository *repository_database.CommentRepository
 }
 
-func NewEventService(constants *bootstrap.Constants, eventRepository *repository_database.EventRepository) *EventService {
+func NewEventService(
+	constants *bootstrap.Constants,
+	eventRepository *repository_database.EventRepository,
+	commentRepository *repository_database.CommentRepository,
+) *EventService {
 	return &EventService{
-		constants:       constants,
-		eventRepository: eventRepository,
+		constants:         constants,
+		eventRepository:   eventRepository,
+		commentRepository: commentRepository,
 	}
 }
 
@@ -53,12 +60,15 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	}
 
 	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+	commentable := eventService.commentRepository.CreateNewCommentable()
 
 	eventDetailsModel := entities.Event{
+		ID:          commentable.CID,
 		Name:        eventDetails.Name,
 		Status:      enumStatus,
 		Categories:  categories,
 		Description: eventDetails.Description,
+		BasePrice:   eventDetails.BasePrice,
 		FromDate:    eventDetails.FromDate,
 		ToDate:      eventDetails.ToDate,
 		MinCapacity: eventDetails.MinCapacity,
@@ -70,7 +80,15 @@ func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventDetail
 	return event
 }
 
-func (eventService *EventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) entities.Ticket {
+func (eventService *EventService) SetBannerPathForEvent(mediaPath string, eventID uint) {
+	eventService.eventRepository.UpdateEventBannerByEventID(mediaPath, eventID)
+}
+
+func (eventService *EventService) SetProfilePathForOrganizer(mediaPath string, organizerID uint) {
+	eventService.eventRepository.UpdateOrganizerProfileByID(mediaPath, organizerID)
+}
+
+func (eventService *EventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -78,14 +96,13 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	ticket, ticketExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
-	if ticketExist {
+	_, mediaExist := eventService.eventRepository.FindEventTicketByName(ticketName, eventID)
+	if mediaExist {
 		conflictError.AppendError(
-			eventService.constants.ErrorField.Ticket,
+			eventService.constants.ErrorField.Media,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	return ticket
 }
 
 func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketDetails) entities.Ticket {
@@ -104,7 +121,7 @@ func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTick
 	return ticket
 }
 
-func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode string, eventID uint) entities.Discount {
+func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -112,14 +129,13 @@ func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode s
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	discount, discountExist := eventService.eventRepository.FindEventDiscountByCode(discountCode, eventID)
+	_, discountExist := eventService.eventRepository.FindEventDiscountByCode(discountCode, eventID)
 	if discountExist {
 		conflictError.AppendError(
 			eventService.constants.ErrorField.Discount,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	return discount
 }
 
 func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountDetails) entities.Discount {
@@ -145,6 +161,7 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	discount := eventService.eventRepository.CreateNewDiscount(discountDetailsModel)
 	return discount
 }
+
 
 func (eventService *EventService) GetEventById(id uint) (entities.Event, bool) {
 	event, eventExist := eventService.eventRepository.FindEventByID(id)
@@ -224,4 +241,350 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 
 	updatedEvent := eventService.eventRepository.UpdateEvent(event)
 	return updatedEvent
+
+func (eventService *EventService) UpdateOrCreateEventOrganizer(eventID uint, name, email, description, token string) uint {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	_, organizerExist := eventService.eventRepository.FindActiveOrVerifiedOrganizerByEmail(eventID, email)
+	if organizerExist {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Organizer,
+			eventService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	organizer, organizerExist := eventService.eventRepository.FindOrganizerByEventIDAndEmailAndVerified(eventID, email, false)
+	if organizerExist {
+		eventService.eventRepository.UpdateOrganizerToken(organizer, token)
+		return organizer.ID
+	}
+	organizer = eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, token, false)
+	return organizer.ID
+}
+
+func (eventService *EventService) GetEventByID(eventID uint) entities.Event {
+	event, _ := eventService.eventRepository.FindEventByID(eventID)
+	return event
+}
+
+func (eventService *EventService) ActivateUser(encodedOrganizerID, encodedEventID, token string) {
+	decodedOrganizerID, err := base64.StdEncoding.DecodeString(encodedOrganizerID)
+	if err != nil {
+		panic(err)
+	}
+	decodedEventID, err := base64.StdEncoding.DecodeString(encodedEventID)
+	if err != nil {
+		panic(err)
+	}
+	organizerID := uint(decodedOrganizerID[0])
+	eventID := uint(decodedEventID[0])
+	var registrationError exceptions.UserRegistrationError
+	var notFoundError exceptions.NotFoundError
+	_, organizerExist := eventService.eventRepository.FindOrganizerByIDAndEventIDAndVerified(organizerID, eventID, true)
+	if organizerExist {
+		registrationError.AppendError(
+			eventService.constants.ErrorField.Organizer,
+			eventService.constants.ErrorTag.AlreadyVerified)
+		panic(registrationError)
+	}
+	organizer, organizerExist := eventService.eventRepository.FindOrganizerByIDAndEventIDAndVerified(organizerID, eventID, false)
+	if !organizerExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Organizer
+		panic(notFoundError)
+	}
+	if organizer.Token != token {
+		registrationError.AppendError(
+			eventService.constants.ErrorField.Organizer,
+			eventService.constants.ErrorTag.InvalidToken)
+		panic(registrationError)
+	}
+	if time.Since(organizer.UpdatedAt) > 8*time.Hour {
+		registrationError.AppendError(
+			eventService.constants.ErrorField.Token,
+			eventService.constants.ErrorTag.ExpiredToken)
+		panic(registrationError)
+	}
+	eventService.eventRepository.ActivateOrganizer(organizer)
+}
+
+func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus)
+	eventsDetails := make([]dto.EventDetailsResponse, len(events))
+	for i, event := range events {
+		eventsDetails[i] = dto.EventDetailsResponse{
+			ID:          event.ID,
+			CreatedAt:   event.CreatedAt,
+			Name:        event.Name,
+			Status:      event.Status.String(),
+			Description: event.Description,
+			FromDate:    event.FromDate,
+			ToDate:      event.ToDate,
+			VenueType:   event.VenueType.String(),
+			Banner:      event.BannerPath,
+		}
+	}
+	return eventsDetails
+}
+
+func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	isAllowStatus := false
+	for _, status := range allowedStatus {
+		if event.Status == status {
+			isAllowStatus = true
+		}
+	}
+	if !isAllowStatus {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	event = eventService.eventRepository.FindEventCategoriesByEvent(event)
+	categoryNames := make([]string, len(event.Categories))
+	for i, category := range event.Categories {
+		categoryNames[i] = category.Name
+	}
+
+	comments := eventService.commentRepository.GetCommentsByEventID(eventID)
+	var commentDetails []dto.CommentDetails
+	for _, comment := range comments {
+		commentDetails = append(commentDetails, dto.CommentDetails{
+			Content:     comment.Content,
+			IsModerated: comment.IsModerated,
+			AuthorName:  comment.Author.Name,
+		})
+	}
+
+	eventDetails := dto.EventDetailsResponse{
+		ID:          event.ID,
+		CreatedAt:   event.CreatedAt,
+		Name:        event.Name,
+		Status:      event.Status.String(),
+		Description: event.Description,
+		BasePrice:   event.BasePrice,
+		MinCapacity: event.MinCapacity,
+		MaxCapacity: event.MaxCapacity,
+		FromDate:    event.FromDate,
+		ToDate:      event.ToDate,
+		VenueType:   event.VenueType.String(),
+		Location:    event.Location,
+		Categories:  categoryNames,
+		Banner:      event.BannerPath,
+		Comments:    commentDetails,
+	}
+	return eventDetails
+}
+
+func (eventService *EventService) GetEventTickets(eventID uint) []dto.TicketDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+
+	tickets, ticketExist := eventService.eventRepository.FindTicketsByEventID(eventID)
+	if !ticketExist {
+		return []dto.TicketDetailsResponse{}
+	}
+	ticketsDetails := make([]dto.TicketDetailsResponse, len(tickets))
+	for i, ticket := range tickets {
+		ticketsDetails[i] = dto.TicketDetailsResponse{
+			ID:             ticket.ID,
+			CreatedAt:      ticket.CreatedAt,
+			Name:           ticket.Name,
+			Description:    ticket.Description,
+			Price:          ticket.Price,
+			Quantity:       ticket.Quantity,
+			IsAvailable:    ticket.IsAvailable,
+			AvailableFrom:  ticket.AvailableFrom,
+			AvailableUntil: ticket.AvailableUntil,
+		}
+	}
+	return ticketsDetails
+}
+
+func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+
+	discounts, discountExist := eventService.eventRepository.FindDiscountsByEventID(eventID)
+	if !discountExist {
+		return []dto.DiscountDetailsResponse{}
+	}
+	discountsDetails := make([]dto.DiscountDetailsResponse, len(discounts))
+	for i, discount := range discounts {
+		discountsDetails[i] = dto.DiscountDetailsResponse{
+			ID:             discount.ID,
+			CreatedAt:      discount.CreatedAt,
+			Code:           discount.Code,
+			Type:           discount.Type.String(),
+			Value:          discount.Value,
+			AvailableFrom:  discount.ValidFrom,
+			AvailableUntil: discount.ValidUntil,
+			Quantity:       discount.Quantity,
+			UsedCount:      discount.UsedCount,
+			MinTickets:     discount.MinTickets,
+		}
+	}
+	return discountsDetails
+}
+
+func (eventService *EventService) GetListEventMedia(eventID uint) []entities.Media {
+	var notFoundError exceptions.NotFoundError
+	media, mediaExist := eventService.eventRepository.FindAllEventMedia(eventID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+	return media
+}
+
+func (eventService *EventService) GetListOfCategories() []string {
+	categoryNames := eventService.eventRepository.FindAllCategories()
+	return categoryNames
+}
+
+func (eventService *EventService) DeleteEvent(eventID uint) {
+	var notFoundError exceptions.NotFoundError
+	eventExist := eventService.eventRepository.DeleteEvent(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+}
+
+func (eventService *EventService) DeleteTicket(eventID, ticketID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	ticketExist := eventService.eventRepository.DeleteTicket(eventID, ticketID)
+	if !ticketExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Ticket
+		panic(notFoundError)
+	}
+}
+
+func (eventService *EventService) DeleteDiscount(eventID, discountID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	discountExist := eventService.eventRepository.DeleteDiscount(eventID, discountID)
+	if !discountExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Discount
+		panic(notFoundError)
+	}
+}
+
+func (eventService *EventService) DeleteOrganizer(eventID, organizerID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	organizerExist := eventService.eventRepository.DeleteOrganizer(eventID, organizerID)
+	if !organizerExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Organizer
+		panic(notFoundError)
+	}
+}
+
+func (eventService *EventService) GetEventMediaDetails(mediaID, eventID uint) entities.Media {
+	var notFoundError exceptions.NotFoundError
+	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+	return media
+}
+
+func (eventService *EventService) GetOrganizerProfilePath(organizerID uint) string {
+	var notFoundError exceptions.NotFoundError
+	organizer, organizerExist := eventService.eventRepository.FindOrganizerByID(organizerID)
+	if !organizerExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Organizer
+		panic(notFoundError)
+	}
+	return organizer.ProfilePath
+}
+
+func (eventService *EventService) DeleteEventMedia(mediaID uint) {
+	var notFoundError exceptions.NotFoundError
+	eventExist := eventService.eventRepository.DeleteMedia(mediaID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+}
+
+func (eventService *EventService) ChangeEventStatus(eventID uint, newStatus string) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	var enumNewStatus enums.EventStatus
+	eventStatuses := enums.GetAllEventStatus()
+	for _, eventStatus := range eventStatuses {
+		if eventStatus.String() == newStatus {
+			enumNewStatus = eventStatus
+		}
+	}
+	if event.Status == enumNewStatus {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.EventStatus,
+			eventService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	eventService.eventRepository.ChangeStatusByEvent(event, enumNewStatus)
+}
+
+func (eventService *EventService) ValidateNewEventMediaDetails(eventID uint, mediaName string) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	_, mediaExist := eventService.eventRepository.FindEventMediaByName(mediaName, eventID)
+	if mediaExist {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Ticket,
+			eventService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+}
+
+func (eventService *EventService) CreateEventMedia(mediaName, mediaPath string, eventID uint) entities.Media {
+	eventMediaModel := entities.Media{
+		Name:    mediaName,
+		Path:    mediaPath,
+		EventID: eventID,
+	}
+	media := eventService.eventRepository.CreateNewMedia(eventMediaModel)
+	return media
+
 }

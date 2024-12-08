@@ -1,20 +1,22 @@
 package bootstrap
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
 type Env struct {
-	PRIMARY_DB    Database
-	PrimaryRedis  RedisDB
-	PrimaryBucket Bucket
-	Applications  AppInfo
-	Email         EmailInfo
-	Admin         UserInfo
-	Moderator     UserInfo
+	PRIMARY_DB     Database
+	PrimaryRedis   RedisDB
+	BannersBucket  Bucket
+	SessionsBucket Bucket
+	PodcastsBucket Bucket
+	ProfileBucket  Bucket
+	Applications   AppInfo
+	Email          EmailInfo
+	Admin          UserInfo
+	Moderator      UserInfo
 }
 
 type Database struct {
@@ -58,10 +60,7 @@ type UserInfo struct {
 }
 
 func NewEnvironments() *Env {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load(".env")
 
 	return &Env{
 		PRIMARY_DB: Database{
@@ -77,12 +76,33 @@ func NewEnvironments() *Env {
 			Password: os.Getenv("REDIS_PASSWORD"),
 			DB:       os.Getenv("REDIS_DB"),
 		},
-		PrimaryBucket: Bucket{
-			Name:      os.Getenv("BUCKET_NAME"),
-			Region:    os.Getenv("BUCKET_REGION"),
-			AccessKey: os.Getenv("BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("BUCKET_ENDPOINT"),
+		BannersBucket: Bucket{
+			Name:      os.Getenv("BANNERS_BUCKET_NAME"),
+			Region:    os.Getenv("BANNERS_BUCKET_REGION"),
+			AccessKey: os.Getenv("BANNERS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("BANNERS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("BANNERS_BUCKET_ENDPOINT"),
+		},
+		SessionsBucket: Bucket{
+			Name:      os.Getenv("SESSIONS_BUCKET_NAME"),
+			Region:    os.Getenv("SESSIONS_BUCKET_REGION"),
+			AccessKey: os.Getenv("SESSIONS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("SESSIONS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("SESSIONS_BUCKET_ENDPOINT"),
+		},
+		PodcastsBucket: Bucket{
+			Name:      os.Getenv("PODCAST_BUCKET_NAME"),
+			Region:    os.Getenv("PODCAST_BUCKET_REGION"),
+			AccessKey: os.Getenv("PODCAST_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("PODCAST_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("PODCAST_BUCKET_ENDPOINT"),
+		},
+		ProfileBucket: Bucket{
+			Name:      os.Getenv("PROFILE_BUCKET_NAME"),
+			Region:    os.Getenv("PROFILE_BUCKET_REGION"),
+			AccessKey: os.Getenv("PROFILE_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("PROFILE_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("PROFILE_BUCKET_ENDPOINT"),
 		},
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),

@@ -9,6 +9,7 @@ import (
 
 type Event struct {
 	gorm.Model
+	ID             uint                   `gorm:"primarykey"`
 	Name           string                 `gorm:"type:varchar(50);not null"`
 	Status         enums.EventStatus      `gorm:"type:int;not null"`
 	Description    string                 `gorm:"type:text"`
@@ -19,13 +20,15 @@ type Event struct {
 	MaxCapacity    uint                   `gorm:"not null"`
 	VenueType      enums.EventVenue       `gorm:"type:int;not null"`
 	Location       string                 `gorm:"type:text"`
+	BannerPath     string                 `gorm:"type:text"`
 	Communications map[string]interface{} `gorm:"-"`
 
-	Commentable Commentable `gorm:"foreignKey:ID"`
+	Commentable Commentable `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE;"`
 
-	Tickets   []Ticket   `gorm:"foreignKey:EventID"`
-	Discounts []Discount `gorm:"foreignKey:EventID"`
+	Tickets    []Ticket    `gorm:"foreignKey:EventID"`
+	Discounts  []Discount  `gorm:"foreignKey:EventID"`
+	Media      []Media     `gorm:"foreignKey:EventID"`
+	Organizers []Organizer `gorm:"foreignKey:EventID"`
 
-	Organizers []Organizer `gorm:"many2many:event_organizers"`
-	Categories []Category  `gorm:"many2many:event_categories"`
+	Categories []Category `gorm:"many2many:event_categories"`
 }

@@ -33,6 +33,7 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client
 
 func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
+	routes_http_v1.SetupNewsRoutes(v1, di, db)
 }
 
 func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
@@ -44,4 +45,5 @@ func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB,
 
 	routes_http_v1.SetupUserRoutes(protected, di, db, rdb)
 	routes_http_v1.SetupEventRoutes(protected, di, db, rdb)
+	routes_http_v1.SetupCommentRoutes(protected, di, db, rdb)
 }

@@ -2,8 +2,10 @@ package application_aws
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/enums"
 	"fmt"
 	"mime/multipart"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,157 +16,134 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type AWSS3 struct {
+type S3service struct {
 	constants *bootstrap.Constants
-	bucket    *bootstrap.Bucket
-	session   *session.Session
-	s3Client  *s3.S3
+	buckets   map[enums.BucketType]*bootstrap.Bucket
+	clients   map[enums.BucketType]*s3.S3
+	uploader  map[enums.BucketType]*s3manager.Uploader
 }
 
-func NewAWSS3(constants *bootstrap.Constants, bucket *bootstrap.Bucket) *AWSS3 {
-	return &AWSS3{
+func NewS3Service(
+	constants *bootstrap.Constants,
+	bannerBucket *bootstrap.Bucket,
+	sessionsBucket *bootstrap.Bucket,
+	podcastsBucket *bootstrap.Bucket,
+	profileBucket *bootstrap.Bucket,
+
+) *S3service {
+	buckets := make(map[enums.BucketType]*bootstrap.Bucket)
+	buckets[enums.BannersBucket] = bannerBucket
+	buckets[enums.SessionsBucket] = sessionsBucket
+	buckets[enums.PodcastsBucket] = podcastsBucket
+	buckets[enums.ProfileBucket] = profileBucket
+	return &S3service{
 		constants: constants,
-		bucket:    bucket,
+		buckets:   buckets,
+		clients:   make(map[enums.BucketType]*s3.S3),
+		uploader:  make(map[enums.BucketType]*s3manager.Uploader),
 	}
 }
 
-func (a *AWSS3) getS3Client() {
-	if a.session != nil && a.s3Client != nil {
+func (s3Service *S3service) setS3Client(bucketType enums.BucketType) {
+	bucketTypes := enums.GetAllBucketTypes()
+	if !slices.Contains(bucketTypes, bucketType) {
+		panic(fmt.Errorf("bucket not exist"))
+	}
+	if s3Service.uploader[bucketType] != nil && s3Service.clients[bucketType] != nil {
 		return
 	}
 	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(a.bucket.AccessKey, a.bucket.SecretKey, ""),
-		Region:      aws.String(a.bucket.Region),
-		Endpoint:    aws.String(a.bucket.Endpoint),
+		Credentials: credentials.NewStaticCredentials(s3Service.buckets[bucketType].AccessKey, s3Service.buckets[bucketType].SecretKey, ""),
+		Region:      aws.String(s3Service.buckets[bucketType].Region),
+		Endpoint:    aws.String(s3Service.buckets[bucketType].Endpoint),
 	})
 
 	if err != nil {
 		panic(fmt.Errorf("unable to create AWS session, %v", err))
 	}
 
-	a.session = sess
-	a.s3Client = s3.New(sess)
+	s3Service.uploader[bucketType] = s3manager.NewUploader(sess)
+	s3Service.clients[bucketType] = s3.New(sess)
 }
 
-func (a *AWSS3) UploadObject(file *multipart.FileHeader, objectTittle string, objectID int) {
-	a.getS3Client()
+func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string, file *multipart.FileHeader) {
+	s3Service.setS3Client(bucketType)
+	bucket := s3Service.buckets[bucketType]
+
 	fileReader, err := file.Open()
 	if err != nil {
 		panic(fmt.Errorf("unable to open file %q, %v", file.Filename, err))
 	}
 	defer fileReader.Close()
 
-	_, err = a.s3Client.HeadBucket(&s3.HeadBucketInput{
-		Bucket: aws.String(a.bucket.Name),
+	_, err = s3Service.clients[bucketType].HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(bucket.Name),
 	})
 
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok && (aerr.Code() == s3.ErrCodeNoSuchBucket || aerr.Code() == "NotFound") {
-			_, err = a.s3Client.CreateBucket(&s3.CreateBucketInput{
-				Bucket: aws.String(a.bucket.Name),
+			_, err = s3Service.clients[bucketType].CreateBucket(&s3.CreateBucketInput{
+				Bucket: aws.String(bucket.Name),
 			})
 			if err != nil {
-				panic(fmt.Errorf("unable to create bucket %q, %v", a.bucket.Name, err))
+				panic(fmt.Errorf("unable to create bucket %q, %v", bucket.Name, err))
 			}
 
-			err = a.s3Client.WaitUntilBucketExists(&s3.HeadBucketInput{
-				Bucket: aws.String(a.bucket.Name),
+			err = s3Service.clients[bucketType].WaitUntilBucketExists(&s3.HeadBucketInput{
+				Bucket: aws.String(bucket.Name),
 			})
 			if err != nil {
-				panic(fmt.Errorf("unable to confirm bucket %q exists, %v", a.bucket.Name, err))
+				panic(fmt.Errorf("unable to confirm bucket %q exists, %v", bucket.Name, err))
 			}
 		} else {
-			panic(fmt.Errorf("unable to check bucket %q, %v", a.bucket.Name, err))
+			panic(fmt.Errorf("unable to check bucket %q, %v", bucket.Name, err))
 		}
 	}
 
-	uploader := s3manager.NewUploader(a.session)
-	_, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(a.bucket.Name),
-		Key:    aws.String(a.constants.ObjectStorage.GetObjectKey(int(objectID), objectTittle, file.Filename)),
+	_, err = s3Service.uploader[bucketType].Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucket.Name),
+		Key:    aws.String(key),
 		Body:   fileReader,
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", file.Filename, a.bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %v", file.Filename, bucket.Name, err))
 	}
 }
 
-func (a *AWSS3) DeleteObject(objectName string) {
-	a.getS3Client()
-	_, err := a.s3Client.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(a.bucket.Name),
-		Key:    aws.String(objectName),
+func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string) {
+	s3Service.setS3Client(bucketType)
+	bucket := s3Service.buckets[bucketType]
+
+	_, err := s3Service.clients[bucketType].DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket.Name),
+		Key:    aws.String(key),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", objectName, a.bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %v", key, bucket.Name, err))
 	}
 
-	err = a.s3Client.WaitUntilObjectNotExists(&s3.HeadObjectInput{
-		Bucket: aws.String(a.bucket.Name),
-		Key:    aws.String(objectName),
+	err = s3Service.clients[bucketType].WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket.Name),
+		Key:    aws.String(key),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to open file %q, %v", objectName, err))
+		panic(fmt.Errorf("unable to open file %q, %v", key, err))
 	}
 }
 
-func (a *AWSS3) ListObjects() []map[string]interface{} {
-	a.getS3Client()
-	resp, err := a.s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket: aws.String(a.bucket.Name),
-	})
-	if err != nil {
-		panic(fmt.Errorf("unable to list items in bucket %q, %v", a.bucket.Name, err))
-	}
+func (s3Service *S3service) GetPresignedURL(bucketType enums.BucketType, objectKey string, expiration time.Duration) string {
+	s3Service.setS3Client(bucketType)
+	bucket := s3Service.buckets[bucketType]
 
-	itemMap := make([]map[string]interface{}, 0)
-	for _, item := range resp.Contents {
-		itemData := map[string]interface{}{
-			"Name":         *item.Key,
-			"LastModified": *item.LastModified,
-			"Size":         *item.Size,
-			"StorageClass": *item.StorageClass,
-		}
-		itemMap = append(itemMap, itemData)
-	}
-
-	return itemMap
-}
-
-func (a *AWSS3) listSessionVideos(sessionID uint) []string {
-	var videoKeys []string
-	prefix := fmt.Sprintf("session/%d/", int(sessionID))
-	err := a.s3Client.ListObjectsV2Pages(&s3.ListObjectsV2Input{
-		Bucket: aws.String(a.bucket.Name),
-		Prefix: aws.String(prefix),
-	}, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
-		for _, obj := range page.Contents {
-			videoKeys = append(videoKeys, *obj.Key)
-		}
-		return true
+	req, _ := s3Service.clients[bucketType].GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(bucket.Name),
+		Key:    aws.String(objectKey),
 	})
 
+	url, err := req.Presign(expiration)
 	if err != nil {
-		panic(fmt.Errorf("unable to list videos for session %s: %v", prefix, err))
+		panic(fmt.Errorf("failed to generate presigned URL: %w", err))
 	}
-	return videoKeys
-}
 
-func (a *AWSS3) GetSessionVideoURLs(sessionID uint) map[string]string {
-	a.getS3Client()
-	videoKeys := a.listSessionVideos(sessionID)
-	videoURLs := make(map[string]string)
-	for _, key := range videoKeys {
-		req, _ := a.s3Client.GetObjectRequest(&s3.GetObjectInput{
-			Bucket: aws.String(a.bucket.Name),
-			Key:    aws.String(key),
-		})
-
-		urlStr, err := req.Presign(24 * time.Hour)
-		if err != nil {
-			panic(fmt.Errorf("failed to sign request for %s: %v", key, err))
-		}
-		videoURLs[key] = urlStr
-	}
-	return videoURLs
+	return url
 }

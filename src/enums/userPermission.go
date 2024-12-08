@@ -6,11 +6,13 @@ const (
 	ManageUsers PermissionType = iota + 1
 	ManageRoles
 	CreateEvent
+	ManageEvent
 	EditEvent
 	PublishEvent
 	ManageNewsAndBlogs
 	ModerateComments
 	ViewReports
+	All
 )
 
 func (p PermissionType) String() string {
@@ -21,6 +23,8 @@ func (p PermissionType) String() string {
 		return "ManageRoles"
 	case CreateEvent:
 		return "CreateEvent"
+	case ManageEvent:
+		return "ManageEvent"
 	case EditEvent:
 		return "EditEvent"
 	case PublishEvent:
@@ -31,6 +35,8 @@ func (p PermissionType) String() string {
 		return "ModerateComments"
 	case ViewReports:
 		return "ViewReports"
+	case All:
+		return "All"
 	}
 	return ""
 }
@@ -40,10 +46,12 @@ func GetAllPermissionTypes() []PermissionType {
 		ManageUsers,
 		ManageRoles,
 		CreateEvent,
+		ManageEvent,
 		EditEvent,
 		PublishEvent,
 		ManageNewsAndBlogs,
 		ModerateComments,
 		ViewReports,
+		All,
 	}
 }

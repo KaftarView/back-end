@@ -20,7 +20,6 @@ func (jt *JWTToken) GenerateJWT(userID uint) (string, string) {
 	accessTokenClaims := jwt.MapClaims{
 		"iss": "test",
 		"sub": userID,
-		// "exp": time.Now().Add(time.Hour * 1).Unix(),
 		"exp": time.Now().Add(time.Minute * 15).Unix(),
 		"iat": time.Now().Unix(),
 	}
@@ -49,15 +48,13 @@ func (jt *JWTToken) GenerateJWT(userID uint) (string, string) {
 
 func (jt *JWTToken) VerifyToken(tokenString string) jwt.MapClaims {
 	jwtKeys := jwt_keys.GetJWTKeys()
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			panic(fmt.Errorf("unexpected signing method: %v", token.Header["alg"]))
 		}
 		return jwtKeys.PublicKey, nil
 	})
-	if err != nil {
-		panic(err)
-	}
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims
 	}

@@ -1,6 +1,6 @@
 package entities
 
 type Commentable struct {
-	ID       uint      `gorm:"primaryKey"`
+	CID      uint      `gorm:"primaryKey;autoIncrement"`
 	Comments []Comment `gorm:"foreignKey:CommentableID"`
 }

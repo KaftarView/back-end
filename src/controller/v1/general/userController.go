@@ -97,15 +97,28 @@ func (userController *UserController) Login(c *gin.Context) {
 	user := userController.userService.AuthenticateUser(param.Username, param.Password)
 	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
 	accessToken, refreshToken := userController.jwtService.GenerateJWT(user.ID)
-	controller.SetAuthCookies(
-		c, accessToken, refreshToken,
-		userController.constants.Context.AccessToken,
-		userController.constants.Context.RefreshToken,
-	)
 	userController.userCache.SetUser(user.ID, user.Name, user.Email)
+	roles, permissions := userController.userService.FindUserRolesAndPermissions(user.ID)
+	userDataResponse := struct {
+		AccessToken  string   `json:"access_token"`
+		RefreshToken string   `json:"refresh_token"`
+		ID           uint     `json:"id"`
+		Name         string   `json:"username"`
+		Email        string   `json:"email"`
+		Roles        []string `json:"roles"`
+		Permissions  []string `json:"permissions"`
+	}{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ID:           user.ID,
+		Name:         user.Name,
+		Email:        user.Email,
+		Roles:        roles,
+		Permissions:  permissions,
+	}
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.login")
-	controller.Response(c, 200, message, nil)
+	controller.Response(c, 200, message, userDataResponse)
 }
 
 func (userController *UserController) ForgotPassword(c *gin.Context) {
@@ -131,8 +144,14 @@ func (userController *UserController) ConfirmOTP(c *gin.Context) {
 		OTP   string `json:"otp" validate:"required"`
 	}
 	param := controller.Validated[confirmOTPParams](c, &userController.constants.Context)
-	userController.userService.ValidateUserOTP(param.Email, param.OTP)
-	controller.Response(c, 200, "", nil)
+	userID := userController.userService.ValidateUserOTP(param.Email, param.OTP)
+	jwt_keys.SetupJWTKeys(c, userController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
+	accessToken, refreshToken := userController.jwtService.GenerateJWT(userID)
+	type tokens struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+	controller.Response(c, 200, "", tokens{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
 func (userController *UserController) ResetPassword(c *gin.Context) {
@@ -147,21 +166,4 @@ func (userController *UserController) ResetPassword(c *gin.Context) {
 	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.resetPassword")
 	controller.Response(c, 200, message, nil)
-}
-
-func (userController *UserController) UpdateUserRoles(c *gin.Context) {
-	type userRolesParams struct {
-		Email string   `json:"email" validate:"required"`
-		Roles []string `json:"roles" validate:"required"`
-	}
-	param := controller.Validated[userRolesParams](c, &userController.constants.Context)
-	userController.userService.UpdateUserRolesIfExists(param.Email, param.Roles)
-
-	trans := controller.GetTranslator(c, userController.constants.Context.Translator)
-	message, _ := trans.T("successMessage.updateUSerRole")
-	controller.Response(c, 200, message, nil)
-}
-
-func (userController *UserController) AdminSayHello(c *gin.Context) {
-	controller.Response(c, 200, "Hello From Admin", nil)
 }
