@@ -8,9 +8,9 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
-	"log"
 	"first-project/src/enums"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"time"
 
@@ -237,6 +237,7 @@ func (eventController *EventController) EditEvent(c *gin.Context) {
 
 	message, _ := trans.T("successMessage.getEvent")
 	controller.Response(c, 200, message, response)
+}
 func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	type addEventOrganizerParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`
@@ -323,8 +324,8 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 	if param.Banner != nil {
 		log.Printf("Banner file received: %+v\n", param.Banner.Filename)
 		objectPath := fmt.Sprintf("Events/Banners/%d", int(param.EventID))
-		eventController.awsService.DeleteObject(objectPath)
-		eventController.awsService.UploadObject(param.Banner, "Events/Banners", int(param.EventID))
+		eventController.awsService.DeleteObject(enums.BannersBucket, objectPath)
+		eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
 	}
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)

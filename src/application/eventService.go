@@ -162,7 +162,6 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-
 func (eventService *EventService) GetEventById(id uint) (entities.Event, bool) {
 	event, eventExist := eventService.eventRepository.FindEventByID(id)
 	if !eventExist {
@@ -241,6 +240,7 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 
 	updatedEvent := eventService.eventRepository.UpdateEvent(event)
 	return updatedEvent
+}
 
 func (eventService *EventService) UpdateOrCreateEventOrganizer(eventID uint, name, email, description, token string) uint {
 	var notFoundError exceptions.NotFoundError

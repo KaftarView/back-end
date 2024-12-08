@@ -36,6 +36,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
 			read.GET("/ticket-details/:id", eventController.GetTicketDetails)
 			read.GET("/discount-details/:id", eventController.GetDiscountDetails)
+			read.GET("/Edit/:id", eventController.EditEvent)
 		}
 
 		create := events.Group("")
@@ -47,22 +48,19 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			create.POST("/add-organizer/:eventID", eventController.AddEventOrganizer)
 		}
 
-		updateOrDelete := events.Group("")
-		updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
-		{
-
-			updateOrDelete.PUT("/Update/:id", eventController.UpdateEvent)
-			updateOrDelete.GET("/Edit/:id", eventController.EditEvent)
-			updateOrDelete.DELETE("/:id", eventController.DeleteEvent)
-			updateOrDelete.POST("/:id/media", eventController.UploadEventMedia)
-			updateOrDelete.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
-			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
-			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
-			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
-			updateOrDelete.DELETE("/:eventID/organizer/:organizerID", eventController.DeleteOrganizer)
-			updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
-			updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
-		}
+		// updateOrDelete := events.Group("")
+		// updateOrDelete.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		// {
+		// 	updateOrDelete.PUT("/Update/:id", eventController.UpdateEvent)
+		// 	updateOrDelete.DELETE("/:id", eventController.DeleteEvent)
+		// 	updateOrDelete.POST("/:id/media", eventController.UploadEventMedia)
+		// 	updateOrDelete.DELETE("/:id/media/:mediaId", eventController.DeleteEventMedia)
+		// 	updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
+		// 	updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
+		// 	updateOrDelete.DELETE("/:eventID/organizer/:organizerID", eventController.DeleteOrganizer)
+		// 	updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
+		// 	updateOrDelete.DELETE("/:eventID/media/:mediaId", eventController.DeleteEventMedia)
+		// }
 
 		publish := events.Group("")
 		publish.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.PublishEvent}))

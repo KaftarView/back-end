@@ -240,13 +240,12 @@ func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entit
 	return discount
 }
 
-
 func (repo *EventRepository) UpdateEvent(event entities.Event) entities.Event {
 	if err := repo.db.Save(&event).Error; err != nil {
 		panic(err)
 	}
 	return event
-
+}
 func (repo *EventRepository) FindActiveOrVerifiedOrganizerByEmail(eventID uint, email string) (entities.Organizer, bool) {
 	var organizer entities.Organizer
 	result := repo.db.Where("email = ? AND event_id = ?", email, eventID).First(&organizer)

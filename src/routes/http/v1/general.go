@@ -1,9 +1,6 @@
 package routes_http_v1
 
 import (
-	application_aws "first-project/src/application/aws"
-	controller_v1_event "first-project/src/controller/v1/event"
-
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
