@@ -66,10 +66,6 @@ func main() {
 		// &entities.Wallet{},
 		&entities.User{},
 	)
-	db.AutoMigrate(&entities.News{})
-	if err != nil {
-		log.Fatalf("failed to migrate: %v", err)
-	}
 	dbNumber, _ := strconv.Atoi(di.Env.PrimaryRedis.DB)
 	addr := fmt.Sprintf("%s:%s", di.Env.PrimaryRedis.Addr, di.Env.PrimaryRedis.Port)
 	rdb := redis.NewClient(&redis.Options{
