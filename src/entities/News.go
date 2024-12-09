@@ -12,7 +12,7 @@ type News struct {
 	Content2    string     `gorm:"type:text"`
 	Author      string     `gorm:"type:varchar(100);not null" `
 	Categories  []Category `gorm:"many2many:news_categories"`
-	BannerPaths []string   `gorm:"type:text"`
+	BannerPaths string     `gorm:"type:text"`
 }
 
 type NewsDTO struct {

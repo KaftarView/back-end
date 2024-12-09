@@ -43,7 +43,7 @@ func (repo *NewsRepository) CreateNews(title, description, content, content2 str
 	}
 	return news
 }
-func (repo *NewsRepository) UpdateNewsBannerByNewsID(mediaPaths []string, eventID uint) {
+func (repo *NewsRepository) UpdateNewsBannerByNewsID(mediaPaths string, eventID uint) {
 	var news entities.News
 	if err := repo.db.Model(&news).Where("id = ?", eventID).Update("banner_path", mediaPaths).Error; err != nil {
 		panic(err)

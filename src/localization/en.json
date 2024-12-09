@@ -16,14 +16,17 @@
         "emailNotExist": "You should register first.",
         "rateLimitExceed": "Rate limit exceeded.",
         "forbidden": "Access Denied.",
+        "NewsNotFound": "News Not Found",
         "unauthorized": "There was an issue with your authentication. Please try again.",
         "fileRequired": "File is required.",
         "locationAlreadyTaken": "This location is already taken.",
-        "notFoundError": "`{0}` not found."
+        "notFoundError": "`{0}` not found.",
+        "BadRequest" : "Bad Request"
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
         "NewsCreation" : "News created successfully.",
+        "NewsFound" : "News Found Successfully",
         "emailVerification": "Email Verified.",
         "login": "Login successfully.",
         "forgotPassword": "Please check your email to enter OTP to reset your password.",
@@ -33,6 +36,7 @@
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
         "updateUSerRole": "Role added to user successfully.",
         "NewsUpdated" : "News updated successfully.",
+        "NewsDeleted" : "News deleted successfully.",
         "createEvent": "Event added successfully.",
         "addTicket": "Ticket added successfully.",
         "addDiscount": "Discount added successfully.",

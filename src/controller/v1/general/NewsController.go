@@ -7,9 +7,9 @@ import (
 	"first-project/src/controller"
 	"first-project/src/enums"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +41,6 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 		Author      string                `json:"author" validate:"required"`
 	}
 	param := controller.Validated[createParams](c, &nc.constants.Context)
-	log.Printf("Received parameters: %+v", param)
 
 	news := nc.newsService.CreateNews(
 		param.Title,
@@ -54,12 +53,12 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 
 	objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
 	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	BannerPaths := []string{objectPath}
+	BannerPaths := objectPath
 
 	if param.Banner2 != nil {
 		objectPath = fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner2.Filename)
 		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-		BannerPaths = append(BannerPaths, objectPath)
+		BannerPaths = BannerPaths + "," + objectPath
 	}
 
 	nc.newsService.SetBannerPath(BannerPaths, news.ID)
@@ -73,7 +72,9 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 	newsID := c.Param("id")
 	id, err := strconv.Atoi(newsID)
 	if err != nil {
-		controller.Response(c, 400, "Invalid news ID", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.NewsNotFound")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
@@ -101,26 +102,30 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 	)
 
 	if !found {
-		controller.Response(c, 400, "No news with this id", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.NewsNotFound")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
-	// nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[0])
+	NewsBannerPaths := strings.Split(updatedNewsPointer.BannerPaths, ",")
 
-	// objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
-	// nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	// BannerPaths := []string{objectPath}
+	nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[0])
 
-	if len(updatedNewsPointer.BannerPaths) > 1 {
-		nc.awsService.DeleteObject(enums.BannersBucket, updatedNewsPointer.BannerPaths[1])
+	objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
+	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	BannerPaths := objectPath
+
+	if len(NewsBannerPaths) > 1 {
+		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[1])
 	}
 
-	// if param.Banner2 != nil {
-	// 	objectPath = fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
-	// 	BannerPaths = append(BannerPaths, objectPath)
-	// }
+	if param.Banner2 != nil {
+		objectPath = fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
+		BannerPaths = BannerPaths + "," + objectPath
+	}
 
-	// nc.newsService.SetBannerPath(BannerPaths, uint(id))
+	nc.newsService.SetBannerPath(BannerPaths, uint(id))
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
 	message, _ := trans.T("successMessage.NewsUpdated")
@@ -130,61 +135,88 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 func (nc *NewsController) DeleteNews(c *gin.Context) {
 	newsIDStr := c.Param("id")
 	id, err := strconv.Atoi(newsIDStr)
+
 	if err != nil {
-		controller.Response(c, 400, "Invalid news ID", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.NewsNotFound")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
-	found := nc.newsService.DeleteNews(uint(id))
+	News, found := nc.newsService.DeleteNews(uint(id))
 	if !found {
-		controller.Response(c, 400, "Invalid news ID", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.NewsNotFound")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
-	controller.Response(c, 200, "News deleted successfully", nil)
+	NewsBannerPaths := strings.Split(News.BannerPaths, ",")
+	nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[0])
+	if len(NewsBannerPaths) > 1 {
+		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[1])
+	}
+
+	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+	message, _ := trans.T("successMessage.NewsDeleted")
+	controller.Response(c, 201, message, nil)
 }
 
 func (nc *NewsController) GetNewsByID(c *gin.Context) {
 	newsID := c.Param("id")
 	id, err := strconv.Atoi(newsID)
 	if err != nil {
-		controller.Response(c, 400, "Invalid news ID", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.NewsNotFound")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
 	news, found := nc.newsService.GetNewsByID(uint(id))
 
 	if !found {
-		controller.Response(c, 400, "No news with this id", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.NewsNotFound")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
-	controller.Response(c, 200, "Success", news)
+	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+	message, _ := trans.T("successMessage.NewsFound")
+	controller.Response(c, 201, message, news)
 }
 func (nc *NewsController) GetNewsList(c *gin.Context) {
 	categories := c.QueryArray("categories")
 
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if err != nil || limit <= 0 {
-		controller.Response(c, 400, "Invalid limit", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.BadRequest")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil || offset < 0 {
-		controller.Response(c, 400, "Invalid offset", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.BadRequest")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
 	newsList := nc.newsService.GetAllNews(categories, limit, offset)
 
-	controller.Response(c, 200, "Success", newsList)
+	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+	message, _ := trans.T("successMessage.NewsFound")
+	controller.Response(c, 201, message, newsList)
 }
 
 func (nc *NewsController) GetTopKNews(c *gin.Context) {
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "5"))
 	if err != nil || limit <= 0 {
-		controller.Response(c, 400, "Invalid limit", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.BadRequest")
+		controller.Response(c, 400, message, nil)
 		return
 	}
 
@@ -193,7 +225,9 @@ func (nc *NewsController) GetTopKNews(c *gin.Context) {
 	for _, category := range categories {
 		parsedCategory, err := strconv.Atoi(category)
 		if err != nil {
-			controller.Response(c, 400, "Invalid category", nil)
+			trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+			message, _ := trans.T("successMessage.BadRequest")
+			controller.Response(c, 400, message, nil)
 			return
 		}
 		parsedCategories = append(parsedCategories, enums.CategoryType(parsedCategory))
@@ -201,11 +235,14 @@ func (nc *NewsController) GetTopKNews(c *gin.Context) {
 
 	topKNews, err := nc.newsService.GetTopKNews(limit, parsedCategories)
 	if err != nil {
-		controller.Response(c, 500, "Error fetching top K news", nil)
+		trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+		message, _ := trans.T("successMessage.BadRequest")
+		controller.Response(c, 400, message, nil)
 		return
 	}
-
-	controller.Response(c, 200, "Success", topKNews)
+	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+	message, _ := trans.T("successMessage.NewsFound")
+	controller.Response(c, 200, message, topKNews)
 }
 
 func (nc *NewsController) GetNewsByCategory(c *gin.Context) {
@@ -215,5 +252,7 @@ func (nc *NewsController) GetNewsByCategory(c *gin.Context) {
 
 	categgories := controller.Validated[requestBody](c, &nc.constants.Context)
 	newsList := nc.newsService.GetAllNews(categgories.Categories, 10, 0)
-	controller.Response(c, 200, "Success", newsList)
+	trans := controller.GetTranslator(c, nc.constants.Context.Translator)
+	message, _ := trans.T("successMessage.NewsFound")
+	controller.Response(c, 200, message, newsList)
 }

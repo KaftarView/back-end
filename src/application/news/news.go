@@ -23,7 +23,7 @@ func (ns *NewsService) CreateNews(title, description, content, content2 string, 
 	log.Printf("Created news: %v\n", res)
 	return res
 }
-func (ns *NewsService) SetBannerPath(mediaPaths []string, eventID uint) {
+func (ns *NewsService) SetBannerPath(mediaPaths string, eventID uint) {
 	ns.newsRepo.UpdateNewsBannerByNewsID(mediaPaths, eventID)
 }
 func (ns *NewsService) GetNewsByID(newsID uint) (*entities.News, bool) {
@@ -43,13 +43,13 @@ func (ns *NewsService) UpdateNews(newsID uint, title, description, content, cont
 	return updated, true
 }
 
-func (ns *NewsService) DeleteNews(newsID uint) bool {
-	_, found := ns.newsRepo.GetNewsByID(newsID)
+func (ns *NewsService) DeleteNews(newsID uint) (*entities.News, bool) {
+	News, found := ns.newsRepo.GetNewsByID(newsID)
 	if !found {
-		return false
+		return News, false
 	}
 	ns.newsRepo.DeleteNews(newsID)
-	return true
+	return News, true
 }
 
 func (ns *NewsService) GetAllNews(categories []string, limit int, offset int) []entities.News {
