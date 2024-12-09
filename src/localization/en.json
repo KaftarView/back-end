@@ -31,17 +31,29 @@
         "refreshToken": "Your session has been extended.",
         "uploadObjectToBucket": "Object added to bucket created successfully.",
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
-        "updateUSerRole": "Role added to user successfully.",
+        "updateUserRole": "Role added to user successfully.",
+        "createRole": "Role created successfully.",
+        "updateRole": "Role updated successfully.",
         "NewsUpdated" : "News updated successfully.",
         "createEvent": "Event added successfully.",
         "addTicket": "Ticket added successfully.",
         "addDiscount": "Discount added successfully.",
+
+        "getEvent": "Event Found successfully",
+        "updateEvent" : "Event Updated successfully",
+
         "deleteEvent": "Event removed successfully.",
         "uploadMedia": "Media added successfully.",
         "deleteMedia": "Media deleted successfully.",
         "publishEvent": "Event published successfully.",
         "unpublishEvent": "Event set to unpublished.",
         "deleteTicket": "Ticket deleted successfully.",
-        "deleteDiscount": "Discount deleted successfully."
+        "deleteDiscount": "Discount deleted successfully.",
+        "organizerRegistration": "Successfully! After Email verification, organizer will be activated.",
+        "organizerActivated": "Successfully! Your credits has been registered as an event organizer.",
+        "addComment": "Comment added successfully.",
+        "editComment": "Comment edited successfully.",
+        "deleteComment": "Comment deleted successfully.",
+        "deleteOrganizer": "Organizer deleted successfully."
     }
 }

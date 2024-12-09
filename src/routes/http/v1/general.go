@@ -29,9 +29,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 
 	eventRepository := repository_database.NewEventRepository(db)
-	eventService := application.NewEventService(di.Constants, eventRepository)
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket)
-	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService)
+	commentRepository := repository_database.NewCommentRepository(db)
+	eventService := application.NewEventService(di.Constants, eventRepository, commentRepository)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
+	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
 
 	public := routerGroup.Group("/public")
 	{
@@ -39,9 +40,15 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		events := public.Group("/events")
 		{
+
+			events.PUT("/Update/:id", eventController.UpdateEvent)
+			events.GET("/Edit/:id", eventController.EditEvent)
+
 			events.GET("/published", eventController.ListPublicEvents)
 			events.GET("/:eventID", eventController.GetPublicEvent)
 			events.GET("/search", eventController.SearchPublicEvents)
+			events.POST("/register/verify-organizer", eventController.VerifyEmail)
+
 		}
 	}
 

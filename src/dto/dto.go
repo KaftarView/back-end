@@ -16,6 +16,20 @@ type CreateEventDetails struct {
 	Location    string
 }
 
+type UpdateEventDetails struct {
+	ID          uint
+	Name        *string
+	Status      *string
+	Description *string
+	FromDate    *time.Time
+	ToDate      *time.Time
+	MinCapacity *uint
+	MaxCapacity *uint
+	VenueType   *string
+	Location    *string
+	Categories  *[]string
+}
+
 type CreateTicketDetails struct {
 	Name           string
 	Description    string
@@ -66,21 +80,34 @@ type CreateDiscountDetails struct {
 	EventID    uint
 }
 
+type CommentDetails struct {
+	Content     string
+	IsModerated bool
+	AuthorName  string
+}
+
+type EventMediaDetails struct {
+	CreatedAt time.Time `json:"created_at"`
+	Size      string    `json:"media_size"`
+	MediaPath string    `json:"media_path"`
+}
+
 type EventDetailsResponse struct {
-	ID          uint      `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	Name        string    `json:"name"`
-	Status      string    `json:"status"`
-	Description string    `json:"description"`
-	BasePrice   float64   `json:"base-price"`
-	MinCapacity uint      `json:"min_capacity"`
-	MaxCapacity uint      `json:"max_capacity"`
-	FromDate    time.Time `json:"from_date"`
-	ToDate      time.Time `json:"to_date"`
-	VenueType   string    `json:"venue_type"`
-	Categories  []string  `json:"categories"`
-	Location    string    `json:"location"`
-	Banner      string    `json:"banner"`
+	ID          uint             `json:"id"`
+	CreatedAt   time.Time        `json:"created_at"`
+	Name        string           `json:"name"`
+	Status      string           `json:"status"`
+	Description string           `json:"description"`
+	BasePrice   float64          `json:"base-price"`
+	MinCapacity uint             `json:"min_capacity"`
+	MaxCapacity uint             `json:"max_capacity"`
+	FromDate    time.Time        `json:"from_date"`
+	ToDate      time.Time        `json:"to_date"`
+	VenueType   string           `json:"venue_type"`
+	Categories  []string         `json:"categories"`
+	Location    string           `json:"location"`
+	Banner      string           `json:"banner"`
+	Comments    []CommentDetails `json:"comments"`
 }
 
 type TicketDetailsResponse struct {

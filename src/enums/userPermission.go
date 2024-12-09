@@ -12,6 +12,7 @@ const (
 	ManageNewsAndBlogs
 	ModerateComments
 	ViewReports
+	All
 )
 
 func (p PermissionType) String() string {
@@ -34,6 +35,8 @@ func (p PermissionType) String() string {
 		return "ModerateComments"
 	case ViewReports:
 		return "ViewReports"
+	case All:
+		return "All"
 	}
 	return ""
 }
@@ -49,5 +52,6 @@ func GetAllPermissionTypes() []PermissionType {
 		ManageNewsAndBlogs,
 		ModerateComments,
 		ViewReports,
+		All,
 	}
 }

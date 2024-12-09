@@ -66,7 +66,7 @@ func (am *AuthMiddleware) RequirePermission(allowedPermissions []enums.Permissio
 		}
 
 		roles := am.userRepository.FindUserRoleTypesByUserID(userID.(uint))
-
+		allowedPermissions = append(allowedPermissions, enums.All)
 		if !am.isAllowRole(allowedPermissions, roles) {
 			authError := exceptions.NewForbiddenError()
 			panic(authError)
