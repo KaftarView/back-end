@@ -10,7 +10,6 @@ import (
 	"first-project/src/dto"
 	"first-project/src/enums"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"time"
 
@@ -316,7 +315,7 @@ func (eventController *EventController) EditEvent(c *gin.Context) {
 		MinCapacity: event.MinCapacity,
 		MaxCapacity: event.MaxCapacity,
 		VenueType:   event.VenueType.String(),
-		Categories:  []string{"Music", "Workshop", "Tech"},
+		Categories:  []string{},
 		Address:     event.Location,
 	}
 
@@ -407,15 +406,13 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 	eventController.eventService.UpdateEvent(eventDetails)
 
 	if param.Banner != nil {
-		log.Printf("Banner file received: %+v\n", param.Banner.Filename)
-		objectPath := fmt.Sprintf("Events/Banners/%d", int(param.EventID))
+		objectPath := fmt.Sprintf("banners/events/%d/images/%s", eventDetails.ID, param.Banner.Filename)
 		eventController.awsService.DeleteObject(enums.BannersBucket, objectPath)
 		eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
 	}
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updateEvent")
-	log.Println("Sending success response")
 	controller.Response(c, 200, message, nil)
 }
 
