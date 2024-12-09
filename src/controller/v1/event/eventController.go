@@ -161,6 +161,48 @@ func (eventController *EventController) AddEventTicket(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) EditEventTicket(c *gin.Context) {
+	type Params struct {
+		EventID  uint `uri:"eventID" validate:"required"`
+		TicketID uint `uri:"ticketID" validate:"required"`
+	}
+	param := controller.Validated[Params](c, &eventController.constants.Context)
+	ticketDetails := eventController.eventService.GetTicketDetails(param.TicketID)
+	controller.Response(c, 200, "", ticketDetails)
+}
+
+func (eventController *EventController) UpdateEventTicket(c *gin.Context) {
+	type EditEventTicketParams struct {
+		Name           *string    `json:"name"`
+		Description    *string    `json:"description"`
+		Price          *float64   `json:"price"`
+		Quantity       *uint      `json:"quantity" `
+		SoldCount      *uint      `json:"soldCount"`
+		IsAvailable    *bool      `json:"isAvailable" `
+		AvailableFrom  *time.Time `json:"availableFrom" `
+		AvailableUntil *time.Time `json:"availableUntil" `
+		EventID        uint       `uri:"eventID" validate:"required"`
+		TicketID       uint       `uri:"ticketID" validate:"required"`
+	}
+	param := controller.Validated[EditEventTicketParams](c, &eventController.constants.Context)
+	ticketDetails := dto.EditTicketDetaitls{
+		Name:           param.Name,
+		Description:    param.Description,
+		Price:          param.Price,
+		Quantity:       param.Quantity,
+		SoldCount:      param.SoldCount,
+		IsAvailable:    param.IsAvailable,
+		AvailableFrom:  param.AvailableFrom,
+		AvailableUntil: param.AvailableUntil,
+		EventID:        param.EventID,
+		TicketID:       param.TicketID,
+	}
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	eventController.eventService.UpdateEventTicket(ticketDetails)
+	message, _ := trans.T("successMessage.addDiscount")
+	controller.Response(c, 200, message, nil)
+}
+
 func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 	type addEventDiscountParams struct {
 		Code       string    `json:"code" validate:"required,max=50"`
@@ -193,6 +235,49 @@ func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.addDiscount")
 	controller.Response(c, 200, message, nil)
+}
+func (eventController *EventController) EditEventDiscount(c *gin.Context) {
+	type EditDiscountParams struct {
+		EventID    uint `uri:"eventID" validate:"required"`
+		DiscountID uint `uri:"discountID" validate:"required"`
+	}
+	param := controller.Validated[EditDiscountParams](c, &eventController.constants.Context)
+	discountDetails := eventController.eventService.GetDiscountDetails(param.DiscountID)
+	controller.Response(c, 200, "", discountDetails)
+}
+func (eventController *EventController) UpdateEventDiscount(c *gin.Context) {
+	type updateEventDiscountParams struct {
+		Code       *string    `json:"code"`
+		Type       *string    `json:"type"`
+		Value      *float64   `json:"value"`
+		ValidFrom  *time.Time `json:"validFrom"`
+		ValidUntil *time.Time `json:"validUntil"`
+		Quantity   *uint      `json:"quantity"`
+		UsedCount  *uint      `json:"usedCount"`
+		MinTickets *uint      `json:"minTickets"`
+		EventID    uint       `uri:"eventID" validate:"required"`
+		DiscountID uint       `uri:"discountID" validate:"required"`
+	}
+	param := controller.Validated[updateEventDiscountParams](c, &eventController.constants.Context)
+
+	discountDetails := dto.EditDiscountDetails{
+		Code:           param.Code,
+		Type:           param.Type,
+		Value:          param.Value,
+		AvailableFrom:  param.ValidFrom,
+		AvailableUntil: param.ValidUntil,
+		Quantity:       param.Quantity,
+		UsedCount:      param.UsedCount,
+		MinTickets:     param.MinTickets,
+		EventID:        param.EventID,
+		DiscountID:     param.DiscountID,
+	}
+	eventController.eventService.UpdateEventDiscount(discountDetails)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateDiscount")
+	controller.Response(c, 200, message, nil)
+
 }
 
 func (eventController *EventController) EditEvent(c *gin.Context) {

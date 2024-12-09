@@ -29,7 +29,6 @@ func setupTranslation(c *gin.Context, constants *bootstrap.Context) {
 
 func Validated[T any](c *gin.Context, constants *bootstrap.Context) T {
 	setupTranslation(c, constants)
-
 	var params T
 	if err := c.ShouldBindUri(&params); err != nil {
 		bindingError := exceptions.BindingError{Err: err}
@@ -49,6 +48,5 @@ func Validated[T any](c *gin.Context, constants *bootstrap.Context) T {
 	if err := validate.Struct(params); err != nil {
 		panic(err)
 	}
-
 	return params
 }
