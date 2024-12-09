@@ -4,7 +4,6 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	repository_database "first-project/src/repository/database"
-	"log"
 )
 
 type NewsService struct {
@@ -18,9 +17,16 @@ func NewNewsService(newsRepo *repository_database.NewsRepository) *NewsService {
 func (ns *NewsService) CreateNews(title, description, content, content2 string, author string, category []string) entities.News {
 	//categoryType, err := enums.StringToCategoryType(category)
 	categories := ns.newsRepo.FindCategoriesByNames(category)
-	log.Printf("Categories: %v\n", categories)
-	res := ns.newsRepo.CreateNews(title, description, content, content2, categories, author)
-	log.Printf("Created news: %v\n", res)
+	news := entities.News{
+		Title:       title,
+		Description: description,
+		Content:     content,
+		Content2:    content2,
+		Categories:  categories,
+		Author:      author,
+	}
+
+	res := ns.newsRepo.CreateNews(news)
 	return res
 }
 func (ns *NewsService) SetBannerPath(mediaPaths string, eventID uint) {

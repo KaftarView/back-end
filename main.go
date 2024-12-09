@@ -66,6 +66,7 @@ func main() {
 		// &entities.Wallet{},
 		&entities.User{},
 	)
+	db.AutoMigrate(&entities.News{})
 	if err != nil {
 		log.Fatalf("failed to migrate: %v", err)
 	}

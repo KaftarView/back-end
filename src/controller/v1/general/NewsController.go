@@ -52,6 +52,7 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 	)
 
 	objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
+
 	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
 	BannerPaths := objectPath
 
@@ -85,7 +86,7 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 		Content2    string                `json:"content2"`
 		Banner      *multipart.FileHeader `json:"banner"`
 		Banner2     *multipart.FileHeader `json:"banner2"`
-		Category    []string              `json:"category" validate:"required"`
+		Category    []string              `json:"category"`
 		Author      string                `json:"author" validate:"required"`
 	}
 
@@ -109,22 +110,19 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 	}
 
 	NewsBannerPaths := strings.Split(updatedNewsPointer.BannerPaths, ",")
-
-	nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[0])
-
-	objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
-	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	BannerPaths := objectPath
-
-	if len(NewsBannerPaths) > 1 {
-		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[1])
+	if param.Banner != nil {
+		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[0])
+		objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
+		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+		NewsBannerPaths[0] = objectPath
 	}
 
 	if param.Banner2 != nil {
-		objectPath = fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
-		BannerPaths = BannerPaths + "," + objectPath
+		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[1])
+		objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
+		NewsBannerPaths[1] = objectPath
 	}
-
+	BannerPaths := strings.Join(NewsBannerPaths, ",")
 	nc.newsService.SetBannerPath(BannerPaths, uint(id))
 
 	trans := controller.GetTranslator(c, nc.constants.Context.Translator)

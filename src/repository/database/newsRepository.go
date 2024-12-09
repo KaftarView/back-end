@@ -18,22 +18,7 @@ func NewNewsRepository(db *gorm.DB) *NewsRepository {
 	}
 }
 
-func (repo *NewsRepository) CreateNews(title, description, content, content2 string, category []entities.Category, author string) entities.News {
-	news := entities.News{
-		Title:       title,
-		Description: description,
-		Content:     content,
-		Content2:    content2,
-		Categories:  category,
-		Author:      author,
-	}
-
-	categoryNames := []string{}
-	for _, cat := range news.Categories {
-		categoryNames = append(categoryNames, cat.Name)
-	}
-
-	log.Printf("Creating news with title: %s, author: %s, categories: %v", title, author, categoryNames)
+func (repo *NewsRepository) CreateNews(news entities.News) entities.News {
 
 	err := repo.db.Create(&news).Error
 
@@ -45,7 +30,7 @@ func (repo *NewsRepository) CreateNews(title, description, content, content2 str
 }
 func (repo *NewsRepository) UpdateNewsBannerByNewsID(mediaPaths string, eventID uint) {
 	var news entities.News
-	if err := repo.db.Model(&news).Where("id = ?", eventID).Update("banner_path", mediaPaths).Error; err != nil {
+	if err := repo.db.Model(&news).Where("id = ?", eventID).Update("banner_paths", mediaPaths).Error; err != nil {
 		panic(err)
 	}
 }
@@ -141,7 +126,6 @@ func (repo *NewsRepository) FindNewsCategories(news entities.News) entities.News
 
 func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
 	var categories []entities.Category
-	log.Printf("Finding categories by names: %v", categoryNames)
 	for _, categoryName := range categoryNames {
 		var category entities.Category
 		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
@@ -149,11 +133,5 @@ func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []enti
 		}
 		categories = append(categories, category)
 	}
-	var categoryNamesList []string
-	for _, category := range categories {
-		categoryNamesList = append(categoryNamesList, category.Name)
-	}
-
-	log.Printf("Found categories: %v", categoryNamesList)
 	return categories
 }
