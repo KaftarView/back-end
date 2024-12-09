@@ -23,7 +23,6 @@ func (repo *NewsRepository) CreateNews(news entities.News) entities.News {
 	err := repo.db.Create(&news).Error
 
 	if err != nil {
-		log.Printf("Error while creating news: %v", err)
 		panic(err)
 	}
 	return news
@@ -40,12 +39,11 @@ func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	err := query.First(&news).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &news, false
+			return news, false
 		}
 		panic(err)
 	}
-	log.Print(news.Categories)
-	return &news, true
+	return news, true
 }
 
 func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content, content2 string, categories []entities.Category, author string) (*entities.News, error) {
@@ -80,27 +78,26 @@ func (repo *NewsRepository) DeleteNews(id uint) {
 	}
 }
 
-func (repo *NewsRepository) GetAllNews(categories []string, limit int, offset int) ([]entities.News, error) {
+func (repo *NewsRepository) GetAllNews(categories []enums.CategoryType, limit int, offset int) ([]entities.News, error) {
 	var news []entities.News
-	if len(categories) == 0 {
-		err := repo.db.Limit(limit).
-			Offset(offset).
-			Find(&news).Error
-		if err != nil {
-			return nil, err
-		}
-		return news, nil
+	query := repo.db
+
+	if len(categories) > 0 {
+		query = query.Where("category IN ?", categories)
+		log.Printf("Applied category filter: %v", categories)
 	}
-	err := repo.db.Joins("JOIN news_categories ON news.id = news_categories.news_id").
-		Joins("JOIN categories ON categories.id = news_categories.category_id").
-		Where("categories.name IN ?", categories).
-		Limit(limit).
-		Offset(offset).
-		Find(&news).Error
+
+	query = query.Debug() // Enable debugging to log SQL and params
+
+	err := query.Limit(limit).Offset(offset).Find(&news).Error
 	if err != nil {
-		return nil, err
+		panic(err) // should be handled
 	}
-	log.Print(categories)
+
+	log.Printf("Generated SQL Query: %s", query.Statement.SQL.String())
+	log.Printf("SQL Vars: %v", query.Statement.Vars)
+	log.Printf("Query executed successfully. Retrieved %d news items.", len(news))
+
 	return news, nil
 }
 
@@ -135,3 +132,4 @@ func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []enti
 	}
 	return categories
 }
+

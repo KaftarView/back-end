@@ -106,7 +106,7 @@ func (userService *UserService) UpdateOrCreateUser(username string, email string
 			panic(err)
 		}
 		user := userService.userRepository.CreateNewUser(username, email, hashedPassword, otp, false)
-		role, _ := userService.userRepository.FindRoleByType(enums.User)
+		role, _ := userService.userRepository.FindRoleByType(enums.User.String())
 		userService.userRepository.AssignRoleToUser(user, role)
 	}
 }
@@ -196,9 +196,46 @@ func (userService *UserService) ResetPasswordService(email, password, confirmPas
 	userService.userRepository.UpdateUserPassword(user, hashedPassword)
 }
 
-func (userService *UserService) UpdateUserRolesIfExists(email string, roles []string) {
+func (userService *UserService) CreateNewRole(name string) entities.Role {
 	var registrationError exceptions.UserRegistrationError
-	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	_, roleExist := userService.userRepository.FindRoleByType(name)
+	if roleExist {
+		registrationError.AppendError(
+			userService.constants.ErrorField.Role,
+			userService.constants.ErrorTag.AlreadyExist)
+		panic(registrationError)
+	}
+	role := userService.userRepository.CreateNewRole(name)
+	return role
+}
+
+func (userService *UserService) AssignPermissionsToRole(roleID uint, permissions []string) {
+	var notFoundError exceptions.NotFoundError
+	role, roleExist := userService.userRepository.FindRoleByID(roleID)
+	if !roleExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.Role
+		panic(notFoundError)
+	}
+	permissionsMap := make(map[string]bool)
+	for _, permission := range permissions {
+		permissionsMap[permission] = true
+	}
+	existingPermissions := userService.userRepository.FindPermissionsByRole(roleID)
+	for _, permission := range existingPermissions {
+		permissionsMap[permission.String()] = false
+	}
+	permissionTypes := enums.GetAllPermissionTypes()
+	for _, permission := range permissionTypes {
+		if permissionsMap[permission.String()] {
+			permission, _ := userService.userRepository.FindPermissionByType(permission)
+			userService.userRepository.AssignPermissionToRole(role, permission)
+		}
+	}
+}
+
+func (userService *UserService) UpdateUserRoles(userID uint, roles []string) {
+	var registrationError exceptions.UserRegistrationError
+	user, verifiedUserExist := userService.userRepository.FindByUserID(userID)
 	if !verifiedUserExist {
 		registrationError.AppendError(
 			userService.constants.ErrorField.Email,
@@ -209,12 +246,29 @@ func (userService *UserService) UpdateUserRolesIfExists(email string, roles []st
 	for _, role := range roles {
 		allowedRolesMap[role] = true
 	}
+	existingRoles := userService.userRepository.FindUserRoleTypesByUserID(user.ID)
+	for _, role := range existingRoles {
+		allowedRolesMap[role.Type] = true
+	}
 
-	roleTypes := enums.GetAllRoleTypes()
-	for _, roleType := range roleTypes {
-		if allowedRolesMap[roleType.String()] {
+	for roleType, ok := range allowedRolesMap {
+		if ok {
 			role, _ := userService.userRepository.FindRoleByType(roleType)
 			userService.userRepository.AssignRoleToUser(user, role)
 		}
 	}
+}
+
+func (userService *UserService) FindUserRolesAndPermissions(userID uint) ([]string, []string) {
+	var roleTypes []string
+	var permissionTypes []string
+	roles := userService.userRepository.FindUserRoleTypesByUserID(userID)
+	for _, role := range roles {
+		roleTypes = append(roleTypes, role.Type)
+		permissions := userService.userRepository.FindPermissionsByRole(role.ID)
+		for _, permission := range permissions {
+			permissionTypes = append(permissionTypes, permission.String())
+		}
+	}
+	return roleTypes, permissionTypes
 }

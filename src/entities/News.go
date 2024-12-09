@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"first-project/src/enums"
+
 	"gorm.io/gorm"
 )
 
