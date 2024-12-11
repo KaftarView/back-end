@@ -17,6 +17,7 @@ type Env struct {
 	Email          EmailInfo
 	Admin          UserInfo
 	Moderator      UserInfo
+	PayInfo        PayInfo
 }
 
 type Database struct {
@@ -57,6 +58,10 @@ type EmailInfo struct {
 type UserInfo struct {
 	EmailAddress string
 	Password     string
+}
+
+type PayInfo struct {
+	ZarinMerchantID string
 }
 
 func NewEnvironments() *Env {
@@ -121,6 +126,9 @@ func NewEnvironments() *Env {
 		Moderator: UserInfo{
 			EmailAddress: os.Getenv("MODERATOR_EMAIL"),
 			Password:     os.Getenv("MODERATOR_PASSWORD"),
+		},
+		PayInfo: PayInfo{
+			ZarinMerchantID: os.Getenv("ZARIN_MERCHANT_ID"),
 		},
 	}
 }

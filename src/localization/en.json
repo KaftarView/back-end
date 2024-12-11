@@ -19,7 +19,12 @@
         "unauthorized": "There was an issue with your authentication. Please try again.",
         "fileRequired": "File is required.",
         "locationAlreadyTaken": "This location is already taken.",
+        "GenericPaymentError" : "Error in Pyament",
+        "invalidPaymentRequest" : "Invalid payment request.",
+        "paymentServerError" : "Payment server error.",
+        "unhandledPaymentError" : "Unhandled payment error." ,
         "notFoundError": "`{0}` not found."
+        
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
