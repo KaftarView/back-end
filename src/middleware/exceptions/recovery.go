@@ -55,6 +55,14 @@ func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err erro
 		handleRateLimitError(c, recovery.constants.Translator)
 	} else if notFoundError, ok := err.(exceptions.NotFoundError); ok {
 		handleNotFoundError(c, notFoundError, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.PaymentError); ok {
+		handleGenericPaymentError(c, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.InvalidPaymentRequestError); ok {
+		handleInvalidPaymentRequest(c, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.PaymentServerError); ok {
+		handlePaymentServerError(c, recovery.constants.Translator)
+	} else if _, ok := err.(exceptions.UnhandledPaymentError); ok {
+		unhandledPaymentError(c, recovery.constants.Translator)
 	} else {
 		unhandledErrors(c, err, recovery.constants.Translator)
 	}
@@ -151,4 +159,28 @@ func unhandledErrors(c *gin.Context, err error, transKey string) {
 	errorMessage, _ := trans.T("errors.generic")
 
 	controller.Response(c, 500, errorMessage, nil)
+}
+
+func handleGenericPaymentError(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.GenericPaymentError")
+	controller.Response(c, 500, message, nil)
+}
+
+func handleInvalidPaymentRequest(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.invalidPaymentRequest")
+	controller.Response(c, http.StatusBadRequest, message, nil)
+}
+
+func handlePaymentServerError(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.paymentServerError")
+	controller.Response(c, http.StatusInternalServerError, message, nil)
+}
+
+func unhandledPaymentError(c *gin.Context, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+	message, _ := trans.T("errors.unhandledPaymentError")
+	controller.Response(c, http.StatusInternalServerError, message, nil)
 }

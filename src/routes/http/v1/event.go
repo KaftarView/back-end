@@ -5,7 +5,9 @@ import (
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
+	application_payment "first-project/src/application/payment"
 	"first-project/src/bootstrap"
+	controller "first-project/src/controller"
 	controller_v1_event "first-project/src/controller/v1/event"
 	"first-project/src/enums"
 	middleware_authentication "first-project/src/middleware/Authentication"
@@ -26,7 +28,8 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
-
+	paymentService := application_payment.NewPaymentService(&di.Env.PayInfo)
+	paymentController := controller.NewPaymentController(paymentService)
 	events := routerGroup.Group("/events")
 	{
 		read := events.Group("")
@@ -45,6 +48,7 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			create.POST("/add-ticket/:eventID", eventController.AddEventTicket)
 			create.POST("/add-discount/:eventID", eventController.AddEventDiscount)
 			create.POST("/add-organizer/:eventID", eventController.AddEventOrganizer)
+			create.POST("/paytest", paymentController.ZarinPayTest)
 		}
 
 		updateOrDelete := events.Group("")
