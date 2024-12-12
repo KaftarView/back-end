@@ -50,6 +50,7 @@
         "addComment": "Comment added successfully.",
         "editComment": "Comment edited successfully.",
         "deleteComment": "Comment deleted successfully.",
-        "deleteOrganizer": "Organizer deleted successfully."
+        "deleteOrganizer": "Organizer deleted successfully.",
+        "createPodcast": "Podcast created successfully."
     }
 }

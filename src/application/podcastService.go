@@ -2,6 +2,8 @@ package application
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/entities"
+	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
 )
 
@@ -21,4 +23,40 @@ func NewPodcastService(
 		podcastRepository: podcastRepository,
 		commentRepository: commentRepository,
 	}
+}
+
+func (podcastService *PodcastService) CreatePodcast(name, description string, categoryNames []string, publisherID uint) uint {
+	var conflictError exceptions.ConflictError
+	_, podcastExist := podcastService.podcastRepository.FindPodcastByName(name)
+	if podcastExist {
+		conflictError.AppendError(
+			podcastService.constants.ErrorField.Tittle,
+			podcastService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	categories := podcastService.podcastRepository.FindCategoriesByNames(categoryNames)
+	commentable := podcastService.commentRepository.CreateNewCommentable()
+
+	podcastModel := entities.Podcast{
+		ID:          commentable.CID,
+		Name:        name,
+		Description: description,
+		PublisherID: publisherID,
+		Categories:  categories,
+	}
+
+	podcast := podcastService.podcastRepository.CreatePodcast(podcastModel)
+	return podcast.ID
+}
+
+func (podcastService *PodcastService) SetPodcastBannerPath(bannerPath string, podcastID uint) {
+	var conflictError exceptions.ConflictError
+	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
+	if !podcastExist {
+		conflictError.AppendError(
+			podcastService.constants.ErrorField.Podcast,
+			podcastService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	podcastService.podcastRepository.SetPodcastBanner(bannerPath, podcast)
 }

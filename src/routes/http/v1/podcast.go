@@ -33,11 +33,11 @@ func SetupPodcastRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		podcastSubRouter := podcasts.Group("/:podcastID")
 		{
-			podcasts.GET("", podcastController.GetPodcastDetails)
-			podcasts.PUT("", podcastController.UpdatePodcast)
-			podcasts.DELETE("", podcastController.DeletePodcast)
-			podcasts.POST("/subscribe", podcastController.SubscribePodcast)
-			podcasts.DELETE("/subscribe", podcastController.UnSubscribePodcast)
+			podcastSubRouter.GET("", podcastController.GetPodcastDetails)
+			podcastSubRouter.PUT("", podcastController.UpdatePodcast)
+			podcastSubRouter.DELETE("", podcastController.DeletePodcast)
+			podcastSubRouter.POST("/subscribe", podcastController.SubscribePodcast)
+			podcastSubRouter.DELETE("/subscribe", podcastController.UnSubscribePodcast)
 
 			podcastEpisodesSubRouter := podcastSubRouter.Group("/episodes")
 			{

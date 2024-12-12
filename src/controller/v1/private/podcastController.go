@@ -4,6 +4,10 @@ import (
 	"first-project/src/application"
 	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
+	"first-project/src/controller"
+	"first-project/src/enums"
+	"fmt"
+	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +35,22 @@ func (podcastController *PodcastController) GetPodcastsList(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {
-	// some code here
+	type createPodcastParams struct {
+		Name        string                `form:"name" validate:"required,max=50"`
+		Description string                `form:"description"`
+		Banner      *multipart.FileHeader `form:"banner"`
+		Categories  []string              `form:"category"`
+	}
+	param := controller.Validated[createPodcastParams](c, &podcastController.constants.Context)
+	userID, _ := c.Get(podcastController.constants.Context.UserID)
+	podcastID := podcastController.podcastService.CreatePodcast(param.Name, param.Description, param.Categories, userID.(uint))
+	objectPath := fmt.Sprintf("banners/podcasts/%d/images/%s", podcastID, param.Banner.Filename)
+	podcastController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+	podcastController.podcastService.SetPodcastBannerPath(objectPath, podcastID)
+
+	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.createPodcast")
+	controller.Response(c, 200, message, podcastID)
 }
 
 func (podcastController *PodcastController) GetPodcastDetails(c *gin.Context) {
