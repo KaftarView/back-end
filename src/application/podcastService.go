@@ -51,7 +51,7 @@ func (podcastService *PodcastService) CreatePodcast(name, description string, ca
 
 func (podcastService *PodcastService) SetPodcastBannerPath(bannerPath string, podcast entities.Podcast) {
 	podcast.BannerPath = bannerPath
-	podcastService.podcastRepository.UpdatePodcast(&podcast)
+	podcastService.podcastRepository.UpdatePodcast(podcast)
 }
 
 func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, description *string, Categories *[]string) entities.Podcast {
@@ -73,7 +73,42 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 	if Categories != nil {
 		podcast.Categories = podcastService.podcastRepository.FindCategoriesByNames(*Categories)
 	}
-	podcastService.podcastRepository.UpdatePodcast(&podcast)
+	podcastService.podcastRepository.UpdatePodcast(podcast)
 
 	return podcast
+}
+
+func (podcastService *PodcastService) CreateEpisode(name, description string, podcastID, publisherID uint) entities.Episode {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	_, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
+	if !podcastExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
+		panic(notFoundError)
+	}
+	_, episodeExist := podcastService.podcastRepository.FindEpisodeByName(name)
+	if episodeExist {
+		conflictError.AppendError(
+			podcastService.constants.ErrorField.Tittle,
+			podcastService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+	episodeModel := entities.Episode{
+		Name:        name,
+		Description: description,
+		PublisherID: publisherID,
+		PodcastID:   podcastID,
+	}
+	episode := podcastService.podcastRepository.CreateEpisode(episodeModel)
+	return episode
+}
+
+func (podcastService *PodcastService) SetEpisodeBannerPath(bannerPath string, episode entities.Episode) {
+	episode.BannerPath = bannerPath
+	podcastService.podcastRepository.UpdateEpisode(episode)
+}
+
+func (podcastService *PodcastService) SetEpisodeAudioPath(audioPath string, episode entities.Episode) {
+	episode.AudioPath = audioPath
+	podcastService.podcastRepository.UpdateEpisode(episode)
 }

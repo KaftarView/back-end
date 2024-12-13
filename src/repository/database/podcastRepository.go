@@ -63,8 +63,36 @@ func (repo *PodcastRepository) CreatePodcast(podcast entities.Podcast) entities.
 	return podcast
 }
 
-func (repo *PodcastRepository) UpdatePodcast(podcast *entities.Podcast) {
+func (repo *PodcastRepository) UpdatePodcast(podcast entities.Podcast) {
 	err := repo.db.Save(podcast).Error
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (repo *PodcastRepository) FindEpisodeByName(name string) (entities.Episode, bool) {
+	var episode entities.Episode
+	result := repo.db.First(&episode, "name = ?", name)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return episode, false
+		}
+		panic(result.Error)
+	}
+	return episode, true
+}
+
+func (repo *PodcastRepository) CreateEpisode(episode entities.Episode) entities.Episode {
+	result := repo.db.Create(&episode)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return episode
+}
+
+func (repo *PodcastRepository) UpdateEpisode(episode entities.Episode) {
+	err := repo.db.Save(&episode).Error
 	if err != nil {
 		panic(err)
 	}
