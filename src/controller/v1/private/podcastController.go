@@ -43,14 +43,14 @@ func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {
 	}
 	param := controller.Validated[createPodcastParams](c, &podcastController.constants.Context)
 	userID, _ := c.Get(podcastController.constants.Context.UserID)
-	podcastID := podcastController.podcastService.CreatePodcast(param.Name, param.Description, param.Categories, userID.(uint))
-	objectPath := fmt.Sprintf("banners/podcasts/%d/images/%s", podcastID, param.Banner.Filename)
+	podcast := podcastController.podcastService.CreatePodcast(param.Name, param.Description, param.Categories, userID.(uint))
+	objectPath := fmt.Sprintf("banners/podcasts/%d/images/%s", podcast.ID, param.Banner.Filename)
 	podcastController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	podcastController.podcastService.SetPodcastBannerPath(objectPath, podcastID)
+	podcastController.podcastService.SetPodcastBannerPath(objectPath, podcast)
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createPodcast")
-	controller.Response(c, 200, message, podcastID)
+	controller.Response(c, 200, message, podcast.ID)
 }
 
 func (podcastController *PodcastController) GetPodcastDetails(c *gin.Context) {
@@ -71,7 +71,7 @@ func (podcastController *PodcastController) UpdatePodcast(c *gin.Context) {
 		podcastController.awsService.DeleteObject(enums.BannersBucket, podcast.BannerPath)
 		objectPath := fmt.Sprintf("banners/podcasts/%d/images/%s", param.PodcastID, param.Banner.Filename)
 		podcastController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-		podcastController.podcastService.SetPodcastBannerPath(objectPath, param.PodcastID)
+		podcastController.podcastService.SetPodcastBannerPath(objectPath, podcast)
 	}
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)

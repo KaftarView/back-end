@@ -25,7 +25,7 @@ func NewPodcastService(
 	}
 }
 
-func (podcastService *PodcastService) CreatePodcast(name, description string, categoryNames []string, publisherID uint) uint {
+func (podcastService *PodcastService) CreatePodcast(name, description string, categoryNames []string, publisherID uint) entities.Podcast {
 	var conflictError exceptions.ConflictError
 	_, podcastExist := podcastService.podcastRepository.FindPodcastByName(name)
 	if podcastExist {
@@ -46,18 +46,10 @@ func (podcastService *PodcastService) CreatePodcast(name, description string, ca
 	}
 
 	podcast := podcastService.podcastRepository.CreatePodcast(podcastModel)
-	return podcast.ID
+	return podcast
 }
 
-func (podcastService *PodcastService) SetPodcastBannerPath(bannerPath string, podcastID uint) {
-	var conflictError exceptions.ConflictError
-	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
-	if !podcastExist {
-		conflictError.AppendError(
-			podcastService.constants.ErrorField.Podcast,
-			podcastService.constants.ErrorTag.AlreadyExist)
-		panic(conflictError)
-	}
+func (podcastService *PodcastService) SetPodcastBannerPath(bannerPath string, podcast entities.Podcast) {
 	podcast.BannerPath = bannerPath
 	podcastService.podcastRepository.UpdatePodcast(&podcast)
 }
