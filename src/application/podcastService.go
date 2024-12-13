@@ -58,5 +58,30 @@ func (podcastService *PodcastService) SetPodcastBannerPath(bannerPath string, po
 			podcastService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	podcastService.podcastRepository.SetPodcastBanner(bannerPath, podcast)
+	podcast.BannerPath = bannerPath
+	podcastService.podcastRepository.UpdatePodcast(&podcast)
+}
+
+func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, description *string, Categories *[]string) entities.Podcast {
+	var conflictError exceptions.ConflictError
+	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
+	if !podcastExist {
+		conflictError.AppendError(
+			podcastService.constants.ErrorField.Podcast,
+			podcastService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+
+	if name != nil {
+		podcast.Name = *name
+	}
+	if description != nil && *description != "" {
+		podcast.Description = *description
+	}
+	if Categories != nil {
+		podcast.Categories = podcastService.podcastRepository.FindCategoriesByNames(*Categories)
+	}
+	podcastService.podcastRepository.UpdatePodcast(&podcast)
+
+	return podcast
 }

@@ -63,8 +63,8 @@ func (repo *PodcastRepository) CreatePodcast(podcast entities.Podcast) entities.
 	return podcast
 }
 
-func (repo *PodcastRepository) SetPodcastBanner(bannerPath string, podcast entities.Podcast) {
-	err := repo.db.Model(&podcast).Update("banner_path", bannerPath).Error
+func (repo *PodcastRepository) UpdatePodcast(podcast *entities.Podcast) {
+	err := repo.db.Save(podcast).Error
 	if err != nil {
 		panic(err)
 	}
