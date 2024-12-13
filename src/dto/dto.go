@@ -21,6 +21,7 @@ type UpdateEventDetails struct {
 	Name        *string
 	Status      *string
 	Description *string
+	BasePrice   *float64
 	FromDate    *time.Time
 	ToDate      *time.Time
 	MinCapacity *uint

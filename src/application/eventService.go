@@ -224,7 +224,6 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-
 func (eventService *EventService) UpdateEventDiscount(discountDetails dto.EditDiscountDetails) entities.Discount {
 	eventID := discountDetails.EventID
 	discountID := discountDetails.DiscountID
@@ -329,6 +328,10 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 		event.ToDate = *updateDetails.ToDate
 	}
 
+	if updateDetails.BasePrice != nil {
+		event.BasePrice = *updateDetails.BasePrice
+	}
+
 	if updateDetails.MinCapacity != nil {
 		event.MinCapacity = *updateDetails.MinCapacity
 	}
@@ -428,7 +431,6 @@ func (eventService *EventService) ActivateUser(encodedOrganizerID, encodedEventI
 	}
 	eventService.eventRepository.ActivateOrganizer(organizer)
 }
-
 
 func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus)
@@ -578,7 +580,6 @@ func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.Discount
 	return discountsDetails
 }
 
-
 func (eventService *EventService) GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse {
 	discount, discountExist := eventService.eventRepository.FindDiscountByDiscountID(discountID)
 	if !discountExist {
@@ -607,7 +608,6 @@ func (eventService *EventService) GetListEventMedia(eventID uint) []entities.Med
 	}
 	return media
 }
-
 
 func (eventService *EventService) GetListOfCategories() []string {
 	categoryNames := eventService.eventRepository.FindAllCategories()

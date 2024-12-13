@@ -378,13 +378,14 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 		Description *string               `form:"description"`
 		FromDate    *time.Time            `form:"fromDate" validate:"omitempty"`
 		ToDate      *time.Time            `form:"toDate" validate:"omitempty,gtfield=FromDate"`
+		BasePrice   *float64              `form:"basePrice"`
 		MinCapacity *uint                 `form:"minCapacity" validate:"omitempty,min=1"`
 		MaxCapacity *uint                 `form:"maxCapacity" validate:"omitempty,gtfield=MinCapacity"`
 		VenueType   *string               `form:"eventType" validate:"omitempty"`
 		Location    *string               `form:"address"`
 		Banner      *multipart.FileHeader `form:"banner"`
 		Categories  *[]string             `form:"category"`
-		EventID     uint                  `uri:"id" binding:"required"`
+		EventID     uint                  `uri:"eventID" binding:"required"`
 	}
 
 	param := controller.Validated[updateEventParams](c, &eventController.constants.Context)
@@ -394,6 +395,7 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 		Name:        param.Name,
 		Status:      param.Status,
 		Description: param.Description,
+		BasePrice:   param.BasePrice,
 		FromDate:    param.FromDate,
 		ToDate:      param.ToDate,
 		MinCapacity: param.MinCapacity,
@@ -403,12 +405,13 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 		Categories:  param.Categories,
 	}
 
-	eventController.eventService.UpdateEvent(eventDetails)
+	event := eventController.eventService.UpdateEvent(eventDetails)
 
 	if param.Banner != nil {
 		objectPath := fmt.Sprintf("banners/events/%d/images/%s", eventDetails.ID, param.Banner.Filename)
-		eventController.awsService.DeleteObject(enums.BannersBucket, objectPath)
+		eventController.awsService.DeleteObject(enums.BannersBucket, event.BannerPath)
 		eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+		eventController.eventService.SetBannerPathForEvent(objectPath, event.ID)
 	}
 
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
