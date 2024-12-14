@@ -116,7 +116,7 @@ func (podcastController *PodcastController) CreateEpisode(c *gin.Context) {
 	podcastController.podcastService.SetEpisodeAudioPath(audioPath, episode)
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
-	message, _ := trans.T("successMessage.createPodcast")
+	message, _ := trans.T("successMessage.createPodcastEpisode")
 	controller.Response(c, 200, message, nil)
 }
 
