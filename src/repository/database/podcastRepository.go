@@ -78,20 +78,23 @@ func (repo *PodcastRepository) FindPodcastByID(podcastID uint) (*entities.Podcas
 	return &podcast, true
 }
 
-// func (repo *PodcastRepository) CreatePodcast(podcast *entities.Podcast) *entities.Podcast {
-// 	result := repo.db.Create(podcast)
-// 	if result.Error != nil {
-// 		panic(result.Error)
-// 	}
-// 	return podcast
-// }
+func (repo *PodcastRepository) ExistSubscriberByID(podcast *entities.Podcast, userID uint) bool {
+	var count int64
+	result := repo.db.Model(podcast).
+		Joins("JOIN podcast_subscribers ON podcast_subscribers.user_id = ? AND podcast_subscribers.podcast_id = ?", userID, podcast.ID).
+		Count(&count)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return count > 0
+}
 
-// func (repo *PodcastRepository) UpdatePodcast(podcast *entities.Podcast) {
-// 	err := repo.db.Save(podcast).Error
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
+func (repo *PodcastRepository) SubscribePodcast(podcast *entities.Podcast, user entities.User) {
+	err := repo.db.Model(podcast).Association("Subscribers").Append(&user)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episode, bool) {
 	var episode entities.Episode

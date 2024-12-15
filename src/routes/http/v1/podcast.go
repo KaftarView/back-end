@@ -22,7 +22,7 @@ func SetupPodcastRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
-	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository)
+	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 
 	podcasts := routerGroup.Group("/podcasts")

@@ -16,6 +16,7 @@ type PodcastService struct {
 	awsS3Service      *application_aws.S3service
 	podcastRepository *repository_database.PodcastRepository
 	commentRepository *repository_database.CommentRepository
+	userRepository    *repository_database.UserRepository
 }
 
 func NewPodcastService(
@@ -23,12 +24,15 @@ func NewPodcastService(
 	awsS3Service *application_aws.S3service,
 	podcastRepository *repository_database.PodcastRepository,
 	commentRepository *repository_database.CommentRepository,
+	userRepository *repository_database.UserRepository,
+
 ) *PodcastService {
 	return &PodcastService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		podcastRepository: podcastRepository,
 		commentRepository: commentRepository,
+		userRepository:    userRepository,
 	}
 }
 
@@ -113,6 +117,30 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 	if err := tx.Commit().Error; err != nil {
 		panic(err)
 	}
+}
+
+func (podcastService *PodcastService) SubscribePodcast(podcastID, userID uint) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
+	if !podcastExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
+		panic(notFoundError)
+	}
+	user, userExist := podcastService.userRepository.FindByUserID(userID)
+	if !userExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+
+	if podcastService.podcastRepository.ExistSubscriberByID(podcast, userID) {
+		conflictError.AppendError(
+			podcastService.constants.ErrorField.Podcast,
+			podcastService.constants.ErrorTag.AlreadySubscribed)
+		panic(conflictError)
+	}
+
+	podcastService.podcastRepository.SubscribePodcast(podcast, user)
 }
 
 func (podcastService *PodcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {

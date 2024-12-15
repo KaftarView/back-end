@@ -58,6 +58,7 @@ type ErrorTag struct {
 	EmailNotExist           string
 	Required                string
 	LocationAlreadyTaken    string
+	AlreadySubscribed       string
 }
 
 type Redis struct {
@@ -112,6 +113,7 @@ func NewConstants() *Constants {
 			EmailNotExist:           "emailNotExist",
 			Required:                "required",
 			LocationAlreadyTaken:    "locationAlreadyTaken",
+			AlreadySubscribed:       "alreadySubscribed",
 		},
 		Redis: Redis{},
 	}
