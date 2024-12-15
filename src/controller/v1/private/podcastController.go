@@ -101,7 +101,8 @@ func (podcastController *PodcastController) UnSubscribePodcast(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) GetEpisodesList(c *gin.Context) {
-	// some code here
+	episodes := podcastController.podcastService.GetEpisodesList()
+	controller.Response(c, 200, "", episodes)
 }
 
 func (podcastController *PodcastController) CreateEpisode(c *gin.Context) {

@@ -161,6 +161,19 @@ func (repo *PodcastRepository) FindEpisodeByName(name string) (*entities.Episode
 	return &episode, true
 }
 
+func (repo *PodcastRepository) FindAllEpisodes() ([]*entities.Episode, bool) {
+	var podcasts []*entities.Episode
+	result := repo.db.Find(&podcasts)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return podcasts, false
+		}
+		panic(result.Error)
+	}
+	return podcasts, true
+}
+
 func (repo *PodcastRepository) CreateEpisode(tx *gorm.DB, episode *entities.Episode) *entities.Episode {
 	result := tx.Create(episode)
 	if result.Error != nil {

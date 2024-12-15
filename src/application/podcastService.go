@@ -225,6 +225,32 @@ func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint)
 	podcastService.podcastRepository.UnSubscribePodcast(podcast, user)
 }
 
+func (podcastService *PodcastService) GetEpisodesList() []dto.EpisodeDetailsResponse {
+	episodes, _ := podcastService.podcastRepository.FindAllEpisodes()
+	episodesDetails := make([]dto.EpisodeDetailsResponse, len(episodes))
+	for i, episode := range episodes {
+		banner := ""
+		if episode.BannerPath != "" {
+			banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, episode.BannerPath, 8*time.Hour)
+		}
+		audio := ""
+		if episode.AudioPath != "" {
+			audio = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, episode.AudioPath, 8*time.Hour)
+		}
+		publisher, _ := podcastService.userRepository.FindByUserID(episode.PublisherID)
+		episodesDetails[i] = dto.EpisodeDetailsResponse{
+			ID:          episode.ID,
+			CreatedAt:   episode.CreatedAt,
+			Name:        episode.Name,
+			Description: episode.Description,
+			Banner:      banner,
+			Audio:       audio,
+			Publisher:   publisher.Name,
+		}
+	}
+	return episodesDetails
+}
+
 func (podcastService *PodcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError

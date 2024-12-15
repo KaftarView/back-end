@@ -105,3 +105,13 @@ type PodcastDetailsResponse struct {
 	Categories       []string  `json:"categories"`
 	SubscribersCount int       `json:"subscribers_count"`
 }
+
+type EpisodeDetailsResponse struct {
+	ID          uint      `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Banner      string    `json:"banner"`
+	Audio       string    `json:"audio"`
+	Publisher   string    `json:"publisher"`
+}
