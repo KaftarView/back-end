@@ -25,7 +25,8 @@ func NewPodcastController(
 }
 
 func (podcastController *PodcastController) GetPodcastsList(c *gin.Context) {
-	// some code here
+	podcasts := podcastController.podcastService.GetPodcastList()
+	controller.Response(c, 200, "", podcasts)
 }
 
 func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {

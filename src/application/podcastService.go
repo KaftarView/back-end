@@ -3,12 +3,14 @@ package application
 import (
 	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
+	"first-project/src/dto"
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
 	"fmt"
 	"mime/multipart"
+	"time"
 )
 
 type PodcastService struct {
@@ -34,6 +36,28 @@ func NewPodcastService(
 		commentRepository: commentRepository,
 		userRepository:    userRepository,
 	}
+}
+
+func (podcastService *PodcastService) GetPodcastList() []dto.PodcastDetailsResponse {
+	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts()
+	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
+	for i, podcast := range podcasts {
+		banner := ""
+		if podcast.BannerPath != "" {
+			banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, podcast.BannerPath, 8*time.Hour)
+		}
+		publisher, _ := podcastService.userRepository.FindByUserID(podcast.PublisherID)
+		podcastsDetails[i] = dto.PodcastDetailsResponse{
+			ID:               podcast.ID,
+			CreatedAt:        podcast.CreatedAt,
+			Name:             podcast.Name,
+			Description:      podcast.Description,
+			Banner:           banner,
+			Publisher:        publisher.Name,
+			SubscribersCount: len(podcast.Subscribers),
+		}
+	}
+	return podcastsDetails
 }
 
 func (podcastService *PodcastService) CreatePodcast(name, description string, categoryNames []string, banner *multipart.FileHeader, publisherID uint) *entities.Podcast {

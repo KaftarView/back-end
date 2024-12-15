@@ -32,18 +32,14 @@ func SetupPodcastRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	podcasts.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
-		podcasts.GET("", podcastController.GetPodcastsList)
 		podcasts.POST("", podcastController.CreatePodcast)
-
 		podcastSubRouter := podcasts.Group("/:podcastID")
 		{
-			podcastSubRouter.GET("", podcastController.GetPodcastDetails)
 			podcastSubRouter.PUT("", podcastController.UpdatePodcast)
 			podcastSubRouter.DELETE("", podcastController.DeletePodcast)
 
 			podcastEpisodesSubRouter := podcastSubRouter.Group("/episodes")
 			{
-				podcastEpisodesSubRouter.GET("", podcastController.GetEpisodesList)
 				podcastEpisodesSubRouter.POST("", podcastController.CreateEpisode)
 			}
 		}

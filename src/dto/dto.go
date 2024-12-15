@@ -94,3 +94,14 @@ type DiscountDetailsResponse struct {
 	UsedCount      uint      `json:"used_count"`
 	MinTickets     uint      `json:"min_tickets"`
 }
+
+type PodcastDetailsResponse struct {
+	ID               uint      `json:"id"`
+	CreatedAt        time.Time `json:"created_at"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description"`
+	Banner           string    `json:"banner"`
+	Publisher        string    `json:"publisher"`
+	Categories       []string  `json:"categories"`
+	SubscribersCount int       `json:"subscribers_count"`
+}

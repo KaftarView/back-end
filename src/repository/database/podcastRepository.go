@@ -52,6 +52,23 @@ func (repo *PodcastRepository) FindCategoriesByNames(categoryNames []string) []e
 	return categories
 }
 
+func (repo *PodcastRepository) FindAllPodcasts() ([]*entities.Podcast, bool) {
+	var podcasts []*entities.Podcast
+	result := repo.db.
+		Preload("Publisher").
+		Preload("Categories").
+		Preload("Subscribers").
+		Find(&podcasts)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return podcasts, false
+		}
+		panic(result.Error)
+	}
+	return podcasts, true
+}
+
 func (repo *PodcastRepository) FindPodcastByName(name string) (*entities.Podcast, bool) {
 	var podcast entities.Podcast
 	result := repo.db.First(&podcast, "name = ?", name)
