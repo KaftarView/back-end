@@ -60,6 +60,40 @@ func (podcastService *PodcastService) GetPodcastList() []dto.PodcastDetailsRespo
 	return podcastsDetails
 }
 
+func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastID)
+	if !podcastExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
+		panic(notFoundError)
+	}
+
+	banner := ""
+	if podcast.BannerPath != "" {
+		banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, podcast.BannerPath, 8*time.Hour)
+	}
+
+	publisher, _ := podcastService.userRepository.FindByUserID(podcast.PublisherID)
+
+	categories := make([]string, len(podcast.Categories))
+	for i, category := range podcast.Categories {
+		categories[i] = category.Name
+	}
+
+	podcastDetails := dto.PodcastDetailsResponse{
+		ID:               podcastID,
+		CreatedAt:        podcast.CreatedAt,
+		Name:             podcast.Name,
+		Description:      podcast.Description,
+		Banner:           banner,
+		Publisher:        publisher.Name,
+		Categories:       categories,
+		SubscribersCount: len(podcast.Subscribers),
+	}
+
+	return podcastDetails
+}
+
 func (podcastService *PodcastService) CreatePodcast(name, description string, categoryNames []string, banner *multipart.FileHeader, publisherID uint) *entities.Podcast {
 	var conflictError exceptions.ConflictError
 	_, podcastExist := podcastService.podcastRepository.FindPodcastByName(name)

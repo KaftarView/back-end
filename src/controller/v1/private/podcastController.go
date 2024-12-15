@@ -29,6 +29,15 @@ func (podcastController *PodcastController) GetPodcastsList(c *gin.Context) {
 	controller.Response(c, 200, "", podcasts)
 }
 
+func (podcastController *PodcastController) GetPodcastDetails(c *gin.Context) {
+	type podcastDetailsParams struct {
+		PodcastID uint `uri:"podcastID" validate:"required"`
+	}
+	param := controller.Validated[podcastDetailsParams](c, &podcastController.constants.Context)
+	podcast := podcastController.podcastService.GetPodcastDetails(param.PodcastID)
+	controller.Response(c, 200, "", podcast)
+}
+
 func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {
 	type createPodcastParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`
@@ -43,10 +52,6 @@ func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createPodcast")
 	controller.Response(c, 200, message, podcast.ID)
-}
-
-func (podcastController *PodcastController) GetPodcastDetails(c *gin.Context) {
-	// some code here
 }
 
 func (podcastController *PodcastController) UpdatePodcast(c *gin.Context) {
@@ -83,10 +88,10 @@ func (podcastController *PodcastController) SubscribePodcast(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) UnSubscribePodcast(c *gin.Context) {
-	type subscribePodcastParams struct {
+	type unSubscribePodcastParams struct {
 		PodcastID uint `uri:"podcastID" validate:"required"`
 	}
-	param := controller.Validated[subscribePodcastParams](c, &podcastController.constants.Context)
+	param := controller.Validated[unSubscribePodcastParams](c, &podcastController.constants.Context)
 	userID, _ := c.Get(podcastController.constants.Context.UserID)
 	podcastController.podcastService.UnSubscribePodcast(param.PodcastID, userID.(uint))
 
