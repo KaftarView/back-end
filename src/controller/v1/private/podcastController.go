@@ -2,11 +2,8 @@ package controller_v1_private
 
 import (
 	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
-	"first-project/src/enums"
-	"fmt"
 	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
@@ -15,18 +12,15 @@ import (
 type PodcastController struct {
 	constants      *bootstrap.Constants
 	podcastService *application.PodcastService
-	awsService     *application_aws.S3service
 }
 
 func NewPodcastController(
 	constants *bootstrap.Constants,
 	podcastService *application.PodcastService,
-	awsService *application_aws.S3service,
 ) *PodcastController {
 	return &PodcastController{
 		constants:      constants,
 		podcastService: podcastService,
-		awsService:     awsService,
 	}
 }
 
@@ -43,10 +37,7 @@ func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {
 	}
 	param := controller.Validated[createPodcastParams](c, &podcastController.constants.Context)
 	userID, _ := c.Get(podcastController.constants.Context.UserID)
-	podcast := podcastController.podcastService.CreatePodcast(param.Name, param.Description, param.Categories, userID.(uint))
-	objectPath := fmt.Sprintf("banners/podcasts/%d/images/%s", podcast.ID, param.Banner.Filename)
-	podcastController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-	podcastController.podcastService.SetPodcastBannerPath(objectPath, podcast)
+	podcast := podcastController.podcastService.CreatePodcast(param.Name, param.Description, param.Categories, param.Banner, userID.(uint))
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createPodcast")
@@ -66,13 +57,7 @@ func (podcastController *PodcastController) UpdatePodcast(c *gin.Context) {
 		PodcastID   uint                  `uri:"podcastID" validate:"required"`
 	}
 	param := controller.Validated[updatePodcastParams](c, &podcastController.constants.Context)
-	podcast := podcastController.podcastService.UpdatePodcast(param.PodcastID, param.Name, param.Description, param.Categories)
-	if param.Banner != nil {
-		podcastController.awsService.DeleteObject(enums.BannersBucket, podcast.BannerPath)
-		objectPath := fmt.Sprintf("banners/podcasts/%d/images/%s", param.PodcastID, param.Banner.Filename)
-		podcastController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
-		podcastController.podcastService.SetPodcastBannerPath(objectPath, podcast)
-	}
+	podcastController.podcastService.UpdatePodcast(param.PodcastID, param.Name, param.Description, param.Categories, param.Banner)
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updatePodcast")
@@ -100,24 +85,16 @@ func (podcastController *PodcastController) CreateEpisode(c *gin.Context) {
 		Name        string                `form:"name" validate:"required,max=50"`
 		Description string                `form:"description"`
 		Banner      *multipart.FileHeader `form:"banner"`
-		Audio       *multipart.FileHeader `form:"audio"`
+		Audio       *multipart.FileHeader `form:"audio" validate:"required"`
 		PodcastID   uint                  `uri:"podcastID" validate:"required"`
 	}
 	param := controller.Validated[createEpisodeParams](c, &podcastController.constants.Context)
 	userID, _ := c.Get(podcastController.constants.Context.UserID)
-	episode := podcastController.podcastService.CreateEpisode(param.Name, param.Description, param.PodcastID, userID.(uint))
-
-	bannerPath := fmt.Sprintf("banners/podcasts/%d/episodes/%d/images/%s", param.PodcastID, episode.ID, param.Banner.Filename)
-	podcastController.awsService.UploadObject(enums.BannersBucket, bannerPath, param.Banner)
-	podcastController.podcastService.SetEpisodeBannerPath(bannerPath, episode)
-
-	audioPath := fmt.Sprintf("media/podcasts/%d/episodes/%d/audio/%s", param.PodcastID, episode.ID, param.Audio.Filename)
-	podcastController.awsService.UploadObject(enums.PodcastsBucket, audioPath, param.Banner)
-	podcastController.podcastService.SetEpisodeAudioPath(audioPath, episode)
+	episode := podcastController.podcastService.CreateEpisode(param.Name, param.Description, param.Banner, param.Audio, param.PodcastID, userID.(uint))
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createPodcastEpisode")
-	controller.Response(c, 200, message, nil)
+	controller.Response(c, 200, message, episode.ID)
 }
 
 func (podcastController *PodcastController) UpdateEpisode(c *gin.Context) {
@@ -129,21 +106,7 @@ func (podcastController *PodcastController) UpdateEpisode(c *gin.Context) {
 		EpisodeID   uint                  `uri:"episodeID" validate:"required"`
 	}
 	param := controller.Validated[updateEpisodeParams](c, &podcastController.constants.Context)
-	episode := podcastController.podcastService.UpdateEpisode(param.EpisodeID, param.Name, param.Description)
-
-	if param.Banner != nil {
-		podcastController.awsService.DeleteObject(enums.BannersBucket, episode.BannerPath)
-		bannerPath := fmt.Sprintf("banners/podcasts/%d/episodes/%d/images/%s", episode.PodcastID, episode.ID, param.Banner.Filename)
-		podcastController.awsService.UploadObject(enums.BannersBucket, bannerPath, param.Banner)
-		podcastController.podcastService.SetEpisodeBannerPath(bannerPath, episode)
-	}
-
-	if param.Audio != nil {
-		podcastController.awsService.DeleteObject(enums.PodcastsBucket, episode.AudioPath)
-		audioPath := fmt.Sprintf("media/podcasts/%d/episodes/%d/audio/%s", episode.PodcastID, episode.ID, param.Audio.Filename)
-		podcastController.awsService.UploadObject(enums.PodcastsBucket, audioPath, param.Audio)
-		podcastController.podcastService.SetEpisodeAudioPath(audioPath, episode)
-	}
+	podcastController.podcastService.UpdateEpisode(param.EpisodeID, param.Name, param.Description, param.Banner, param.Audio)
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updatePodcastEpisode")
@@ -155,11 +118,7 @@ func (podcastController *PodcastController) DeleteEpisode(c *gin.Context) {
 		EpisodeID uint `uri:"episodeID" validate:"required"`
 	}
 	param := controller.Validated[deleteEpisodeParams](c, &podcastController.constants.Context)
-	episode := podcastController.podcastService.FindEpisodeByID(param.EpisodeID)
 	podcastController.podcastService.DeleteEpisode(param.EpisodeID)
-
-	podcastController.awsService.DeleteObject(enums.BannersBucket, episode.BannerPath)
-	podcastController.awsService.DeleteObject(enums.PodcastsBucket, episode.AudioPath)
 
 	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deletePodcastEpisode")

@@ -16,6 +16,29 @@ func NewPodcastRepository(db *gorm.DB) *PodcastRepository {
 	}
 }
 
+func (repo *PodcastRepository) BeginTransaction() *gorm.DB {
+	tx := repo.db.Begin()
+	if tx.Error != nil {
+		panic(tx.Error)
+	}
+	return tx
+}
+
+func (repo *PodcastRepository) CreatePodcast(tx *gorm.DB, podcast *entities.Podcast) *entities.Podcast {
+	result := tx.Create(podcast)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return podcast
+}
+
+func (repo *PodcastRepository) UpdatePodcast(tx *gorm.DB, podcast *entities.Podcast) {
+	err := tx.Save(podcast).Error
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (repo *PodcastRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
 	var categories []entities.Category
 
@@ -55,20 +78,20 @@ func (repo *PodcastRepository) FindPodcastByID(podcastID uint) (*entities.Podcas
 	return &podcast, true
 }
 
-func (repo *PodcastRepository) CreatePodcast(podcast *entities.Podcast) *entities.Podcast {
-	result := repo.db.Create(podcast)
-	if result.Error != nil {
-		panic(result.Error)
-	}
-	return podcast
-}
+// func (repo *PodcastRepository) CreatePodcast(podcast *entities.Podcast) *entities.Podcast {
+// 	result := repo.db.Create(podcast)
+// 	if result.Error != nil {
+// 		panic(result.Error)
+// 	}
+// 	return podcast
+// }
 
-func (repo *PodcastRepository) UpdatePodcast(podcast *entities.Podcast) {
-	err := repo.db.Save(podcast).Error
-	if err != nil {
-		panic(err)
-	}
-}
+// func (repo *PodcastRepository) UpdatePodcast(podcast *entities.Podcast) {
+// 	err := repo.db.Save(podcast).Error
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
 
 func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episode, bool) {
 	var episode entities.Episode
@@ -96,23 +119,23 @@ func (repo *PodcastRepository) FindEpisodeByName(name string) (*entities.Episode
 	return &episode, true
 }
 
-func (repo *PodcastRepository) CreateEpisode(episode *entities.Episode) *entities.Episode {
-	result := repo.db.Create(episode)
+func (repo *PodcastRepository) CreateEpisode(tx *gorm.DB, episode *entities.Episode) *entities.Episode {
+	result := tx.Create(episode)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return episode
 }
 
-func (repo *PodcastRepository) UpdateEpisode(episode *entities.Episode) {
-	err := repo.db.Save(episode).Error
+func (repo *PodcastRepository) UpdateEpisode(tx *gorm.DB, episode *entities.Episode) {
+	err := tx.Save(episode).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) DeleteEpisodeByID(episodeID uint) {
-	err := repo.db.Unscoped().Delete(&entities.Episode{}, episodeID).Error
+func (repo *PodcastRepository) DeleteEpisodeByID(tx *gorm.DB, episodeID uint) {
+	err := tx.Unscoped().Delete(&entities.Episode{}, episodeID).Error
 	if err != nil {
 		panic(err)
 	}

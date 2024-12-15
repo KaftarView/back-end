@@ -58,7 +58,7 @@ type EventDetailsResponse struct {
 	Name        string           `json:"name"`
 	Status      string           `json:"status"`
 	Description string           `json:"description"`
-	BasePrice   float64          `json:"base-price"`
+	BasePrice   float64          `json:"base_price"`
 	MinCapacity uint             `json:"min_capacity"`
 	MaxCapacity uint             `json:"max_capacity"`
 	FromDate    time.Time        `json:"from_date"`
