@@ -143,6 +143,30 @@ func (podcastService *PodcastService) SubscribePodcast(podcastID, userID uint) {
 	podcastService.podcastRepository.SubscribePodcast(podcast, user)
 }
 
+func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
+	if !podcastExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
+		panic(notFoundError)
+	}
+	user, userExist := podcastService.userRepository.FindByUserID(userID)
+	if !userExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+
+	if !podcastService.podcastRepository.ExistSubscriberByID(podcast, userID) {
+		conflictError.AppendError(
+			podcastService.constants.ErrorField.Podcast,
+			podcastService.constants.ErrorTag.NotSubscribe)
+		panic(conflictError)
+	}
+
+	podcastService.podcastRepository.UnSubscribePodcast(podcast, user)
+}
+
 func (podcastService *PodcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError

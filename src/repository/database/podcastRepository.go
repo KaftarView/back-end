@@ -96,6 +96,13 @@ func (repo *PodcastRepository) SubscribePodcast(podcast *entities.Podcast, user 
 	}
 }
 
+func (repo *PodcastRepository) UnSubscribePodcast(podcast *entities.Podcast, user entities.User) {
+	err := repo.db.Model(&podcast).Association("Subscribers").Delete(&user)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episode, bool) {
 	var episode entities.Episode
 	result := repo.db.First(&episode, "id = ?", episodeID)

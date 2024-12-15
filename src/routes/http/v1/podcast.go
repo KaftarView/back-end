@@ -26,6 +26,10 @@ func SetupPodcastRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 
 	podcasts := routerGroup.Group("/podcasts")
+
+	podcasts.POST("/:podcastID/subscribe", podcastController.SubscribePodcast)
+	podcasts.DELETE("/:podcastID/subscribe", podcastController.UnSubscribePodcast)
+
 	podcasts.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
 		podcasts.GET("", podcastController.GetPodcastsList)
@@ -36,8 +40,6 @@ func SetupPodcastRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			podcastSubRouter.GET("", podcastController.GetPodcastDetails)
 			podcastSubRouter.PUT("", podcastController.UpdatePodcast)
 			podcastSubRouter.DELETE("", podcastController.DeletePodcast)
-			podcastSubRouter.POST("/subscribe", podcastController.SubscribePodcast)
-			podcastSubRouter.DELETE("/subscribe", podcastController.UnSubscribePodcast)
 
 			podcastEpisodesSubRouter := podcastSubRouter.Group("/episodes")
 			{

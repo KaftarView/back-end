@@ -20,7 +20,8 @@
         "fileRequired": "File is required.",
         "locationAlreadyTaken": "This location is already taken.",
         "notFoundError": "`{0}` not found.",
-        "alreadySubscribed" : "You have already subscribed to `{0}`."
+        "alreadySubscribed" : "You have already subscribed to `{0}`.",
+        "notSubscribed": "You have not subscribed to `{0}`."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
@@ -57,6 +58,7 @@
         "createPodcastEpisode": "Podcast episode created successfully.",
         "updatePodcastEpisode": "Podcast episode updated successfully.",
         "deletePodcastEpisode": "Podcast episode deleted successfully.",
-        "subscribePodcast": "Successfully subscribed to podcast."
+        "subscribePodcast": "Successfully subscribed to podcast.",
+        "unSubscribePodcast": "Successfully unsubscribed from podcast."
     }
 }
