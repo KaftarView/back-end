@@ -78,6 +78,16 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 	return podcast
 }
 
+func (podcastService *PodcastService) FindEpisodeByID(episodeID uint) *entities.Episode {
+	var notFoundError exceptions.NotFoundError
+	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(episodeID)
+	if !episodeExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Episode
+		panic(notFoundError)
+	}
+	return episode
+}
+
 func (podcastService *PodcastService) CreateEpisode(name, description string, podcastID, publisherID uint) *entities.Episode {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
@@ -114,16 +124,22 @@ func (podcastService *PodcastService) SetEpisodeAudioPath(audioPath string, epis
 }
 
 func (podcastService *PodcastService) UpdateEpisode(episodeID uint, name, description *string) *entities.Episode {
+	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(episodeID)
 	if !episodeExist {
-		conflictError.AppendError(
-			podcastService.constants.ErrorField.Episode,
-			podcastService.constants.ErrorTag.AlreadyExist)
-		panic(conflictError)
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Episode
+		panic(notFoundError)
 	}
 
 	if name != nil {
+		_, episodeExist := podcastService.podcastRepository.FindEpisodeByName(*name)
+		if episodeExist {
+			conflictError.AppendError(
+				podcastService.constants.ErrorField.Tittle,
+				podcastService.constants.ErrorTag.AlreadyExist)
+			panic(conflictError)
+		}
 		episode.Name = *name
 	}
 	if description != nil && *description != "" {
@@ -132,4 +148,14 @@ func (podcastService *PodcastService) UpdateEpisode(episodeID uint, name, descri
 
 	podcastService.podcastRepository.UpdateEpisode(episode)
 	return episode
+}
+
+func (podcastService *PodcastService) DeleteEpisode(episodeID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, episodeExist := podcastService.podcastRepository.FindEpisodeByID(episodeID)
+	if !episodeExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Episode
+		panic(notFoundError)
+	}
+	podcastService.podcastRepository.DeleteEpisodeByID(episodeID)
 }

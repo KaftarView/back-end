@@ -11,5 +11,5 @@ type Episode struct {
 	PublisherID uint    `gorm:"not null;index"`
 	Publisher   User    `gorm:"foreignKey:PublisherID"`
 	PodcastID   uint    `gorm:"not null"`
-	Podcast     Podcast `gorm:"foreignKey:PodcastID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Podcast     Podcast `gorm:"foreignKey:PodcastID;"`
 }

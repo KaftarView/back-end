@@ -110,3 +110,10 @@ func (repo *PodcastRepository) UpdateEpisode(episode *entities.Episode) {
 		panic(err)
 	}
 }
+
+func (repo *PodcastRepository) DeleteEpisodeByID(episodeID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Episode{}, episodeID).Error
+	if err != nil {
+		panic(err)
+	}
+}

@@ -54,6 +54,7 @@
         "createPodcast": "Podcast created successfully.",
         "updatePodcast": "Podcast updated successfully.",
         "createPodcastEpisode": "Podcast episode created successfully.",
-        "updatePodcastEpisode": "Podcast episode updated successfully."
+        "updatePodcastEpisode": "Podcast episode updated successfully.",
+        "deletePodcastEpisode": "Podcast episode deleted successfully."
     }
 }

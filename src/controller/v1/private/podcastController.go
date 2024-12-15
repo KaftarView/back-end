@@ -151,5 +151,17 @@ func (podcastController *PodcastController) UpdateEpisode(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) DeleteEpisode(c *gin.Context) {
-	// some code here
+	type deleteEpisodeParams struct {
+		EpisodeID uint `uri:"episodeID" validate:"required"`
+	}
+	param := controller.Validated[deleteEpisodeParams](c, &podcastController.constants.Context)
+	episode := podcastController.podcastService.FindEpisodeByID(param.EpisodeID)
+	podcastController.podcastService.DeleteEpisode(param.EpisodeID)
+
+	podcastController.awsService.DeleteObject(enums.BannersBucket, episode.BannerPath)
+	podcastController.awsService.DeleteObject(enums.PodcastsBucket, episode.AudioPath)
+
+	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deletePodcastEpisode")
+	controller.Response(c, 200, message, nil)
 }
