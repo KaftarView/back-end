@@ -39,7 +39,7 @@ func (podcastController *PodcastController) CreatePodcast(c *gin.Context) {
 		Name        string                `form:"name" validate:"required,max=50"`
 		Description string                `form:"description"`
 		Banner      *multipart.FileHeader `form:"banner"`
-		Categories  []string              `form:"category"`
+		Categories  []string              `form:"categories"`
 	}
 	param := controller.Validated[createPodcastParams](c, &podcastController.constants.Context)
 	userID, _ := c.Get(podcastController.constants.Context.UserID)
@@ -62,7 +62,7 @@ func (podcastController *PodcastController) UpdatePodcast(c *gin.Context) {
 		Name        *string               `form:"name" validate:"omitempty,max=50"`
 		Description *string               `form:"description"`
 		Banner      *multipart.FileHeader `form:"banner"`
-		Categories  *[]string             `form:"category"`
+		Categories  *[]string             `form:"categories"`
 		PodcastID   uint                  `uri:"podcastID" validate:"required"`
 	}
 	param := controller.Validated[updatePodcastParams](c, &podcastController.constants.Context)
@@ -121,7 +121,33 @@ func (podcastController *PodcastController) CreateEpisode(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) UpdateEpisode(c *gin.Context) {
-	// some code here
+	type updateEpisodeParams struct {
+		Name        *string               `form:"name" validate:"omitempty,max=50"`
+		Description *string               `form:"description"`
+		Banner      *multipart.FileHeader `form:"banner"`
+		Audio       *multipart.FileHeader `form:"audio"`
+		EpisodeID   uint                  `uri:"episodeID" validate:"required"`
+	}
+	param := controller.Validated[updateEpisodeParams](c, &podcastController.constants.Context)
+	episode := podcastController.podcastService.UpdateEpisode(param.EpisodeID, param.Name, param.Description)
+
+	if param.Banner != nil {
+		podcastController.awsService.DeleteObject(enums.BannersBucket, episode.BannerPath)
+		bannerPath := fmt.Sprintf("banners/podcasts/%d/episodes/%d/images/%s", episode.PodcastID, episode.ID, param.Banner.Filename)
+		podcastController.awsService.UploadObject(enums.BannersBucket, bannerPath, param.Banner)
+		podcastController.podcastService.SetEpisodeBannerPath(bannerPath, episode)
+	}
+
+	if param.Audio != nil {
+		podcastController.awsService.DeleteObject(enums.PodcastsBucket, episode.AudioPath)
+		audioPath := fmt.Sprintf("media/podcasts/%d/episodes/%d/audio/%s", episode.PodcastID, episode.ID, param.Audio.Filename)
+		podcastController.awsService.UploadObject(enums.PodcastsBucket, audioPath, param.Audio)
+		podcastController.podcastService.SetEpisodeAudioPath(audioPath, episode)
+	}
+
+	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updatePodcastEpisode")
+	controller.Response(c, 200, message, nil)
 }
 
 func (podcastController *PodcastController) DeleteEpisode(c *gin.Context) {

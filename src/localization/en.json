@@ -53,6 +53,7 @@
         "deleteOrganizer": "Organizer deleted successfully.",
         "createPodcast": "Podcast created successfully.",
         "updatePodcast": "Podcast updated successfully.",
-        "createPodcastEpisode": "Podcast episode created successfully."
+        "createPodcastEpisode": "Podcast episode created successfully.",
+        "updatePodcastEpisode": "Podcast episode updated successfully."
     }
 }

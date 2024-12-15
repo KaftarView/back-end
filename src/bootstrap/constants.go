@@ -40,6 +40,7 @@ type ErrorField struct {
 	Post        string
 	Comment     string
 	Podcast     string
+	Episode     string
 }
 
 type ErrorTag struct {
@@ -94,6 +95,7 @@ func NewConstants() *Constants {
 			Post:        "post",
 			Comment:     "comment",
 			Podcast:     "podcast",
+			Episode:     "episode",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",

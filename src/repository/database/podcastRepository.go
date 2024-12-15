@@ -29,70 +29,83 @@ func (repo *PodcastRepository) FindCategoriesByNames(categoryNames []string) []e
 	return categories
 }
 
-func (repo *PodcastRepository) FindPodcastByName(name string) (entities.Podcast, bool) {
+func (repo *PodcastRepository) FindPodcastByName(name string) (*entities.Podcast, bool) {
 	var podcast entities.Podcast
 	result := repo.db.First(&podcast, "name = ?", name)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return podcast, false
+			return &podcast, false
 		}
 		panic(result.Error)
 	}
-	return podcast, true
+	return &podcast, true
 }
 
-func (repo *PodcastRepository) FindPodcastByID(podcastID uint) (entities.Podcast, bool) {
+func (repo *PodcastRepository) FindPodcastByID(podcastID uint) (*entities.Podcast, bool) {
 	var podcast entities.Podcast
 	result := repo.db.First(&podcast, "id = ?", podcastID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return podcast, false
+			return &podcast, false
 		}
 		panic(result.Error)
 	}
-	return podcast, true
+	return &podcast, true
 }
 
-func (repo *PodcastRepository) CreatePodcast(podcast entities.Podcast) entities.Podcast {
-	result := repo.db.Create(&podcast)
+func (repo *PodcastRepository) CreatePodcast(podcast *entities.Podcast) *entities.Podcast {
+	result := repo.db.Create(podcast)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return podcast
 }
 
-func (repo *PodcastRepository) UpdatePodcast(podcast entities.Podcast) {
+func (repo *PodcastRepository) UpdatePodcast(podcast *entities.Podcast) {
 	err := repo.db.Save(podcast).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) FindEpisodeByName(name string) (entities.Episode, bool) {
+func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episode, bool) {
+	var episode entities.Episode
+	result := repo.db.First(&episode, "id = ?", episodeID)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return &episode, false
+		}
+		panic(result.Error)
+	}
+	return &episode, true
+}
+
+func (repo *PodcastRepository) FindEpisodeByName(name string) (*entities.Episode, bool) {
 	var episode entities.Episode
 	result := repo.db.First(&episode, "name = ?", name)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return episode, false
+			return &episode, false
 		}
 		panic(result.Error)
 	}
-	return episode, true
+	return &episode, true
 }
 
-func (repo *PodcastRepository) CreateEpisode(episode entities.Episode) entities.Episode {
-	result := repo.db.Create(&episode)
+func (repo *PodcastRepository) CreateEpisode(episode *entities.Episode) *entities.Episode {
+	result := repo.db.Create(episode)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return episode
 }
 
-func (repo *PodcastRepository) UpdateEpisode(episode entities.Episode) {
-	err := repo.db.Save(&episode).Error
+func (repo *PodcastRepository) UpdateEpisode(episode *entities.Episode) {
+	err := repo.db.Save(episode).Error
 	if err != nil {
 		panic(err)
 	}
