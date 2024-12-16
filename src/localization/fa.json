@@ -19,10 +19,6 @@
         "unauthorized": "مشکلی برای احراز هویت شما پیش آمده است. مجدد تلاش کنید.",
         "fileRequired": "وارد کردن فایل اجباری است.",
         "locationAlreadyTaken": "این محل در این زمان در حال برگزاری رویداد دیگری است،",
-        "GenericPaymentError" : "مشکلی در پرداخت پیش آمده است",
-        "invalidPaymentRequest" : "درخواست پرداخت نامعتبر است." , 
-        "paymentServerError" : "خطایی در سرور پرداخت رخ داده است." , 
-        "unhandledPaymentError" : "خطایی غیر منتظره رخ داده است." , 
         "notFoundError": "`{0}` یافت نشد."
     },
     "successMessage": {
