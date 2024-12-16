@@ -12,6 +12,7 @@ import (
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_general "first-project/src/controller/v1/general"
+	controller_v1_private "first-project/src/controller/v1/private"
 	repository_database "first-project/src/repository/database"
 	repository_cache "first-project/src/repository/redis"
 )
@@ -33,6 +34,9 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	eventService := application.NewEventService(di.Constants, eventRepository, commentRepository)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
+	podcastRepository := repository_database.NewPodcastRepository(db)
+	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
+	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 
 	public := routerGroup.Group("/public")
 	{
@@ -44,6 +48,13 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			events.GET("/:eventID", eventController.GetPublicEvent)
 			events.GET("/search", eventController.SearchPublicEvents)
 			events.POST("/register/verify-organizer", eventController.VerifyEmail)
+		}
+
+		podcasts := public.Group("/podcasts")
+		{
+			podcasts.GET("", podcastController.GetPodcastsList)
+			podcasts.GET("/:podcastID", podcastController.GetPodcastDetails)
+			podcasts.GET("/:podcastID/episodes", podcastController.GetEpisodesList)
 		}
 	}
 

@@ -39,6 +39,8 @@ type ErrorField struct {
 	User        string
 	Post        string
 	Comment     string
+	Podcast     string
+	Episode     string
 }
 
 type ErrorTag struct {
@@ -56,6 +58,8 @@ type ErrorTag struct {
 	EmailNotExist           string
 	Required                string
 	LocationAlreadyTaken    string
+	AlreadySubscribed       string
+	NotSubscribe            string
 }
 
 type Redis struct {
@@ -92,6 +96,8 @@ func NewConstants() *Constants {
 			User:        "user",
 			Post:        "post",
 			Comment:     "comment",
+			Podcast:     "podcast",
+			Episode:     "episode",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
@@ -108,6 +114,8 @@ func NewConstants() *Constants {
 			EmailNotExist:           "emailNotExist",
 			Required:                "required",
 			LocationAlreadyTaken:    "locationAlreadyTaken",
+			AlreadySubscribed:       "alreadySubscribed",
+			NotSubscribe:            "notSubscribed",
 		},
 		Redis: Redis{},
 	}

@@ -46,4 +46,5 @@ func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB,
 	routes_http_v1.SetupUserRoutes(protected, di, db, rdb)
 	routes_http_v1.SetupEventRoutes(protected, di, db, rdb)
 	routes_http_v1.SetupCommentRoutes(protected, di, db, rdb)
+	routes_http_v1.SetupPodcastRoutes(protected, di, db, rdb)
 }

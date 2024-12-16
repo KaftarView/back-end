@@ -22,12 +22,12 @@ func NewCommentController(constants *bootstrap.Constants, commentService *applic
 
 func (commentController *CommentController) CreateComment(c *gin.Context) {
 	type createCommentParams struct {
-		AuthorID uint   `json:"userID" validate:"required"`
-		PostID   uint   `uri:"postID" validate:"required"`
-		Content  string `json:"content" validate:"required"`
+		PostID  uint   `uri:"postID" validate:"required"`
+		Content string `json:"content" validate:"required"`
 	}
 	param := controller.Validated[createCommentParams](c, &commentController.constants.Context)
-	commentController.commentService.CreateComment(param.AuthorID, param.PostID, param.Content)
+	userID, _ := c.Get(commentController.constants.Context.UserID)
+	commentController.commentService.CreateComment(userID.(uint), param.PostID, param.Content)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.addComment")

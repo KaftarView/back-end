@@ -58,7 +58,7 @@ type EventDetailsResponse struct {
 	Name        string           `json:"name"`
 	Status      string           `json:"status"`
 	Description string           `json:"description"`
-	BasePrice   float64          `json:"base-price"`
+	BasePrice   float64          `json:"base_price"`
 	MinCapacity uint             `json:"min_capacity"`
 	MaxCapacity uint             `json:"max_capacity"`
 	FromDate    time.Time        `json:"from_date"`
@@ -93,4 +93,25 @@ type DiscountDetailsResponse struct {
 	Quantity       uint      `json:"quantity"`
 	UsedCount      uint      `json:"used_count"`
 	MinTickets     uint      `json:"min_tickets"`
+}
+
+type PodcastDetailsResponse struct {
+	ID               uint      `json:"id"`
+	CreatedAt        time.Time `json:"created_at"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description"`
+	Banner           string    `json:"banner"`
+	Publisher        string    `json:"publisher"`
+	Categories       []string  `json:"categories"`
+	SubscribersCount int       `json:"subscribers_count"`
+}
+
+type EpisodeDetailsResponse struct {
+	ID          uint      `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Banner      string    `json:"banner"`
+	Audio       string    `json:"audio"`
+	Publisher   string    `json:"publisher"`
 }
