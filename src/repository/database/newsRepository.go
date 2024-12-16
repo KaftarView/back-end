@@ -18,36 +18,36 @@ func NewNewsRepository(db *gorm.DB) *NewsRepository {
 	}
 }
 
-func (repo *NewsRepository) CreateNews(title, description, content string, category enums.CategoryType, author string) entities.News {
-	news := entities.News{
-		Title:       title,
-		Description: description,
-		Content:     content,
-		Category:    category,
-		Author:      author,
-	}
+func (repo *NewsRepository) CreateNews(news entities.News) entities.News {
 
 	err := repo.db.Create(&news).Error
+
 	if err != nil {
 		panic(err)
 	}
 	return news
 }
-
-func (repo *NewsRepository) GetNewsByID(id uint) (entities.News, bool) {
+func (repo *NewsRepository) UpdateNewsBannerByNewsID(mediaPaths string, eventID uint) {
+	var news entities.News
+	if err := repo.db.Model(&news).Where("id = ?", eventID).Update("banner_paths", mediaPaths).Error; err != nil {
+		panic(err)
+	}
+}
+func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	var news entities.News
 	query := repo.db.Where("id = ?", id)
 	err := query.First(&news).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return news, false
+			return &news, false
 		}
 		panic(err)
 	}
-	return news, true
+	log.Print(news.Categories)
+	return &news, true
 }
 
-func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content string, category enums.CategoryType, author string) (*entities.News, error) {
+func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content, content2 string, categories []entities.Category, author string) (*entities.News, error) {
 	var news entities.News
 	query := repo.db.Where("id = ?", newsID).First(&news)
 	if query.Error != nil {
@@ -60,7 +60,8 @@ func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content 
 	news.Title = title
 	news.Description = description
 	news.Content = content
-	news.Category = category
+	news.Content2 = content2
+	news.Categories = categories
 	news.Author = author
 
 	err := repo.db.Save(&news).Error
@@ -78,26 +79,27 @@ func (repo *NewsRepository) DeleteNews(id uint) {
 	}
 }
 
-func (repo *NewsRepository) GetAllNews(categories []enums.CategoryType, limit int, offset int) ([]entities.News, error) {
+func (repo *NewsRepository) GetAllNews(categories []string, limit int, offset int) ([]entities.News, error) {
 	var news []entities.News
-	query := repo.db
-
-	if len(categories) > 0 {
-		query = query.Where("category IN ?", categories)
-		log.Printf("Applied category filter: %v", categories)
+	if len(categories) == 0 {
+		err := repo.db.Limit(limit).
+			Offset(offset).
+			Find(&news).Error
+		if err != nil {
+			return nil, err
+		}
+		return news, nil
 	}
-
-	query = query.Debug() // Enable debugging to log SQL and params
-
-	err := query.Limit(limit).Offset(offset).Find(&news).Error
+	err := repo.db.Joins("JOIN news_categories ON news.id = news_categories.news_id").
+		Joins("JOIN categories ON categories.id = news_categories.category_id").
+		Where("categories.name IN ?", categories).
+		Limit(limit).
+		Offset(offset).
+		Find(&news).Error
 	if err != nil {
-		panic(err) // should be handled
+		return nil, err
 	}
-
-	log.Printf("Generated SQL Query: %s", query.Statement.SQL.String())
-	log.Printf("SQL Vars: %v", query.Statement.Vars)
-	log.Printf("Query executed successfully. Retrieved %d news items.", len(news))
-
+	log.Print(categories)
 	return news, nil
 }
 
@@ -112,4 +114,23 @@ func (repo *NewsRepository) GetTopKNews(limit int, categories []enums.CategoryTy
 		return nil, err
 	}
 	return news, nil
+}
+
+func (repo *NewsRepository) FindNewsCategories(news entities.News) entities.News {
+	if err := repo.db.Model(&news).Association("Categories").Find(&news.Categories); err != nil {
+		panic(err)
+	}
+	return news
+}
+
+func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
+	var categories []entities.Category
+	for _, categoryName := range categoryNames {
+		var category entities.Category
+		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
+			panic(err)
+		}
+		categories = append(categories, category)
+	}
+	return categories
 }
