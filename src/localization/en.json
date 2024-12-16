@@ -59,6 +59,7 @@
         "updatePodcastEpisode": "Podcast episode updated successfully.",
         "deletePodcastEpisode": "Podcast episode deleted successfully.",
         "subscribePodcast": "Successfully subscribed to podcast.",
-        "unSubscribePodcast": "Successfully unsubscribed from podcast."
+        "unSubscribePodcast": "Successfully unsubscribed from podcast.",
+        "deletePodcast": "Podcast deleted successfully."
     }
 }

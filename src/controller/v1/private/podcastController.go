@@ -71,7 +71,15 @@ func (podcastController *PodcastController) UpdatePodcast(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) DeletePodcast(c *gin.Context) {
-	// some code here
+	type deletePodcastParams struct {
+		PodcastID uint `uri:"podcastID" validate:"required"`
+	}
+	param := controller.Validated[deletePodcastParams](c, &podcastController.constants.Context)
+	podcastController.podcastService.DeletePodcast(param.PodcastID)
+
+	trans := controller.GetTranslator(c, podcastController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deletePodcast")
+	controller.Response(c, 200, message, nil)
 }
 
 func (podcastController *PodcastController) SubscribePodcast(c *gin.Context) {

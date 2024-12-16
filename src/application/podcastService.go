@@ -177,6 +177,20 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 	}
 }
 
+func (podcastService *PodcastService) DeletePodcast(podcastID uint) {
+	var notFoundError exceptions.NotFoundError
+	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastID)
+	if !podcastExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
+		panic(notFoundError)
+	}
+	podcastService.podcastRepository.DeletePodcast(podcast.ID)
+	podcastService.awsS3Service.DeleteObject(enums.BannersBucket, podcast.BannerPath)
+	for _, podcast := range podcast.Episodes {
+		podcastService.awsS3Service.DeleteObject(enums.PodcastsBucket, podcast.AudioPath)
+	}
+}
+
 func (podcastService *PodcastService) SubscribePodcast(podcastID, userID uint) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
@@ -259,7 +273,7 @@ func (podcastService *PodcastService) CreateEpisode(name, description string, ba
 		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
 		panic(notFoundError)
 	}
-	_, episodeExist := podcastService.podcastRepository.FindEpisodeByName(name)
+	_, episodeExist := podcastService.podcastRepository.FindPodcastEpisodeByName(name, podcastID)
 	if episodeExist {
 		conflictError.AppendError(
 			podcastService.constants.ErrorField.Tittle,
@@ -311,7 +325,7 @@ func (podcastService *PodcastService) UpdateEpisode(episodeID uint, name, descri
 	defer tx.Rollback()
 
 	if name != nil {
-		_, episodeExist := podcastService.podcastRepository.FindEpisodeByName(*name)
+		_, episodeExist := podcastService.podcastRepository.FindPodcastEpisodeByName(*name, episode.PodcastID)
 		if episodeExist {
 			conflictError.AppendError(
 				podcastService.constants.ErrorField.Tittle,

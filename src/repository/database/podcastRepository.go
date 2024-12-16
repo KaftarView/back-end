@@ -71,6 +71,7 @@ func (repo *PodcastRepository) FindDetailedPodcastByID(podcastID uint) (*entitie
 	var podcast entities.Podcast
 	result := repo.db.
 		Preload("Subscribers").
+		Preload("Episodes").
 		Preload("Categories").
 		First(&podcast, podcastID)
 
@@ -121,6 +122,13 @@ func (repo *PodcastRepository) ExistSubscriberByID(podcast *entities.Podcast, us
 	return count > 0
 }
 
+func (repo *PodcastRepository) DeletePodcast(podcastID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Podcast{}, podcastID).Error
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (repo *PodcastRepository) SubscribePodcast(podcast *entities.Podcast, user entities.User) {
 	err := repo.db.Model(podcast).Association("Subscribers").Append(&user)
 	if err != nil {
@@ -148,9 +156,9 @@ func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episod
 	return &episode, true
 }
 
-func (repo *PodcastRepository) FindEpisodeByName(name string) (*entities.Episode, bool) {
+func (repo *PodcastRepository) FindPodcastEpisodeByName(name string, podcastID uint) (*entities.Episode, bool) {
 	var episode entities.Episode
-	result := repo.db.First(&episode, "name = ?", name)
+	result := repo.db.First(&episode, "name = ? AND podcast_id = ?", name, podcastID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

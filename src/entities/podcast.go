@@ -12,6 +12,6 @@ type Podcast struct {
 	PublisherID uint        `gorm:"not null;index"`
 	Publisher   User        `gorm:"foreignKey:PublisherID"`
 	Episodes    []Episode   `gorm:"foreignKey:PodcastID;constraint:OnDelete:CASCADE"`
-	Categories  []Category  `gorm:"many2many:podcast_categories"`
+	Categories  []Category  `gorm:"many2many:podcast_categories;constraint:OnDelete:CASCADE"`
 	Subscribers []User      `gorm:"many2many:podcast_subscribers;"`
 }
