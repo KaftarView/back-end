@@ -20,7 +20,9 @@
         "NewsNotFound": "News Not Found",
         "fileRequired": "File is required.",
         "locationAlreadyTaken": "This location is already taken.",
-        "notFoundError": "`{0}` not found."
+        "notFoundError": "`{0}` not found.",
+        "alreadySubscribed" : "You have already subscribed to `{0}`.",
+        "notSubscribed": "You have not subscribed to `{0}`."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
@@ -58,6 +60,14 @@
         "addComment": "Comment added successfully.",
         "editComment": "Comment edited successfully.",
         "deleteComment": "Comment deleted successfully.",
-        "deleteOrganizer": "Organizer deleted successfully."
+        "deleteOrganizer": "Organizer deleted successfully.",
+        "createPodcast": "Podcast created successfully.",
+        "updatePodcast": "Podcast updated successfully.",
+        "createPodcastEpisode": "Podcast episode created successfully.",
+        "updatePodcastEpisode": "Podcast episode updated successfully.",
+        "deletePodcastEpisode": "Podcast episode deleted successfully.",
+        "subscribePodcast": "Successfully subscribed to podcast.",
+        "unSubscribePodcast": "Successfully unsubscribed from podcast.",
+        "deletePodcast": "Podcast deleted successfully."
     }
 }

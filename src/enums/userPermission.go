@@ -10,6 +10,7 @@ const (
 	EditEvent
 	PublishEvent
 	ManageNewsAndBlogs
+	ManagePodcasts
 	ModerateComments
 	ViewReports
 	All
@@ -31,6 +32,8 @@ func (p PermissionType) String() string {
 		return "PublishEvent"
 	case ManageNewsAndBlogs:
 		return "ManageNewsAndBlogs"
+	case ManagePodcasts:
+		return "ManagePodcasts"
 	case ModerateComments:
 		return "ModerateComments"
 	case ViewReports:
