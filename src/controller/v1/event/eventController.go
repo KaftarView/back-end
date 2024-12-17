@@ -198,7 +198,7 @@ func (eventController *EventController) UpdateEventTicket(c *gin.Context) {
 	}
 	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
 	eventController.eventService.UpdateEventTicket(ticketDetails)
-	message, _ := trans.T("successMessage.addDiscount")
+	message, _ := trans.T("successMessage.updateTicket")
 	controller.Response(c, 200, message, nil)
 }
 

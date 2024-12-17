@@ -41,7 +41,8 @@
         "createEvent": "Event added successfully.",
         "addTicket": "Ticket added successfully.",
         "addDiscount": "Discount added successfully.",
-
+        "updateTicket" : "Ticket Updated successfully",
+        "updateDiscount" : "Discount Updated successfully",
         "getEvent": "Event Found successfully",
         "updateEvent" : "Event Updated successfully",
 
