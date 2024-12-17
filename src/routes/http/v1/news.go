@@ -5,7 +5,7 @@ import (
 	application_jwt "first-project/src/application/jwt"
 	application_news "first-project/src/application/news"
 	"first-project/src/bootstrap"
-	controller_v1_general "first-project/src/controller/v1/general"
+	controller_v1_news "first-project/src/controller/v1/news"
 	"first-project/src/enums"
 	middleware_authentication "first-project/src/middleware/Authentication"
 	repository_database "first-project/src/repository/database"
@@ -19,7 +19,7 @@ func SetupNewsRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB
 	newsRepository := repository_database.NewNewsRepository(db)
 	newsService := application_news.NewNewsService(newsRepository)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
-	newsController := controller_v1_general.NewNewsController(di.Constants, newsService, awsService)
+	newsController := controller_v1_news.NewNewsController(di.Constants, newsService, awsService)
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 	news := routerGroup.Group("/news")

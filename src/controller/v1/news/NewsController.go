@@ -1,4 +1,4 @@
-package controller_v1_general
+package controller_v1_news
 
 import (
 	application_aws "first-project/src/application/aws"
@@ -52,14 +52,14 @@ func (nc *NewsController) CreateNews(c *gin.Context) {
 		param.Category,
 	)
 
-	objectPath := fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner.Filename)
+	objectPath := fmt.Sprintf("banners/news/%d/images/%s", news.ID, param.Banner.Filename)
 
 	nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
 	BannerPaths := objectPath
 
 	if param.Banner2 != nil {
-		objectPath = fmt.Sprintf("news/%d/banners/%s", news.ID, param.Banner2.Filename)
-		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+		objectPath = fmt.Sprintf("banners/news/%d/images/%s", news.ID, param.Banner2.Filename)
+		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner2)
 		BannerPaths = BannerPaths + "," + objectPath
 	}
 
@@ -113,15 +113,22 @@ func (nc *NewsController) UpdateNews(c *gin.Context) {
 	NewsBannerPaths := strings.Split(updatedNewsPointer.BannerPaths, ",")
 	if param.Banner != nil {
 		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[0])
-		objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner.Filename)
+		objectPath := fmt.Sprintf("banners/news/%d/images/%s", id, param.Banner.Filename)
 		nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
 		NewsBannerPaths[0] = objectPath
 	}
 
 	if param.Banner2 != nil {
-		nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[1])
-		objectPath := fmt.Sprintf("news/%d/banners/%s", id, param.Banner2.Filename)
-		NewsBannerPaths[1] = objectPath
+		if len(NewsBannerPaths) > 1 {
+			nc.awsService.DeleteObject(enums.BannersBucket, NewsBannerPaths[1])
+			objectPath := fmt.Sprintf("banners/news/%d/images/%s", id, param.Banner2.Filename)
+			nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner2)
+			NewsBannerPaths[1] = objectPath
+		} else {
+			objectPath := fmt.Sprintf("banners/news/%d/images/%s", id, param.Banner2.Filename)
+			nc.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner2)
+			NewsBannerPaths = append(NewsBannerPaths, objectPath)
+		}
 	}
 	BannerPaths := strings.Join(NewsBannerPaths, ",")
 	nc.newsService.SetBannerPath(BannerPaths, uint(id))
