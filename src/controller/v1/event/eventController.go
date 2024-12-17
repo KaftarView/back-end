@@ -160,6 +160,48 @@ func (eventController *EventController) AddEventTicket(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (eventController *EventController) EditEventTicket(c *gin.Context) {
+	type Params struct {
+		EventID  uint `uri:"eventID" validate:"required"`
+		TicketID uint `uri:"ticketID" validate:"required"`
+	}
+	param := controller.Validated[Params](c, &eventController.constants.Context)
+	ticketDetails := eventController.eventService.GetTicketDetails(param.TicketID)
+	controller.Response(c, 200, "", ticketDetails)
+}
+
+func (eventController *EventController) UpdateEventTicket(c *gin.Context) {
+	type EditEventTicketParams struct {
+		Name           *string    `json:"name"`
+		Description    *string    `json:"description"`
+		Price          *float64   `json:"price"`
+		Quantity       *uint      `json:"quantity" `
+		SoldCount      *uint      `json:"soldCount"`
+		IsAvailable    *bool      `json:"isAvailable" `
+		AvailableFrom  *time.Time `json:"availableFrom" `
+		AvailableUntil *time.Time `json:"availableUntil" `
+		EventID        uint       `uri:"eventID" validate:"required"`
+		TicketID       uint       `uri:"ticketID" validate:"required"`
+	}
+	param := controller.Validated[EditEventTicketParams](c, &eventController.constants.Context)
+	ticketDetails := dto.EditTicketDetaitls{
+		Name:           param.Name,
+		Description:    param.Description,
+		Price:          param.Price,
+		Quantity:       param.Quantity,
+		SoldCount:      param.SoldCount,
+		IsAvailable:    param.IsAvailable,
+		AvailableFrom:  param.AvailableFrom,
+		AvailableUntil: param.AvailableUntil,
+		EventID:        param.EventID,
+		TicketID:       param.TicketID,
+	}
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	eventController.eventService.UpdateEventTicket(ticketDetails)
+	message, _ := trans.T("successMessage.updateTicket")
+	controller.Response(c, 200, message, nil)
+}
+
 func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 	type addEventDiscountParams struct {
 		Code       string    `json:"code" validate:"required,max=50"`
@@ -193,7 +235,93 @@ func (eventController *EventController) AddEventDiscount(c *gin.Context) {
 	message, _ := trans.T("successMessage.addDiscount")
 	controller.Response(c, 200, message, nil)
 }
+func (eventController *EventController) EditEventDiscount(c *gin.Context) {
+	type EditDiscountParams struct {
+		EventID    uint `uri:"eventID" validate:"required"`
+		DiscountID uint `uri:"discountID" validate:"required"`
+	}
+	param := controller.Validated[EditDiscountParams](c, &eventController.constants.Context)
+	discountDetails := eventController.eventService.GetDiscountDetails(param.DiscountID)
+	controller.Response(c, 200, "", discountDetails)
+}
+func (eventController *EventController) UpdateEventDiscount(c *gin.Context) {
+	type updateEventDiscountParams struct {
+		Code       *string    `json:"code"`
+		Type       *string    `json:"type"`
+		Value      *float64   `json:"value"`
+		ValidFrom  *time.Time `json:"validFrom"`
+		ValidUntil *time.Time `json:"validUntil"`
+		Quantity   *uint      `json:"quantity"`
+		UsedCount  *uint      `json:"usedCount"`
+		MinTickets *uint      `json:"minTickets"`
+		EventID    uint       `uri:"eventID" validate:"required"`
+		DiscountID uint       `uri:"discountID" validate:"required"`
+	}
+	param := controller.Validated[updateEventDiscountParams](c, &eventController.constants.Context)
 
+	discountDetails := dto.EditDiscountDetails{
+		Code:           param.Code,
+		Type:           param.Type,
+		Value:          param.Value,
+		AvailableFrom:  param.ValidFrom,
+		AvailableUntil: param.ValidUntil,
+		Quantity:       param.Quantity,
+		UsedCount:      param.UsedCount,
+		MinTickets:     param.MinTickets,
+		EventID:        param.EventID,
+		DiscountID:     param.DiscountID,
+	}
+	eventController.eventService.UpdateEventDiscount(discountDetails)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateDiscount")
+	controller.Response(c, 200, message, nil)
+
+}
+
+func (eventController *EventController) EditEvent(c *gin.Context) {
+	type editEventParams struct {
+		EventID uint `uri:"id" binding:"required"`
+	}
+	param := controller.Validated[editEventParams](c, &eventController.constants.Context)
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	event, found := eventController.eventService.GetEventById(param.EventID)
+	if !found {
+		message, _ := trans.T("errorMessage.notFoundError")
+		controller.Response(c, 404, message, nil)
+		return
+	}
+
+	type responseStruct struct {
+		Name        string    `json:"name"`
+		Status      string    `json:"status"`
+		Description string    `json:"description"`
+		FromDate    time.Time `json:"fromDate"`
+		ToDate      time.Time `json:"toDate"`
+		MinCapacity uint      `json:"minCapacity"`
+		MaxCapacity uint      `json:"maxCapacity"`
+		VenueType   string    `json:"eventType"`
+		Categories  []string  `json:"category"`
+		Address     string    `json:"address"`
+	}
+
+	response := responseStruct{
+		Name:        event.Name,
+		Status:      event.Status.String(),
+		Description: event.Description,
+		FromDate:    event.FromDate,
+		ToDate:      event.ToDate,
+		MinCapacity: event.MinCapacity,
+		MaxCapacity: event.MaxCapacity,
+		VenueType:   event.VenueType.String(),
+		Categories:  []string{},
+		Address:     event.Location,
+	}
+
+	message, _ := trans.T("successMessage.getEvent")
+	controller.Response(c, 200, message, response)
+}
 func (eventController *EventController) AddEventOrganizer(c *gin.Context) {
 	type addEventOrganizerParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`
@@ -244,7 +372,51 @@ func (eventController *EventController) VerifyEmail(c *gin.Context) {
 }
 
 func (eventController *EventController) UpdateEvent(c *gin.Context) {
-	// some code here ...
+	type updateEventParams struct {
+		Name        *string               `form:"name" validate:"omitempty,max=50"`
+		Status      *string               `form:"status"`
+		Description *string               `form:"description"`
+		FromDate    *time.Time            `form:"fromDate" validate:"omitempty"`
+		ToDate      *time.Time            `form:"toDate" validate:"omitempty,gtfield=FromDate"`
+		BasePrice   *float64              `form:"basePrice"`
+		MinCapacity *uint                 `form:"minCapacity" validate:"omitempty,min=1"`
+		MaxCapacity *uint                 `form:"maxCapacity" validate:"omitempty,gtfield=MinCapacity"`
+		VenueType   *string               `form:"eventType" validate:"omitempty"`
+		Location    *string               `form:"address"`
+		Banner      *multipart.FileHeader `form:"banner"`
+		Categories  *[]string             `form:"category"`
+		EventID     uint                  `uri:"eventID" binding:"required"`
+	}
+
+	param := controller.Validated[updateEventParams](c, &eventController.constants.Context)
+
+	eventDetails := dto.UpdateEventDetails{
+		ID:          param.EventID,
+		Name:        param.Name,
+		Status:      param.Status,
+		Description: param.Description,
+		BasePrice:   param.BasePrice,
+		FromDate:    param.FromDate,
+		ToDate:      param.ToDate,
+		MinCapacity: param.MinCapacity,
+		MaxCapacity: param.MaxCapacity,
+		VenueType:   param.VenueType,
+		Location:    param.Location,
+		Categories:  param.Categories,
+	}
+
+	event := eventController.eventService.UpdateEvent(eventDetails)
+
+	if param.Banner != nil {
+		objectPath := fmt.Sprintf("banners/events/%d/images/%s", eventDetails.ID, param.Banner.Filename)
+		eventController.awsService.DeleteObject(enums.BannersBucket, event.BannerPath)
+		eventController.awsService.UploadObject(enums.BannersBucket, objectPath, param.Banner)
+		eventController.eventService.SetBannerPathForEvent(objectPath, event.ID)
+	}
+
+	trans := controller.GetTranslator(c, eventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateEvent")
+	controller.Response(c, 200, message, nil)
 }
 
 func (eventController *EventController) DeleteEvent(c *gin.Context) {

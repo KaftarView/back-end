@@ -51,6 +51,19 @@ func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location strin
 	return existingEvent, true
 }
 
+func (repo *EventRepository) FindEventByName(name string) (entities.Event, bool) {
+	var existingEvent entities.Event
+	query := repo.db.Where("name = ? AND status != ?", name, enums.Cancelled)
+	result := query.First(&existingEvent)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return existingEvent, false
+		}
+		panic(result.Error)
+	}
+	return existingEvent, true
+}
+
 func (repo *EventRepository) CreateNewEvent(event entities.Event) entities.Event {
 	result := repo.db.Create(&event)
 	if result.Error != nil {
@@ -161,10 +174,32 @@ func (repo *EventRepository) FindDiscountsByEventID(eventID uint) ([]entities.Di
 	}
 	return discounts, true
 }
-
+func (repo *EventRepository) FindDiscountByDiscountID(discountID uint) (entities.Discount, bool) {
+	var discount entities.Discount
+	result := repo.db.First(&discount, "id = ?", discountID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return discount, false
+		}
+		panic(result.Error)
+	}
+	return discount, true
+}
 func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID uint) (entities.Ticket, bool) {
 	var ticket entities.Ticket
 	result := repo.db.First(&ticket, "name = ? AND event_id = ?", ticketName, eventID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return ticket, false
+		}
+		panic(result.Error)
+	}
+	return ticket, true
+}
+func (repo *EventRepository) FindEvenetTicketByID(ticketID uint) (entities.Ticket, bool) {
+	var ticket entities.Ticket
+	result := repo.db.First(&ticket, "id = ?", ticketID)
+
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return ticket, false
@@ -227,6 +262,12 @@ func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entit
 	return discount
 }
 
+func (repo *EventRepository) UpdateEvent(event entities.Event) entities.Event {
+	if err := repo.db.Save(&event).Error; err != nil {
+		panic(err)
+	}
+	return event
+}
 func (repo *EventRepository) FindActiveOrVerifiedOrganizerByEmail(eventID uint, email string) (entities.Organizer, bool) {
 	var organizer entities.Organizer
 	result := repo.db.Where("email = ? AND event_id = ?", email, eventID).First(&organizer)
@@ -396,4 +437,20 @@ func (repo *EventRepository) DeleteMedia(mediaID uint) bool {
 		return false
 	}
 	return true
+
+}
+
+func (repo *EventRepository) UpdateEventTicket(ticket entities.Ticket) entities.Ticket {
+	result := repo.db.Save(&ticket)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return ticket
+}
+
+func (repo *EventRepository) UpdateEventDiscount(discount entities.Discount) {
+	result := repo.db.Save(&discount)
+	if result.Error != nil {
+		panic(result.Error)
+	}
 }

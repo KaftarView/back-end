@@ -14,44 +14,56 @@ func NewNewsService(newsRepo *repository_database.NewsRepository) *NewsService {
 	return &NewsService{newsRepo: newsRepo}
 }
 
-func (ns *NewsService) CreateNews(title, description, content, category, author string) {
-	categoryType, err := enums.StringToCategoryType(category)
-	if err != nil {
-		panic(err)
+func (ns *NewsService) CreateNews(title, description, content, content2 string, author string, category []string) entities.News {
+	//categoryType, err := enums.StringToCategoryType(category)
+	categories := ns.newsRepo.FindCategoriesByNames(category)
+	news := entities.News{
+		Title:       title,
+		Description: description,
+		Content:     content,
+		Content2:    content2,
+		Categories:  categories,
+		Author:      author,
 	}
 
-	ns.newsRepo.CreateNews(title, description, content, categoryType, author)
+	res := ns.newsRepo.CreateNews(news)
+	return res
 }
-
+func (ns *NewsService) SetBannerPath(mediaPaths string, eventID uint) {
+	ns.newsRepo.UpdateNewsBannerByNewsID(mediaPaths, eventID)
+}
 func (ns *NewsService) GetNewsByID(newsID uint) (*entities.News, bool) {
 	news, found := ns.newsRepo.GetNewsByID(newsID)
-	return &news, found
+	cat := ns.newsRepo.FindNewsCategories(*news)
+	news.Categories = cat.Categories
+	return news, found
 }
 
-func (ns *NewsService) UpdateNews(newsID uint, title, description, content, category, author string) (*entities.News, bool) {
-	categoryType, err := enums.StringToCategoryType(category)
-	if err != nil {
-		panic(err)
-	}
+func (ns *NewsService) UpdateNews(newsID uint, title, description, content, content2, author string, category []string) (*entities.News, bool) {
+	categories := ns.newsRepo.FindCategoriesByNames(category)
 
-	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, categoryType, author)
+	updated, err := ns.newsRepo.UpdateNews(newsID, title, description, content, content2, categories, author)
 	if err != nil {
 		panic(err)
 	}
 	return updated, true
 }
 
-func (ns *NewsService) DeleteNews(newsID uint) bool {
-	_, found := ns.newsRepo.GetNewsByID(newsID)
+func (ns *NewsService) DeleteNews(newsID uint) (*entities.News, bool) {
+	News, found := ns.newsRepo.GetNewsByID(newsID)
 	if !found {
-		return false
+		return News, false
 	}
 	ns.newsRepo.DeleteNews(newsID)
-	return true
+	return News, true
 }
 
-func (ns *NewsService) GetAllNews(categories []enums.CategoryType, limit int, offset int) []entities.News {
+func (ns *NewsService) GetAllNews(categories []string, limit int, offset int) []entities.News {
 	news, err := ns.newsRepo.GetAllNews(categories, limit, offset)
+	for i, job := range news {
+		cat := ns.newsRepo.FindNewsCategories(job)
+		news[i].Categories = cat.Categories
+	}
 	if err != nil {
 		panic(err)
 	}

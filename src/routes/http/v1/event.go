@@ -36,6 +36,9 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			read.GET("/event-details/:id", eventController.GetEventDetailsForAdmin)
 			read.GET("/ticket-details/:id", eventController.GetTicketDetails)
 			read.GET("/discount-details/:id", eventController.GetDiscountDetails)
+			read.GET("/:eventID/ticket/:ticketID", eventController.EditEventTicket)
+			read.GET("/:eventID/discount/:discountID", eventController.EditEventDiscount)
+			read.GET("/Edit/:id", eventController.GetEventDetailsForAdmin)
 		}
 
 		create := events.Group("")
@@ -53,6 +56,8 @@ func SetupEventRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			updateOrDelete.PUT("/:eventID", eventController.UpdateEvent)
 			updateOrDelete.DELETE("/:eventID", eventController.DeleteEvent)
 			updateOrDelete.DELETE("/:eventID/ticket/:ticketID", eventController.DeleteTicket)
+			updateOrDelete.PUT("/:eventID/ticket/:ticketID", eventController.UpdateEventTicket)
+			updateOrDelete.PUT("/:eventID/discount/:discountID", eventController.UpdateEventDiscount)
 			updateOrDelete.DELETE("/:eventID/discount/:discountID", eventController.DeleteDiscount)
 			updateOrDelete.DELETE("/:eventID/organizer/:organizerID", eventController.DeleteOrganizer)
 			updateOrDelete.POST("/:eventID/media", eventController.UploadEventMedia)
