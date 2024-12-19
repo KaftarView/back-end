@@ -291,6 +291,12 @@ func (repo *UserRepository) DeleteRolePermission(role entities.Role, permission 
 	}
 }
 
+func (repo *UserRepository) DeleteUserRole(user entities.User, role entities.Role) {
+	if err := repo.db.Model(&user).Association("Roles").Delete(&role); err != nil {
+		panic(err)
+	}
+}
+
 func (repo *UserRepository) FindAllPermissions() []entities.Permission {
 	var permissions []entities.Permission
 	result := repo.db.Find(&permissions)

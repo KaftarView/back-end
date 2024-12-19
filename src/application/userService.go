@@ -234,14 +234,12 @@ func (userService *UserService) AssignPermissionsToRole(roleID uint, permissions
 	}
 }
 
-func (userService *UserService) UpdateUserRoles(userID uint, roles []string) {
-	var registrationError exceptions.UserRegistrationError
-	user, verifiedUserExist := userService.userRepository.FindByUserID(userID)
+func (userService *UserService) UpdateUserRoles(email string, roles []string) {
+	var notFoundError exceptions.NotFoundError
+	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !verifiedUserExist {
-		registrationError.AppendError(
-			userService.constants.ErrorField.Email,
-			userService.constants.ErrorTag.EmailNotExist)
-		panic(registrationError)
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
 	}
 	allowedRolesMap := make(map[string]bool)
 	for _, role := range roles {
@@ -344,4 +342,19 @@ func (userService *UserService) GetPermissionsList() []dto.PermissionDetailsResp
 		}
 	}
 	return permissionsDetails
+}
+
+func (userService *UserService) DeleteUserRole(email string, roleID uint) {
+	var notFoundError exceptions.NotFoundError
+	user, userExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	if !userExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+	role, roleExist := userService.userRepository.FindRoleByID(roleID)
+	if !roleExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.Role
+		panic(notFoundError)
+	}
+	userService.userRepository.DeleteUserRole(user, role)
 }

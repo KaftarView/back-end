@@ -167,7 +167,6 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		userRoles := users.Group("/users/roles")
 		{
-			userRoles.GET("", roleController.GetUserRolesList)
 			userRoles.POST("", roleController.UpdateUserRoles)
 			userRoles.DELETE("/:roleID", roleController.DeleteUserRole)
 		}

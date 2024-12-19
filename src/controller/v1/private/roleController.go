@@ -93,21 +93,26 @@ func (roleController *RoleController) GetPermissionsList(c *gin.Context) {
 
 func (roleController *RoleController) UpdateUserRoles(c *gin.Context) {
 	type userRolesParams struct {
-		Roles  []string `json:"roles" validate:"required"`
-		UserID uint     `uri:"userID" validate:"required"`
+		Roles []string `json:"roles" validate:"required"`
+		Email string   `json:"email" validate:"required"`
 	}
 	param := controller.Validated[userRolesParams](c, &roleController.constants.Context)
-	roleController.userService.UpdateUserRoles(param.UserID, param.Roles)
+	roleController.userService.UpdateUserRoles(param.Email, param.Roles)
 
 	trans := controller.GetTranslator(c, roleController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updateUserRole")
 	controller.Response(c, 200, message, nil)
 }
 
-func (roleController *RoleController) GetUserRolesList(c *gin.Context) {
-	// some code here
-}
-
 func (roleController *RoleController) DeleteUserRole(c *gin.Context) {
-	// some code here
+	type deleteUserRolesParams struct {
+		Email  string `json:"email" validate:"required"`
+		RoleID uint   `uri:"roleID" validate:"required"`
+	}
+	param := controller.Validated[deleteUserRolesParams](c, &roleController.constants.Context)
+	roleController.userService.DeleteUserRole(param.Email, param.RoleID)
+
+	trans := controller.GetTranslator(c, roleController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteUserRole")
+	controller.Response(c, 200, message, nil)
 }
