@@ -49,7 +49,15 @@ func (roleController *RoleController) CreateRole(c *gin.Context) {
 }
 
 func (roleController *RoleController) DeleteRole(c *gin.Context) {
-	// some code here
+	type deleteRoleParams struct {
+		RoleID uint `uri:"roleID" validate:"required"`
+	}
+	param := controller.Validated[deleteRoleParams](c, &roleController.constants.Context)
+	roleController.userService.DeleteRole(param.RoleID)
+
+	trans := controller.GetTranslator(c, roleController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteRole")
+	controller.Response(c, 200, message, nil)
 }
 
 func (roleController *RoleController) UpdateRole(c *gin.Context) {

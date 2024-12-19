@@ -294,10 +294,26 @@ func (userService *UserService) GetRolesList() []dto.RoleDetailsResponse {
 }
 
 func (userService *UserService) GetRoleOwners(roleID uint) map[string]string {
+	var notFoundError exceptions.NotFoundError
+	_, roleExist := userService.userRepository.FindRoleByID(roleID)
+	if !roleExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.Role
+		panic(notFoundError)
+	}
 	users := userService.userRepository.FindUsersByRoleID(roleID)
 	userDetails := make(map[string]string)
 	for _, user := range users {
 		userDetails[user.Email] = user.Name
 	}
 	return userDetails
+}
+
+func (userService *UserService) DeleteRole(roleID uint) {
+	var notFoundError exceptions.NotFoundError
+	_, roleExist := userService.userRepository.FindRoleByID(roleID)
+	if !roleExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.Role
+		panic(notFoundError)
+	}
+	userService.userRepository.DeleteRoleByRoleID(roleID)
 }

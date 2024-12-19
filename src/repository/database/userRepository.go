@@ -263,3 +263,12 @@ func (repo *UserRepository) FindUsersByRoleID(roleID uint) []entities.User {
 	}
 	return users
 }
+
+func (repo *UserRepository) DeleteRoleByRoleID(roleID uint) {
+	repo.db.Exec("DELETE FROM user_roles WHERE role_id = ?", roleID)
+	repo.db.Exec("DELETE FROM role_permissions WHERE role_id = ?", roleID)
+
+	if err := repo.db.Delete(&entities.Role{}, roleID).Error; err != nil {
+		panic(err)
+	}
+}
