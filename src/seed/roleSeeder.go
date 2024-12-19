@@ -25,8 +25,8 @@ func NewRoleSeeder(userRepository *repository_database.UserRepository, admin, mo
 func (rs *RoleSeeder) SeedRoles() {
 	permissionTypes := enums.GetAllPermissionTypes()
 	for _, permissionType := range permissionTypes {
-		_, roleExist := rs.userRepository.FindPermissionByType(permissionType)
-		if roleExist {
+		_, permissionExist := rs.userRepository.FindPermissionByType(permissionType)
+		if permissionExist {
 			continue
 		}
 		rs.userRepository.CreateNewPermission(permissionType)

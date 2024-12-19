@@ -173,7 +173,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	}
 
 	news := routerGroup.Group("/news")
-	news.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageNewsAndBlogs}))
+	news.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageNews}))
 	{
 		news.POST("", newsController.CreateNews)
 		news.GET("", newsController.GetNewsList)
