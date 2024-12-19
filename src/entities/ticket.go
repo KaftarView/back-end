@@ -18,5 +18,5 @@ type Ticket struct {
 	AvailableUntil time.Time   `gorm:"not null"`
 	Purchasable    Purchasable `gorm:"foreignKey:ID"`
 	EventID        uint        `gorm:"not null"`
-	Event          Event       `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Event          Event       `gorm:"foreignKey:EventID"`
 }

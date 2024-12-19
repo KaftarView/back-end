@@ -156,7 +156,7 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 		}
 		podcast.Name = *name
 	}
-	if description != nil && *description != "" {
+	if description != nil {
 		podcast.Description = *description
 	}
 	if Categories != nil {

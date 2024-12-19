@@ -30,7 +30,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	otpService := application.NewOTPService()
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
-	eventService := application.NewEventService(di.Constants, eventRepository, commentRepository)
+	eventService := application.NewEventService(di.Constants, awsService, eventRepository, commentRepository)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
@@ -38,7 +38,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 
-	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
+	eventController := controller_v1_event.NewEventController(di.Constants, eventService, emailService)
 	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	roleController := controller_v1_private.NewRoleController(di.Constants, userService)
@@ -52,7 +52,10 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			readGroup.GET("", eventController.GetEventsListForAdmin)
 			readGroup.GET("/event-details/:eventID", eventController.GetEventDetailsForAdmin)
 			readGroup.GET("/ticket-details/:eventID", eventController.GetAllTicketDetails)
-			readGroup.GET("/discount-details/:eventID", eventController.GetDiscountDetails)
+			readGroup.GET("/discount-details/:eventID", eventController.GetAllDiscountDetails)
+
+			readGroup.GET("ticket/:ticketID", eventController.GetTicketDetails)
+			readGroup.GET("discount/:discountID", eventController.GetDiscountDetails)
 		}
 
 		createGroup := events.Group("")
@@ -64,27 +67,30 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			createGroup.POST("/add-organizer/:eventID", eventController.AddEventOrganizer)
 		}
 
-		manageGroup := events.Group("/:eventID")
-		manageGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		manageEventsGroup := events.Group("")
+		manageEventsGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
 		{
-			manageGroup.PUT("", eventController.UpdateEvent)
-			manageGroup.DELETE("", eventController.DeleteEvent)
+			eventSubGroup := events.Group("/:eventID")
+			{
+				eventSubGroup.PUT("", eventController.UpdateEvent)
+				eventSubGroup.DELETE("", eventController.DeleteEvent)
+				eventSubGroup.POST("/media", eventController.UploadEventMedia)
+			}
 
-			ticketSubGroup := manageGroup.Group("/ticket/:ticketID")
+			ticketSubGroup := manageEventsGroup.Group("/ticket/:ticketID")
 			{
 				ticketSubGroup.PUT("", eventController.UpdateEventTicket)
 				ticketSubGroup.DELETE("", eventController.DeleteTicket)
 			}
 
-			discountSubGroup := manageGroup.Group("/discount/:discountID")
+			discountSubGroup := manageEventsGroup.Group("/discount/:discountID")
 			{
 				discountSubGroup.PUT("", eventController.UpdateEventDiscount)
 				discountSubGroup.DELETE("", eventController.DeleteDiscount)
 			}
 
-			manageGroup.DELETE("/organizer/:organizerID", eventController.DeleteOrganizer)
-			manageGroup.POST("/media", eventController.UploadEventMedia)
-			manageGroup.DELETE("/media/:mediaId", eventController.DeleteEventMedia)
+			manageEventsGroup.DELETE("/organizer/:organizerID", eventController.DeleteOrganizer)
+			manageEventsGroup.DELETE("/media/:mediaId", eventController.DeleteEventMedia)
 		}
 
 		publishGroup := events.Group("/:eventID")
