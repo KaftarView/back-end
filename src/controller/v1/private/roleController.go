@@ -20,6 +20,14 @@ func NewRoleController(constants *bootstrap.Constants, userService *application.
 	}
 }
 
+func (roleController *RoleController) GetRolesList(c *gin.Context) {
+	// some code here
+}
+
+func (roleController *RoleController) GetRoleDetails(c *gin.Context) {
+	// some code here ...
+}
+
 func (roleController *RoleController) CreateRole(c *gin.Context) {
 	type createRolesParams struct {
 		Permissions []string `json:"permissions" validate:"required"`
@@ -32,6 +40,10 @@ func (roleController *RoleController) CreateRole(c *gin.Context) {
 	trans := controller.GetTranslator(c, roleController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createRole")
 	controller.Response(c, 200, message, nil)
+}
+
+func (roleController *RoleController) DeleteRole(c *gin.Context) {
+	// some code here
 }
 
 func (roleController *RoleController) UpdateRole(c *gin.Context) {
@@ -47,6 +59,14 @@ func (roleController *RoleController) UpdateRole(c *gin.Context) {
 	controller.Response(c, 200, message, nil)
 }
 
+func (roleController *RoleController) DeleteRolePermission(c *gin.Context) {
+	// some code here
+}
+
+func (roleController *RoleController) GetPermissionsList(c *gin.Context) {
+	// some code here
+}
+
 func (roleController *RoleController) UpdateUserRoles(c *gin.Context) {
 	type userRolesParams struct {
 		Roles  []string `json:"roles" validate:"required"`
@@ -58,4 +78,12 @@ func (roleController *RoleController) UpdateUserRoles(c *gin.Context) {
 	trans := controller.GetTranslator(c, roleController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updateUserRole")
 	controller.Response(c, 200, message, nil)
+}
+
+func (roleController *RoleController) GetUserRolesList(c *gin.Context) {
+	// some code here
+}
+
+func (roleController *RoleController) DeleteUserRole(c *gin.Context) {
+	// some code here
 }

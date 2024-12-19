@@ -310,7 +310,7 @@ func (nc *NewsController) GetTopKNews(c *gin.Context) {
 
 func (nc *NewsController) GetNewsByCategory(c *gin.Context) {
 	type requestBody struct {
-		Categories []string `json:"categories"`
+		Categories []string `form:"categories"`
 	}
 
 	categgories := controller.Validated[requestBody](c, &nc.constants.Context)

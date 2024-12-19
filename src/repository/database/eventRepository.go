@@ -149,9 +149,9 @@ func (repo *EventRepository) FindEventCategoriesByEvent(event entities.Event) en
 	return event
 }
 
-func (repo *EventRepository) FindTicketsByEventID(eventID uint) ([]entities.Ticket, bool) {
+func (repo *EventRepository) FindTicketsByEventID(eventID uint, availability []bool) ([]entities.Ticket, bool) {
 	var tickets []entities.Ticket
-	result := repo.db.Where(queryByEventID, eventID).Find(&tickets)
+	result := repo.db.Where("event_id = ? AND is_available IN ?", eventID, availability).Find(&tickets)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -196,6 +196,8 @@ func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID ui
 	}
 	return ticket, true
 }
+
+// TODO: remove this shit !
 func (repo *EventRepository) FindEvenetTicketByID(ticketID uint) (entities.Ticket, bool) {
 	var ticket entities.Ticket
 	result := repo.db.First(&ticket, "id = ?", ticketID)

@@ -19,24 +19,25 @@ import (
 
 func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
-
-	otpService := application.NewOTPService()
-	userService := application.NewUserService(di.Constants, userRepository, otpService)
-	emailService := application_communication.NewEmailService(&di.Env.Email)
-	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
-	jwtService := application_jwt.NewJWTToken()
-	userController := controller_v1_general.NewUserController(
-		di.Constants, userService, emailService, userCache, otpService, jwtService)
-	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
-
 	eventRepository := repository_database.NewEventRepository(db)
 	commentRepository := repository_database.NewCommentRepository(db)
-	eventService := application.NewEventService(di.Constants, eventRepository, commentRepository)
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
-	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
 	podcastRepository := repository_database.NewPodcastRepository(db)
+	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
+
+	jwtService := application_jwt.NewJWTToken()
+	emailService := application_communication.NewEmailService(&di.Env.Email)
+	otpService := application.NewOTPService()
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
+	eventService := application.NewEventService(di.Constants, eventRepository, commentRepository)
+	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
+	userService := application.NewUserService(di.Constants, userRepository, otpService)
+
+	eventController := controller_v1_event.NewEventController(di.Constants, eventService, awsService, emailService)
+	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
+	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
+	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
 
 	public := routerGroup.Group("/public")
 	{
@@ -44,15 +45,15 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		events := public.Group("/events")
 		{
-
-			events.PUT("/Update/:id", eventController.UpdateEvent)
-			events.GET("/Edit/:id", eventController.EditEvent)
-
 			events.GET("/published", eventController.ListPublicEvents)
-			events.GET("/:eventID", eventController.GetPublicEvent)
 			events.GET("/search", eventController.SearchPublicEvents)
 			events.POST("/register/verify-organizer", eventController.VerifyEmail)
 
+			eventSubGroup := events.Group("/:eventID")
+			{
+				eventSubGroup.GET("", eventController.GetPublicEventDetails)
+				eventSubGroup.GET("/tickets", eventController.GetAvailableTicketDetails)
+			}
 		}
 
 		podcasts := public.Group("/podcasts")
@@ -61,6 +62,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			podcasts.GET("/:podcastID", podcastController.GetPodcastDetails)
 			podcasts.GET("/:podcastID/episodes", podcastController.GetEpisodesList)
 		}
+
+		public.GET("comments/:postID", commentController.GetComments)
 	}
 
 	auth := routerGroup.Group("/auth")

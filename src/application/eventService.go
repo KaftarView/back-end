@@ -504,7 +504,7 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 	return eventDetails
 }
 
-func (eventService *EventService) GetEventTickets(eventID uint) []dto.TicketDetailsResponse {
+func (eventService *EventService) GetEventTickets(eventID uint, availability []bool) []dto.TicketDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
@@ -512,7 +512,7 @@ func (eventService *EventService) GetEventTickets(eventID uint) []dto.TicketDeta
 		panic(notFoundError)
 	}
 
-	tickets, ticketExist := eventService.eventRepository.FindTicketsByEventID(eventID)
+	tickets, ticketExist := eventService.eventRepository.FindTicketsByEventID(eventID, availability)
 	if !ticketExist {
 		return []dto.TicketDetailsResponse{}
 	}

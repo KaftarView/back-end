@@ -20,6 +20,16 @@ func NewCommentController(constants *bootstrap.Constants, commentService *applic
 	}
 }
 
+func (commentController *CommentController) GetComments(c *gin.Context) {
+	type getPostCommentsParams struct {
+		PostID uint `uri:"postID" validate:"required"`
+	}
+	param := controller.Validated[getPostCommentsParams](c, &commentController.constants.Context)
+	comments := commentController.commentService.GetPostComments(param.PostID)
+
+	controller.Response(c, 200, "", comments)
+}
+
 func (commentController *CommentController) CreateComment(c *gin.Context) {
 	type createCommentParams struct {
 		PostID  uint   `uri:"postID" validate:"required"`
@@ -36,12 +46,12 @@ func (commentController *CommentController) CreateComment(c *gin.Context) {
 
 func (commentController *CommentController) EditComment(c *gin.Context) {
 	type editCommentParams struct {
-		AuthorID  uint   `json:"userID" validate:"required"`
 		CommentID uint   `uri:"commentID" validate:"required"`
 		Content   string `json:"content" validate:"required"`
 	}
 	param := controller.Validated[editCommentParams](c, &commentController.constants.Context)
-	commentController.commentService.EditComment(param.AuthorID, param.CommentID, param.Content)
+	userID, _ := c.Get(commentController.constants.Context.UserID)
+	commentController.commentService.EditComment(userID.(uint), param.CommentID, param.Content)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.editComment")
@@ -50,11 +60,11 @@ func (commentController *CommentController) EditComment(c *gin.Context) {
 
 func (commentController *CommentController) DeleteCommentByUser(c *gin.Context) {
 	type deleteCommentParams struct {
-		AuthorID  uint `json:"userID" validate:"required"`
 		CommentID uint `uri:"commentID" validate:"required"`
 	}
 	param := controller.Validated[deleteCommentParams](c, &commentController.constants.Context)
-	commentController.commentService.DeleteComment(param.AuthorID, param.CommentID, false)
+	userID, _ := c.Get(commentController.constants.Context.UserID)
+	commentController.commentService.DeleteComment(userID.(uint), param.CommentID, false)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteComment")
@@ -63,11 +73,11 @@ func (commentController *CommentController) DeleteCommentByUser(c *gin.Context) 
 
 func (commentController *CommentController) DeleteCommentByAdmin(c *gin.Context) {
 	type deleteCommentParams struct {
-		AuthorID  uint `json:"userID" validate:"required"`
 		CommentID uint `uri:"commentID" validate:"required"`
 	}
 	param := controller.Validated[deleteCommentParams](c, &commentController.constants.Context)
-	commentController.commentService.DeleteComment(param.AuthorID, param.CommentID, true)
+	userID, _ := c.Get(commentController.constants.Context.UserID)
+	commentController.commentService.DeleteComment(userID.(uint), param.CommentID, true)
 
 	trans := controller.GetTranslator(c, commentController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteComment")

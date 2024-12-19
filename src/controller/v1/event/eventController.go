@@ -56,7 +56,7 @@ func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
 
 func (eventController *EventController) GetEventDetailsForAdmin(c *gin.Context) {
 	type getEventParams struct {
-		EventID uint `uri:"id" validate:"required"`
+		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
@@ -65,18 +65,27 @@ func (eventController *EventController) GetEventDetailsForAdmin(c *gin.Context) 
 	controller.Response(c, 200, "", eventDetails)
 }
 
-func (eventController *EventController) GetTicketDetails(c *gin.Context) {
+func (eventController *EventController) GetAllTicketDetails(c *gin.Context) {
 	type getEventParams struct {
-		EventID uint `uri:"id" validate:"required"`
+		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
-	ticketDetails := eventController.eventService.GetEventTickets(param.EventID)
+	ticketDetails := eventController.eventService.GetEventTickets(param.EventID, []bool{true, false})
+	controller.Response(c, 200, "", ticketDetails)
+}
+
+func (eventController *EventController) GetAvailableTicketDetails(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
+	ticketDetails := eventController.eventService.GetEventTickets(param.EventID, []bool{true})
 	controller.Response(c, 200, "", ticketDetails)
 }
 
 func (eventController *EventController) GetDiscountDetails(c *gin.Context) {
 	type getEventParams struct {
-		EventID uint `uri:"id" validate:"required"`
+		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &eventController.constants.Context)
 	discountDetails := eventController.eventService.GetEventDiscounts(param.EventID)
@@ -281,7 +290,7 @@ func (eventController *EventController) UpdateEventDiscount(c *gin.Context) {
 
 func (eventController *EventController) EditEvent(c *gin.Context) {
 	type editEventParams struct {
-		EventID uint `uri:"id" binding:"required"`
+		EventID uint `uri:"eventID" binding:"required"`
 	}
 	param := controller.Validated[editEventParams](c, &eventController.constants.Context)
 
@@ -544,7 +553,7 @@ func (eventController *EventController) ListPublicEvents(c *gin.Context) {
 	controller.Response(c, 200, "", events)
 }
 
-func (eventController *EventController) GetPublicEvent(c *gin.Context) {
+func (eventController *EventController) GetPublicEventDetails(c *gin.Context) {
 	type getPublicEventParams struct {
 		EventID uint `uri:"eventID" validate:"required"`
 	}
