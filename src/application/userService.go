@@ -247,7 +247,7 @@ func (userService *UserService) UpdateUserRoles(email string, roles []string) {
 	}
 	existingRoles := userService.userRepository.FindUserRoleTypesByUserID(user.ID)
 	for _, role := range existingRoles {
-		allowedRolesMap[role.Type] = true
+		allowedRolesMap[role.Type] = false
 	}
 
 	for roleType, ok := range allowedRolesMap {

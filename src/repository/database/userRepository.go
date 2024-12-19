@@ -205,23 +205,14 @@ func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionT
 	return permission
 }
 
-// TODO: it is wrong i think!!
 func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.Role) {
-	exists := repo.db.Model(&user).
-		Where("id = ?", role.ID).
-		Association("Roles").
-		Count() > 0
-	if exists {
-		return
-	}
 	if err := repo.db.Model(&user).Association("Roles").Append(&role); err != nil {
 		panic(err)
 	}
 }
 
 func (repo *UserRepository) AssignPermissionToRole(role entities.Role, permission entities.Permission) {
-	err := repo.db.Model(&role).Association("Permissions").Append(&permission)
-	if err != nil {
+	if err := repo.db.Model(&role).Association("Permissions").Append(&permission); err != nil {
 		panic(err)
 	}
 }
