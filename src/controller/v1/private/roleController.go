@@ -87,7 +87,8 @@ func (roleController *RoleController) DeleteRolePermission(c *gin.Context) {
 }
 
 func (roleController *RoleController) GetPermissionsList(c *gin.Context) {
-	// some code here
+	permissionsList := roleController.userService.GetPermissionsList()
+	controller.Response(c, 200, "", permissionsList)
 }
 
 func (roleController *RoleController) UpdateUserRoles(c *gin.Context) {

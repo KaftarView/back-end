@@ -290,3 +290,15 @@ func (repo *UserRepository) DeleteRolePermission(role entities.Role, permission 
 		panic(err)
 	}
 }
+
+func (repo *UserRepository) FindAllPermissions() []entities.Permission {
+	var permissions []entities.Permission
+	result := repo.db.Find(&permissions)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []entities.Permission{}
+		}
+		panic(result.Error)
+	}
+	return permissions
+}

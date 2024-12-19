@@ -163,3 +163,9 @@ type RoleDetailsResponse struct {
 	Type        string          `json:"type"`
 	Permissions map[uint]string `json:"permissions"`
 }
+
+type PermissionDetailsResponse struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}

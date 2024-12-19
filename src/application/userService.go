@@ -332,3 +332,16 @@ func (userService *UserService) DeleteRolePermission(roleID, permissionID uint) 
 	}
 	userService.userRepository.DeleteRolePermission(role, permission)
 }
+
+func (userService *UserService) GetPermissionsList() []dto.PermissionDetailsResponse {
+	permissions := userService.userRepository.FindAllPermissions()
+	permissionsDetails := make([]dto.PermissionDetailsResponse, len(permissions))
+	for i, permission := range permissions {
+		permissionsDetails[i] = dto.PermissionDetailsResponse{
+			ID:          permission.ID,
+			Name:        permission.Type.String(),
+			Description: permission.Description,
+		}
+	}
+	return permissionsDetails
+}
