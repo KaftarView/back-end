@@ -39,6 +39,7 @@
         "createRole": "Role created successfully.",
         "updateRole": "Role updated successfully.",
         "deleteRole": "Role deleted successfully.",
+        "deleteRolePermission": "Role permission deleted successfully.",
         "NewsUpdated" : "News updated successfully.",
         "NewsDeleted" : "News deleted successfully.",
         "createEvent": "Event added successfully.",

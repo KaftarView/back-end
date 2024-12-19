@@ -158,7 +158,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 				rolePermissions := roleSubGroup.Group("/permissions")
 				{
 					rolePermissions.POST("", roleController.UpdateRole)
-					rolePermissions.DELETE("", roleController.DeleteRolePermission)
+					rolePermissions.DELETE("/:permissionID", roleController.DeleteRolePermission)
 				}
 			}
 		}

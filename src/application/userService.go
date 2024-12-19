@@ -317,3 +317,18 @@ func (userService *UserService) DeleteRole(roleID uint) {
 	}
 	userService.userRepository.DeleteRoleByRoleID(roleID)
 }
+
+func (userService *UserService) DeleteRolePermission(roleID, permissionID uint) {
+	var notFoundError exceptions.NotFoundError
+	role, roleExist := userService.userRepository.FindRoleByID(roleID)
+	if !roleExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.Role
+		panic(notFoundError)
+	}
+	permission, permissionExist := userService.userRepository.FindPermissionByID(permissionID)
+	if !permissionExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.Permission
+		panic(notFoundError)
+	}
+	userService.userRepository.DeleteRolePermission(role, permission)
+}

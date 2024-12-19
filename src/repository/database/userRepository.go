@@ -159,6 +159,18 @@ func (repo *UserRepository) FindRoleByID(roleID uint) (entities.Role, bool) {
 	return role, true
 }
 
+func (repo *UserRepository) FindPermissionByID(permissionID uint) (entities.Permission, bool) {
+	var permission entities.Permission
+	result := repo.db.First(&permission, permissionID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return permission, false
+		}
+		panic(result.Error)
+	}
+	return permission, true
+}
+
 func (repo *UserRepository) FindPermissionByType(permissionType enums.PermissionType) (entities.Permission, bool) {
 	var permission entities.Permission
 	result := repo.db.Where("type = ?", permissionType).First(&permission)
@@ -269,6 +281,12 @@ func (repo *UserRepository) DeleteRoleByRoleID(roleID uint) {
 	repo.db.Exec("DELETE FROM role_permissions WHERE role_id = ?", roleID)
 
 	if err := repo.db.Delete(&entities.Role{}, roleID).Error; err != nil {
+		panic(err)
+	}
+}
+
+func (repo *UserRepository) DeleteRolePermission(role entities.Role, permission entities.Permission) {
+	if err := repo.db.Model(&role).Association("Permissions").Delete(&permission); err != nil {
 		panic(err)
 	}
 }

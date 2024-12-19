@@ -28,6 +28,7 @@ type ErrorField struct {
 	OTP         string
 	Tittle      string
 	Role        string
+	Permission  string
 	Location    string
 	Event       string
 	Ticket      string
@@ -85,6 +86,7 @@ func NewConstants() *Constants {
 			OTP:         "OTP",
 			Tittle:      "tittle",
 			Role:        "role",
+			Permission:  "permission",
 			Location:    "location",
 			Event:       "event",
 			Ticket:      "ticket",

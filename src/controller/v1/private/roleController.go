@@ -74,7 +74,16 @@ func (roleController *RoleController) UpdateRole(c *gin.Context) {
 }
 
 func (roleController *RoleController) DeleteRolePermission(c *gin.Context) {
-	// some code here
+	type deleteRolePermissionParams struct {
+		RoleID       uint `uri:"roleID" validate:"required"`
+		PermissionID uint `uri:"permissionID" validate:"required"`
+	}
+	param := controller.Validated[deleteRolePermissionParams](c, &roleController.constants.Context)
+	roleController.userService.DeleteRolePermission(param.RoleID, param.PermissionID)
+
+	trans := controller.GetTranslator(c, roleController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteRolePermission")
+	controller.Response(c, 200, message, nil)
 }
 
 func (roleController *RoleController) GetPermissionsList(c *gin.Context) {
