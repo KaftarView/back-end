@@ -156,3 +156,10 @@ type EpisodeDetailsResponse struct {
 	Audio       string    `json:"audio"`
 	Publisher   string    `json:"publisher"`
 }
+
+type RoleDetailsResponse struct {
+	ID          uint            `json:"id"`
+	CreatedAt   time.Time       `json:"created_at"`
+	Type        string          `json:"type"`
+	Permissions map[uint]string `json:"permissions"`
+}

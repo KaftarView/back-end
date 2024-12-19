@@ -2,6 +2,7 @@ package application
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/dto"
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
@@ -271,4 +272,23 @@ func (userService *UserService) FindUserRolesAndPermissions(userID uint) ([]stri
 		}
 	}
 	return roleTypes, permissionTypes
+}
+
+func (userService *UserService) GetRolesList() []dto.RoleDetailsResponse {
+	roles := userService.userRepository.FindAllRolesWithPermissions()
+	rolesDetails := make([]dto.RoleDetailsResponse, len(roles))
+
+	for i, role := range roles {
+		permissions := make(map[uint]string)
+		for _, permission := range role.Permissions {
+			permissions[permission.ID] = permission.Type.String()
+		}
+		rolesDetails[i] = dto.RoleDetailsResponse{
+			ID:          role.ID,
+			Type:        role.Type,
+			CreatedAt:   role.CreatedAt,
+			Permissions: permissions,
+		}
+	}
+	return rolesDetails
 }

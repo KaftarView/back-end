@@ -193,6 +193,7 @@ func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionT
 	return permission
 }
 
+// TODO: it is wrong i think!!
 func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.Role) {
 	exists := repo.db.Model(&user).
 		Where("id = ?", role.ID).
@@ -233,4 +234,16 @@ func (repo *UserRepository) FindPermissionsByRole(roleID uint) []enums.Permissio
 		permissionTypes[i] = permission.Type
 	}
 	return permissionTypes
+}
+
+func (repo *UserRepository) FindAllRolesWithPermissions() []entities.Role {
+	var roles []entities.Role
+	result := repo.db.Preload("Permissions").Find(&roles)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []entities.Role{}
+		}
+		panic(result.Error)
+	}
+	return roles
 }

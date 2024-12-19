@@ -21,7 +21,8 @@ func NewRoleController(constants *bootstrap.Constants, userService *application.
 }
 
 func (roleController *RoleController) GetRolesList(c *gin.Context) {
-	// some code here
+	rolesList := roleController.userService.GetRolesList()
+	controller.Response(c, 200, "", rolesList)
 }
 
 func (roleController *RoleController) GetRoleDetails(c *gin.Context) {
