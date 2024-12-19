@@ -25,8 +25,13 @@ func (roleController *RoleController) GetRolesList(c *gin.Context) {
 	controller.Response(c, 200, "", rolesList)
 }
 
-func (roleController *RoleController) GetRoleDetails(c *gin.Context) {
-	// some code here ...
+func (roleController *RoleController) GetRoleOwners(c *gin.Context) {
+	type getRoleParams struct {
+		RoleID uint `uri:"roleID" validate:"required"`
+	}
+	param := controller.Validated[getRoleParams](c, &roleController.constants.Context)
+	roleOwners := roleController.userService.GetRoleOwners(param.RoleID)
+	controller.Response(c, 200, "", roleOwners)
 }
 
 func (roleController *RoleController) CreateRole(c *gin.Context) {

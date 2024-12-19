@@ -152,7 +152,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 			roleSubGroup := roles.Group("/:roleID")
 			{
-				roleSubGroup.GET("", roleController.GetRoleDetails)
+				roleSubGroup.GET("", roleController.GetRoleOwners)
 				roleSubGroup.DELETE("", roleController.DeleteRole)
 
 				rolePermissions := roleSubGroup.Group("/permissions")

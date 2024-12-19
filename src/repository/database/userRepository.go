@@ -247,3 +247,19 @@ func (repo *UserRepository) FindAllRolesWithPermissions() []entities.Role {
 	}
 	return roles
 }
+
+func (repo *UserRepository) FindUsersByRoleID(roleID uint) []entities.User {
+	var users []entities.User
+	result := repo.db.
+		Joins("JOIN user_roles ON user_roles.user_id = users.id").
+		Where("user_roles.role_id = ?", roleID).
+		Find(&users)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []entities.User{}
+		}
+		panic(result.Error)
+	}
+	return users
+}

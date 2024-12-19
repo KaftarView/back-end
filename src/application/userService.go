@@ -292,3 +292,12 @@ func (userService *UserService) GetRolesList() []dto.RoleDetailsResponse {
 	}
 	return rolesDetails
 }
+
+func (userService *UserService) GetRoleOwners(roleID uint) map[string]string {
+	users := userService.userRepository.FindUsersByRoleID(roleID)
+	userDetails := make(map[string]string)
+	for _, user := range users {
+		userDetails[user.Email] = user.Name
+	}
+	return userDetails
+}
