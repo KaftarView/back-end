@@ -157,3 +157,40 @@ func (podcastController *PodcastController) DeleteEpisode(c *gin.Context) {
 	message, _ := trans.T("successMessage.deletePodcastEpisode")
 	controller.Response(c, 200, message, nil)
 }
+
+func (podcastController *PodcastController) SearchPodcast(c *gin.Context) {
+	type searchPodcastsParams struct {
+		Query    string `form:"query"`
+		Page     int    `form:"page"`
+		PageSize int    `form:"pageSize"`
+	}
+	param := controller.Validated[searchPodcastsParams](c, &podcastController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	podcasts := podcastController.podcastService.SearchEvents(param.Query, param.Page, param.PageSize)
+
+	controller.Response(c, 200, "", podcasts)
+}
+
+func (podcastController *PodcastController) FilterPodcastByCategory(c *gin.Context) {
+	type filterPodcastsParams struct {
+		Categories []string `form:"categories"`
+		Page       int      `form:"page"`
+		PageSize   int      `form:"pageSize"`
+	}
+	param := controller.Validated[filterPodcastsParams](c, &podcastController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+
+	podcasts := podcastController.podcastService.FilterPodcastsByCategory(param.Categories, param.Page, param.PageSize)
+
+	controller.Response(c, 200, "", podcasts)
+}

@@ -388,3 +388,61 @@ func (podcastService *PodcastService) DeleteEpisode(episodeID uint) {
 		panic(err)
 	}
 }
+
+func (podcastService *PodcastService) SearchEvents(query string, page, pageSize int) []dto.PodcastDetailsResponse {
+	var podcasts []*entities.Podcast
+	offset := (page - 1) * pageSize
+	if query != "" {
+		podcasts = podcastService.podcastRepository.FullTextSearch(query, offset, pageSize)
+	} else {
+		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts()
+	}
+
+	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
+	for i, podcast := range podcasts {
+		banner := ""
+		if podcast.BannerPath != "" {
+			banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, podcast.BannerPath, 8*time.Hour)
+		}
+		publisher, _ := podcastService.userRepository.FindByUserID(podcast.PublisherID)
+		podcastsDetails[i] = dto.PodcastDetailsResponse{
+			ID:               podcast.ID,
+			CreatedAt:        podcast.CreatedAt,
+			Name:             podcast.Name,
+			Description:      podcast.Description,
+			Banner:           banner,
+			Publisher:        publisher.Name,
+			SubscribersCount: len(podcast.Subscribers),
+		}
+	}
+	return podcastsDetails
+}
+
+func (podcastService *PodcastService) FilterPodcastsByCategory(categories []string, page, pageSize int) []dto.PodcastDetailsResponse {
+	var podcasts []*entities.Podcast
+	offset := (page - 1) * pageSize
+	if len(categories) == 0 {
+		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts()
+	} else {
+		podcasts = podcastService.podcastRepository.FindPodcastsByCategoryName(categories, offset, pageSize)
+	}
+
+	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
+	for i, podcast := range podcasts {
+		banner := ""
+		if podcast.BannerPath != "" {
+			banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, podcast.BannerPath, 8*time.Hour)
+		}
+		publisher, _ := podcastService.userRepository.FindByUserID(podcast.PublisherID)
+		podcastsDetails[i] = dto.PodcastDetailsResponse{
+			ID:               podcast.ID,
+			CreatedAt:        podcast.CreatedAt,
+			Name:             podcast.Name,
+			Description:      podcast.Description,
+			Banner:           banner,
+			Publisher:        publisher.Name,
+			SubscribersCount: len(podcast.Subscribers),
+		}
+	}
+	return podcastsDetails
+}

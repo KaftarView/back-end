@@ -2,6 +2,7 @@ package repository_database
 
 import (
 	"first-project/src/entities"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -202,4 +203,47 @@ func (repo *PodcastRepository) DeleteEpisodeByID(tx *gorm.DB, episodeID uint) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (repo *PodcastRepository) FullTextSearch(query string, offset, pageSize int) []*entities.Podcast {
+	var podcasts []*entities.Podcast
+
+	repo.db.Exec(`ALTER TABLE podcasts ADD FULLTEXT INDEX idx_name_description (name, description)`)
+	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
+
+	result := repo.db.Model(&entities.Podcast{}).
+		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&podcasts)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return podcasts
+}
+
+func (repo *PodcastRepository) FindPodcastsByCategoryName(categories []string, offset, pageSize int) []*entities.Podcast {
+	var podcasts []*entities.Podcast
+
+	result := repo.db.
+		Distinct("podcasts.*").
+		Joins("JOIN podcast_categories ON podcasts.id = podcast_categories.podcast_id").
+		Joins("JOIN categories ON categories.id = podcast_categories.category_id").
+		Where("categories.name IN ?", categories).
+		Limit(pageSize).
+		Offset(offset).
+		Find(&podcasts)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+
+	return podcasts
 }
