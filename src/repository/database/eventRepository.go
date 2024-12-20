@@ -406,6 +406,7 @@ func (repo *EventRepository) FindEventsByCategoryName(categories []string, offse
 	var events []*entities.Event
 
 	result := repo.db.
+		Distinct("events.*").
 		Joins("JOIN event_categories ON events.id = event_categories.event_id").
 		Joins("JOIN categories ON categories.id = event_categories.category_id").
 		Where("categories.name IN ?", categories).

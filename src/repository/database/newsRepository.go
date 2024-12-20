@@ -100,6 +100,7 @@ func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, 
 	var news []*entities.News
 
 	result := repo.db.
+		Distinct("news.*").
 		Joins("JOIN news_categories ON news.id = news_categories.news_id").
 		Joins("JOIN categories ON categories.id = news_categories.category_id").
 		Where("categories.name IN ?", categories).
