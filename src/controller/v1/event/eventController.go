@@ -485,12 +485,12 @@ func (eventController *EventController) SearchEventsForAdmin(c *gin.Context) {
 }
 
 func (eventController *EventController) SearchPublicEvents(c *gin.Context) {
-	type searchEventForAdminParams struct {
+	type searchPublicEventParams struct {
 		Query    string `form:"query"`
 		Page     int    `form:"page"`
 		PageSize int    `form:"pageSize"`
 	}
-	param := controller.Validated[searchEventForAdminParams](c, &eventController.constants.Context)
+	param := controller.Validated[searchPublicEventParams](c, &eventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}
@@ -523,12 +523,12 @@ func (eventController *EventController) FilterEventsForAdmin(c *gin.Context) {
 }
 
 func (eventController *EventController) FilterPublicEvents(c *gin.Context) {
-	type filterEventForAdminParams struct {
+	type filterPublicEventParams struct {
 		Categories []string `form:"categories"`
 		Page       int      `form:"page"`
 		PageSize   int      `form:"pageSize"`
 	}
-	param := controller.Validated[filterEventForAdminParams](c, &eventController.constants.Context)
+	param := controller.Validated[filterPublicEventParams](c, &eventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}

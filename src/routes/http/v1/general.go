@@ -75,6 +75,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			news.GET("", newsController.GetNewsList)
 			news.GET("/:newsID", newsController.GetNewsDetails)
 			news.GET("/filter", newsController.FilterNewsByCategory)
+			news.GET("/search", newsController.SearchNews)
 		}
 	}
 

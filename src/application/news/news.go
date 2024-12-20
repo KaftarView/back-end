@@ -216,6 +216,42 @@ func (newsService *NewsService) GetNewsList(page, pageSize int) []dto.NewsDetail
 	return newsDetails
 }
 
+func (newsService *NewsService) SearchNews(query string, page, pageSize int) []dto.NewsDetailsResponse {
+	var newsList []*entities.News
+	offset := (page - 1) * pageSize
+	if query != "" {
+		newsList = newsService.newsRepository.FullTextSearch(query, offset, pageSize)
+	} else {
+		newsList, _ = newsService.newsRepository.FindAllNews(offset, pageSize)
+	}
+
+	newsDetails := make([]dto.NewsDetailsResponse, len(newsList))
+	for i, news := range newsList {
+		banner := ""
+		if news.BannerPath != "" {
+			banner = newsService.awsS3Service.GetPresignedURL(enums.BannersBucket, news.BannerPath, 8*time.Hour)
+		}
+
+		author, _ := newsService.userRepository.FindByUserID(news.AuthorID)
+
+		categories := newsService.newsRepository.FindNewsCategoriesByNews(news)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
+
+		newsDetails[i] = dto.NewsDetailsResponse{
+			ID:          news.ID,
+			Title:       news.Title,
+			Description: news.Description,
+			Banner:      banner,
+			Categories:  categoryNames,
+			Author:      author.Name,
+		}
+	}
+	return newsDetails
+}
+
 func (newsService *NewsService) FilterNewsByCategory(categories []string, page, pageSize int) []dto.NewsDetailsResponse {
 	var newsList []*entities.News
 	offset := (page - 1) * pageSize
