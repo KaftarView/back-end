@@ -8,5 +8,6 @@ import (
 
 type Permission struct {
 	gorm.Model
-	Type enums.PermissionType `gorm:"not null"`
+	Type        enums.PermissionType `gorm:"not null"`
+	Description string               `gorm:"type:text"`
 }

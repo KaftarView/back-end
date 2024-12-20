@@ -23,7 +23,7 @@ func (cronJob *CronJob) reminderEmailToUnverifiedUsers() {
 				Username: user.Name,
 			}
 			cronJob.emailService.SendEmail(user.Email, "Activate your account", "activateAccount/en.html", data)
-		}(user)
+		}(*user)
 	}
 	wg.Wait()
 }

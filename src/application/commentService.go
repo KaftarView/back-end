@@ -2,6 +2,7 @@ package application
 
 import (
 	"first-project/src/bootstrap"
+	"first-project/src/dto"
 	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
 )
@@ -22,6 +23,19 @@ func NewCommentService(
 		commentRepository: commentRepository,
 		userRepository:    userRepository,
 	}
+}
+
+func (commentService *CommentService) GetPostComments(commentableID uint) []dto.CommentDetails {
+	comments := commentService.commentRepository.GetCommentsByEventID(commentableID)
+	var commentsDetails []dto.CommentDetails
+	for _, comment := range comments {
+		commentsDetails = append(commentsDetails, dto.CommentDetails{
+			Content:     comment.Content,
+			IsModerated: comment.IsModerated,
+			AuthorName:  comment.Author.Name,
+		})
+	}
+	return commentsDetails
 }
 
 func (commentService *CommentService) CreateComment(authorID, commentableID uint, content string) {

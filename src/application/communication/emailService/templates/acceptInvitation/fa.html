@@ -3,45 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پذیرش دعوت</title>
+    <title>ایمیل خوش آمدگویی</title>
     <style>
         body {
-            font-family: Tahoma, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
             direction: rtl;
             text-align: right;
         }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background-color: #f9f9f9;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            color: #fff;
-            background-color: #007bff;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        .button:hover {
-            background-color: #0056b3;
+        .footer {
+            background-color: #f1f1f1;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <p>کاربر گرامی <strong>{{.Name}}</strong>,</p>
-        <p>
-            شما برای پیوستن به پلتفرم ما به عنوان برگزارکننده به رویداد {{.EventName}} دعوت شده‌اید. لطفاً برای پذیرش دعوت، روی دکمه زیر کلیک کنید.
-        </p>
-        <a href="{{.Link}}" class="button">پذیرش دعوت</a>
+        <!-- Persian Section -->
+        <div class="header">
+            <h1>به تیم برگزارکنندگان رویداد خوش آمدید!</h1>
+        </div>
+        <div class="content">
+            <p>دوست عزیز {{.Username}},</p>
+            <p>ما از حضور شما در جامعه برگزارکنندگان رویداد {{.EventName}} بسیار خوشحالیم. با هم رویدادهای به‌یادماندنی و تجربه‌های فراموش‌نشدنی خلق خواهیم کرد.</p>
+            <p>اگر سوالی دارید یا نیاز به راهنمایی دارید، لطفاً در هر زمان با ما تماس بگیرید.</p>
+            <p>مشتاقانه منتظر یک سفر فوق‌العاده با شما هستیم!</p>
+            <p>با احترام،</p>
+            <p>تیم</p>
+        </div>
+        <div class="footer">
+            &copy; 2024 تیم برگزارکنندگان رویداد. تمامی حقوق محفوظ است.
+        </div>
     </div>
 </body>
 </html>

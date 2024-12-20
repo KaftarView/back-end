@@ -28,7 +28,6 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client
 
 	registerGeneralRoutes(v1, di, db, rdb)
 	registerProtectedRoutes(v1, di, db, rdb)
-
 }
 
 func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
@@ -39,12 +38,8 @@ func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB,
 	userRepository := repository_database.NewUserRepository(db)
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+
 	protected := v1.Group("")
 	protected.Use(authMiddleware.Authentication)
-
-	routes_http_v1.SetupUserRoutes(protected, di, db, rdb)
-	routes_http_v1.SetupEventRoutes(protected, di, db, rdb)
-	routes_http_v1.SetupCommentRoutes(protected, di, db, rdb)
-	routes_http_v1.SetupNewsRoutes(protected, di, db)
-	routes_http_v1.SetupPodcastRoutes(protected, di, db, rdb)
+	routes_http_v1.SetupPrivateRoutes(protected, di, db, rdb)
 }

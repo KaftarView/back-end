@@ -3,7 +3,6 @@ package repository_database
 import (
 	"first-project/src/entities"
 	"first-project/src/enums"
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -23,7 +22,7 @@ const queryByIDAndEventID = "id = ? AND event_id = ?"
 const queryByID = "id = ?"
 const queryByEventID = "event_id = ?"
 
-func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location string, fromDate, toDate time.Time) (entities.Event, bool) {
+func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location string, fromDate, toDate time.Time) (*entities.Event, bool) {
 	var existingEvent entities.Event
 	query := repo.db.Where("name = ? AND status != ?", name, enums.Cancelled)
 
@@ -44,27 +43,14 @@ func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location strin
 	result := query.First(&existingEvent)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return existingEvent, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return existingEvent, true
+	return &existingEvent, true
 }
 
-func (repo *EventRepository) FindEventByName(name string) (entities.Event, bool) {
-	var existingEvent entities.Event
-	query := repo.db.Where("name = ? AND status != ?", name, enums.Cancelled)
-	result := query.First(&existingEvent)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return existingEvent, false
-		}
-		panic(result.Error)
-	}
-	return existingEvent, true
-}
-
-func (repo *EventRepository) CreateNewEvent(event entities.Event) entities.Event {
+func (repo *EventRepository) CreateNewEvent(event *entities.Event) *entities.Event {
 	result := repo.db.Create(&event)
 	if result.Error != nil {
 		panic(result.Error)
@@ -85,235 +71,206 @@ func (repo *EventRepository) FindCategoriesByNames(categoryNames []string) []ent
 	return categories
 }
 
-func (repo *EventRepository) FindEventByID(eventID uint) (entities.Event, bool) {
+func (repo *EventRepository) FindEventByID(eventID uint) (*entities.Event, bool) {
 	var event entities.Event
 	result := repo.db.First(&event, queryByID, eventID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return event, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return event, true
+	return &event, true
 }
 
-func (repo *EventRepository) FindOrganizerByID(organizerID uint) (entities.Organizer, bool) {
-	var organizer entities.Organizer
-	result := repo.db.First(&organizer, queryByID, organizerID)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return organizer, false
-		}
-		panic(result.Error)
-	}
-	return organizer, true
-}
-
-func (repo *EventRepository) FindOrganizerByEventIDAndEmailAndVerified(eventID uint, email string, verified bool) (entities.Organizer, bool) {
-	var organizer entities.Organizer
-	result := repo.db.First(&organizer, "event_id = ? AND email = ? AND verified = ?", eventID, email, verified)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return organizer, false
-		}
-		panic(result.Error)
-	}
-	return organizer, true
-}
-
-func (repo *EventRepository) UpdateOrganizerToken(organizer entities.Organizer, token string) {
-	organizer.Token = token
-	repo.db.Save(&organizer)
-}
-
-func (repo *EventRepository) FindOrganizerByIDAndEventIDAndVerified(organizerID, eventID uint, verified bool) (entities.Organizer, bool) {
-	var organizer entities.Organizer
-	result := repo.db.First(&organizer, "id = ? AND event_id = ? AND verified = ?", organizerID, eventID, verified)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return organizer, false
-		}
-		panic(result.Error)
-	}
-	return organizer, true
-}
-
-func (repo *EventRepository) FindEventCategoriesByEvent(event entities.Event) entities.Event {
-	if err := repo.db.Model(&event).Association("Categories").Find(&event.Categories); err != nil {
+func (repo *EventRepository) FindEventCategoriesByEvent(event *entities.Event) *entities.Event {
+	if err := repo.db.Model(event).Association("Categories").Find(&event.Categories); err != nil {
 		panic(err)
 	}
 	return event
 }
 
-func (repo *EventRepository) FindTicketsByEventID(eventID uint) ([]entities.Ticket, bool) {
-	var tickets []entities.Ticket
-	result := repo.db.Where(queryByEventID, eventID).Find(&tickets)
+func (repo *EventRepository) FindTicketsByEventID(eventID uint, availability []bool) ([]*entities.Ticket, bool) {
+	var tickets []*entities.Ticket
+	result := repo.db.Where("event_id = ? AND is_available IN ?", eventID, availability).Find(&tickets)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return tickets, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
 	return tickets, true
 }
 
-func (repo *EventRepository) FindDiscountsByEventID(eventID uint) ([]entities.Discount, bool) {
-	var discounts []entities.Discount
+func (repo *EventRepository) FindDiscountsByEventID(eventID uint) ([]*entities.Discount, bool) {
+	var discounts []*entities.Discount
 	result := repo.db.Where(queryByEventID, eventID).Find(&discounts)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return discounts, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
 	return discounts, true
 }
-func (repo *EventRepository) FindDiscountByDiscountID(discountID uint) (entities.Discount, bool) {
+func (repo *EventRepository) FindDiscountByDiscountID(discountID uint) (*entities.Discount, bool) {
 	var discount entities.Discount
-	result := repo.db.First(&discount, "id = ?", discountID)
+	result := repo.db.First(&discount, queryByID, discountID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return discount, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return discount, true
+	return &discount, true
 }
-func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID uint) (entities.Ticket, bool) {
+
+func (repo *EventRepository) FindEventTicketByName(ticketName string, eventID uint) (*entities.Ticket, bool) {
 	var ticket entities.Ticket
 	result := repo.db.First(&ticket, "name = ? AND event_id = ?", ticketName, eventID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return ticket, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return ticket, true
+	return &ticket, true
 }
-func (repo *EventRepository) FindEvenetTicketByID(ticketID uint) (entities.Ticket, bool) {
+
+func (repo *EventRepository) FindEventTicketByID(ticketID uint) (*entities.Ticket, bool) {
 	var ticket entities.Ticket
-	result := repo.db.First(&ticket, "id = ?", ticketID)
+	result := repo.db.First(&ticket, queryByID, ticketID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return ticket, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return ticket, true
+	return &ticket, true
 }
 
-func (repo *EventRepository) FindEventMediaByName(mediaName string, eventID uint) (entities.Media, bool) {
+func (repo *EventRepository) FindEventMediaByName(mediaName string, eventID uint) (*entities.Media, bool) {
 	var media entities.Media
 	result := repo.db.First(&media, "name = ? AND event_id = ?", mediaName, eventID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return media, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return media, true
+	return &media, true
 }
 
-func (repo *EventRepository) FindAllEventMedia(eventID uint) ([]entities.Media, bool) {
-	var media []entities.Media
+func (repo *EventRepository) FindAllEventMedia(eventID uint) ([]*entities.Media, bool) {
+	var media []*entities.Media
 	result := repo.db.Where(queryByEventID, eventID).Find(&media)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return media, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
 	return media, true
 }
 
-func (repo *EventRepository) CreateNewTicket(ticket entities.Ticket) entities.Ticket {
-	result := repo.db.Create(&ticket)
+func (repo *EventRepository) FindAllEventOrganizers(eventID uint) ([]*entities.Organizer, bool) {
+	var organizers []*entities.Organizer
+	result := repo.db.Where(queryByEventID, eventID).Find(&organizers)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return organizers, true
+}
+
+func (repo *EventRepository) CreateNewTicket(ticket *entities.Ticket) *entities.Ticket {
+	result := repo.db.Create(ticket)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return ticket
 }
 
-func (repo *EventRepository) FindEventDiscountByCode(discountCode string, eventID uint) (entities.Discount, bool) {
+func (repo *EventRepository) FindEventDiscountByCode(discountCode string, eventID uint) (*entities.Discount, bool) {
 	var discount entities.Discount
 	result := repo.db.First(&discount, "code = ? AND event_id = ?", discountCode, eventID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return discount, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return discount, true
+	return &discount, true
 }
 
-func (repo *EventRepository) CreateNewDiscount(discount entities.Discount) entities.Discount {
-	result := repo.db.Create(&discount)
+func (repo *EventRepository) CreateNewDiscount(discount *entities.Discount) *entities.Discount {
+	result := repo.db.Create(discount)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return discount
 }
 
-func (repo *EventRepository) UpdateEvent(event entities.Event) entities.Event {
-	if err := repo.db.Save(&event).Error; err != nil {
+func (repo *EventRepository) UpdateEvent(event *entities.Event) {
+	if err := repo.db.Save(event).Error; err != nil {
 		panic(err)
 	}
-	return event
 }
-func (repo *EventRepository) FindActiveOrVerifiedOrganizerByEmail(eventID uint, email string) (entities.Organizer, bool) {
+
+func (repo *EventRepository) FindOrganizerByID(organizerID uint) (*entities.Organizer, bool) {
+	var organizer entities.Organizer
+	result := repo.db.First(&organizer, queryByID, organizerID)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &organizer, true
+}
+
+func (repo *EventRepository) FindOrganizerByEmail(eventID uint, email string) (*entities.Organizer, bool) {
 	var organizer entities.Organizer
 	result := repo.db.Where("email = ? AND event_id = ?", email, eventID).First(&organizer)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return organizer, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	if organizer.Verified || time.Since(organizer.UpdatedAt) < 8*time.Hour {
-		return organizer, true
-	}
-	repo.db.Delete(&organizer)
-	return organizer, false
+	return &organizer, true
 }
 
-func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email, description, token string, verified bool) entities.Organizer {
-	organizer := entities.Organizer{
+func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email, description, profilePath string) *entities.Organizer {
+	organizer := &entities.Organizer{
 		Name:        name,
 		Email:       email,
 		Description: description,
-		Token:       token,
-		Verified:    verified,
 		EventID:     eventID,
+		ProfilePath: profilePath,
 	}
-	result := repo.db.Create(&organizer)
+	result := repo.db.Create(organizer)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return organizer
 }
 
-func (repo *EventRepository) ActivateOrganizer(organizer entities.Organizer) {
-	organizer.Verified = true
-	organizer.Token = ""
-	if err := repo.db.Save(&organizer).Error; err != nil {
-		panic(err)
-	}
-}
-
-func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]entities.Event, bool) {
-	var events []entities.Event
+func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]*entities.Event, bool) {
+	var events []*entities.Event
 	result := repo.db.Where("status IN ?", allowedStatus).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return events, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
@@ -332,124 +289,90 @@ func (repo *EventRepository) FindAllCategories() []string {
 	return categoryNames
 }
 
-func (repo *EventRepository) DeleteEvent(eventID uint) bool {
-	result := repo.db.Delete(&entities.Event{}, eventID)
-	if result.Error != nil {
-		panic(result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return false
-	}
-	return true
-}
-
-func (repo *EventRepository) DeleteTicket(eventID, ticketID uint) bool {
-	var ticket entities.Ticket
-	result := repo.db.Where(queryByIDAndEventID, ticketID, eventID).First(&ticket)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return false
-		}
-		panic(result.Error)
-	}
-	if err := repo.db.Delete(&ticket).Error; err != nil {
-		panic(fmt.Errorf("failed to delete ticket: %w", err))
-	}
-	return true
-}
-
-func (repo *EventRepository) DeleteDiscount(eventID, discountID uint) bool {
-	var discount entities.Discount
-	result := repo.db.Where(queryByIDAndEventID, discountID, eventID).First(&discount)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return false
-		}
-		panic(result.Error)
-	}
-	if err := repo.db.Delete(&discount).Error; err != nil {
-		panic(fmt.Errorf("failed to delete discount: %w", err))
-	}
-	return true
-}
-
-func (repo *EventRepository) DeleteOrganizer(eventID, organizerID uint) bool {
-	var organizer entities.Organizer
-	result := repo.db.Where(queryByIDAndEventID, organizerID, eventID).First(&organizer)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return false
-		}
-		panic(result.Error)
-	}
-	if err := repo.db.Delete(&organizer).Error; err != nil {
-		panic(fmt.Errorf("failed to delete organizer: %w", err))
-	}
-	return true
-}
-
-func (repo *EventRepository) UpdateEventBannerByEventID(mediaPath string, eventID uint) {
-	var event entities.Event
-	if err := repo.db.Model(&event).Where(queryByID, eventID).Update("banner_path", mediaPath).Error; err != nil {
+func (repo *EventRepository) DeleteEvent(eventID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Event{}, eventID).Error
+	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *EventRepository) UpdateOrganizerProfileByID(mediaPath string, organizerID uint) {
-	var organizer entities.Organizer
-	if err := repo.db.Model(&organizer).Where(queryByID, organizerID).Update("profile_path", mediaPath).Error; err != nil {
+func (repo *EventRepository) DeleteTicket(ticketID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Ticket{}, ticketID).Error
+	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *EventRepository) ChangeStatusByEvent(event entities.Event, newStatus enums.EventStatus) {
+func (repo *EventRepository) DeleteDiscount(discountID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Discount{}, discountID).Error
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (repo *EventRepository) DeleteOrganizer(organizerID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Organizer{}, organizerID).Error
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (repo *EventRepository) ChangeStatusByEvent(event *entities.Event, newStatus enums.EventStatus) {
 	event.Status = newStatus
-	repo.db.Save(&event)
+	repo.db.Save(event)
 }
 
-func (repo *EventRepository) CreateNewMedia(media entities.Media) entities.Media {
-	result := repo.db.Create(&media)
+func (repo *EventRepository) CreateNewMedia(media *entities.Media) *entities.Media {
+	result := repo.db.Create(media)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return media
 }
 
-func (repo *EventRepository) FindMediaByIDAndEventID(mediaID, eventID uint) (entities.Media, bool) {
+func (repo *EventRepository) FindMediaByIDAndEventID(mediaID, eventID uint) (*entities.Media, bool) {
 	var media entities.Media
 	result := repo.db.Where(queryByIDAndEventID, mediaID, eventID).First(&media)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return media, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return media, true
+	return &media, true
 }
 
-func (repo *EventRepository) DeleteMedia(mediaID uint) bool {
-	result := repo.db.Delete(&entities.Media{}, mediaID)
+func (repo *EventRepository) FindMediaByID(mediaID uint) (*entities.Media, bool) {
+	var media entities.Media
+	result := repo.db.Where(queryByID, mediaID).First(&media)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &media, true
+}
+
+func (repo *EventRepository) DeleteMedia(mediaID uint) {
+	result := repo.db.Unscoped().Delete(&entities.Media{}, mediaID)
 	if result.Error != nil {
 		panic(result.Error)
 	}
-	if result.RowsAffected == 0 {
-		return false
-	}
-	return true
-
 }
 
-func (repo *EventRepository) UpdateEventTicket(ticket entities.Ticket) entities.Ticket {
-	result := repo.db.Save(&ticket)
+func (repo *EventRepository) UpdateEventTicket(ticket *entities.Ticket) *entities.Ticket {
+	result := repo.db.Save(ticket)
 	if result.Error != nil {
 		panic(result.Error)
 	}
 	return ticket
 }
 
-func (repo *EventRepository) UpdateEventDiscount(discount entities.Discount) {
-	result := repo.db.Save(&discount)
+func (repo *EventRepository) UpdateEventDiscount(discount *entities.Discount) {
+	result := repo.db.Save(discount)
 	if result.Error != nil {
 		panic(result.Error)
 	}

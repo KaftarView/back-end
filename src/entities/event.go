@@ -22,13 +22,10 @@ type Event struct {
 	Location       string                 `gorm:"type:text"`
 	BannerPath     string                 `gorm:"type:text"`
 	Communications map[string]interface{} `gorm:"-"`
-
-	Commentable Commentable `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE;"`
-
-	Tickets    []Ticket    `gorm:"foreignKey:EventID"`
-	Discounts  []Discount  `gorm:"foreignKey:EventID"`
-	Media      []Media     `gorm:"foreignKey:EventID"`
-	Organizers []Organizer `gorm:"foreignKey:EventID"`
-
-	Categories []Category `gorm:"many2many:event_categories"`
+	Commentable    Commentable            `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	Tickets        []Ticket               `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE"`
+	Discounts      []Discount             `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE"`
+	Media          []Media                `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE"`
+	Organizers     []Organizer            `gorm:"foreignKey:EventID;constraint:OnDelete:CASCADE"`
+	Categories     []Category             `gorm:"many2many:event_categories;constraint:OnDelete:CASCADE"`
 }
