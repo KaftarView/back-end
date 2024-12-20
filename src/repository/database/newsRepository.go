@@ -2,7 +2,6 @@ package repository_database
 
 import (
 	"first-project/src/entities"
-	"log"
 
 	"gorm.io/gorm"
 )
@@ -17,33 +16,33 @@ func NewNewsRepository(db *gorm.DB) *NewsRepository {
 	}
 }
 
-func (repo *NewsRepository) FindNewsByTitle(name string) (entities.News, bool) {
+func (repo *NewsRepository) FindNewsByTitle(name string) (*entities.News, bool) {
 	var news entities.News
 	result := repo.db.First(&news, "title = ?", name)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return news, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return news, true
+	return &news, true
 }
 
-func (repo *NewsRepository) FindNewsByID(newsID uint) (entities.News, bool) {
+func (repo *NewsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
 	var news entities.News
 	result := repo.db.First(&news, queryByID, newsID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return news, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return news, true
+	return &news, true
 }
 
-func (repo *NewsRepository) CreateNews(news entities.News) entities.News {
+func (repo *NewsRepository) CreateNews(news *entities.News) *entities.News {
 	err := repo.db.Create(&news).Error
 	if err != nil {
 		panic(err)
@@ -62,16 +61,15 @@ func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	err := query.First(&news).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &news, false
+			return nil, false
 		}
 		panic(err)
 	}
-	log.Print(news.Categories)
 	return &news, true
 }
 
-func (repo *NewsRepository) UpdateNews(news entities.News) {
-	err := repo.db.Save(&news).Error
+func (repo *NewsRepository) UpdateNews(news *entities.News) {
+	err := repo.db.Save(news).Error
 	if err != nil {
 		panic(err)
 	}
@@ -84,21 +82,21 @@ func (repo *NewsRepository) DeleteNews(newsID uint) {
 	}
 }
 
-func (repo *NewsRepository) FindAllNews(offset, pageSize int) ([]entities.News, bool) {
-	var news []entities.News
+func (repo *NewsRepository) FindAllNews(offset, pageSize int) ([]*entities.News, bool) {
+	var news []*entities.News
 	result := repo.db.Offset(offset).Limit(pageSize).Find(&news)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return news, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
 	return news, true
 }
 
-func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, pageSize int) []entities.News {
-	var news []entities.News
+func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, pageSize int) []*entities.News {
+	var news []*entities.News
 
 	result := repo.db.
 		Joins("JOIN news_categories ON news.id = news_categories.news_id").
@@ -110,7 +108,7 @@ func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, 
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return []entities.News{}
+			return nil
 		}
 		panic(result.Error)
 	}
@@ -130,8 +128,8 @@ func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []enti
 	return categories
 }
 
-func (repo *NewsRepository) FindNewsCategoriesByNews(news entities.News) []entities.Category {
-	if err := repo.db.Model(&news).Association("Categories").Find(&news.Categories); err != nil {
+func (repo *NewsRepository) FindNewsCategoriesByNews(news *entities.News) []entities.Category {
+	if err := repo.db.Model(news).Association("Categories").Find(&news.Categories); err != nil {
 		panic(err)
 	}
 	return news.Categories

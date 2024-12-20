@@ -47,7 +47,7 @@ func (eventService *EventService) ValidateEventCreationDetails(
 	}
 }
 
-func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetails) entities.Event {
+func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetails) *entities.Event {
 	enumStatus := enums.Draft
 	eventStatuses := enums.GetAllEventStatus()
 	for _, eventStatus := range eventStatuses {
@@ -70,7 +70,7 @@ func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetai
 	bannerPath := fmt.Sprintf("banners/events/%d/images/%s", commentable.CID, eventDetails.Banner.Filename)
 	eventService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, eventDetails.Banner)
 
-	eventDetailsModel := entities.Event{
+	eventDetailsModel := &entities.Event{
 		ID:          commentable.CID,
 		Name:        eventDetails.Name,
 		Status:      enumStatus,
@@ -106,8 +106,8 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 	}
 }
 
-func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketDetails) entities.Ticket {
-	ticketDetailsModel := entities.Ticket{
+func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketDetails) *entities.Ticket {
+	ticketDetailsModel := &entities.Ticket{
 		Name:           ticketDetails.Name,
 		Description:    ticketDetails.Description,
 		Price:          ticketDetails.Price,
@@ -183,7 +183,7 @@ func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode s
 	}
 }
 
-func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountDetails) entities.Discount {
+func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountDetails) *entities.Discount {
 	var enumDiscountType enums.DiscountType
 	discountTypes := enums.GetAllDiscountTypes()
 	for _, discountType := range discountTypes {
@@ -192,7 +192,7 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 		}
 	}
 
-	discountDetailsModel := entities.Discount{
+	discountDetailsModel := &entities.Discount{
 		Code:       discountDetails.Code,
 		Type:       enumDiscountType,
 		Value:      discountDetails.Value,
@@ -296,8 +296,8 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 		panic(notFoundError)
 	}
 
-	eventService.updateEventBanner(&event, updateDetails.Banner)
-	updateBasicDetails(&event, updateDetails)
+	eventService.updateEventBanner(event, updateDetails.Banner)
+	updateBasicDetails(event, updateDetails)
 
 	if updateDetails.Status != nil {
 		statusEnum := event.Status
@@ -357,7 +357,7 @@ func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email
 	eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, profilePath)
 }
 
-func (eventService *EventService) GetEventByID(eventID uint) entities.Event {
+func (eventService *EventService) GetEventByID(eventID uint) *entities.Event {
 	event, _ := eventService.eventRepository.FindEventByID(eventID)
 	return event
 }
@@ -528,7 +528,7 @@ func (eventService *EventService) GetDiscountDetails(discountID uint) dto.Discou
 	return discountDetails
 }
 
-func (eventService *EventService) GetListEventMedia(eventID uint) []entities.Media {
+func (eventService *EventService) GetListEventMedia(eventID uint) []*entities.Media {
 	var notFoundError exceptions.NotFoundError
 	media, mediaExist := eventService.eventRepository.FindAllEventMedia(eventID)
 	if !mediaExist {
@@ -596,7 +596,7 @@ func (eventService *EventService) DeleteOrganizer(organizerID uint) {
 	eventService.eventRepository.DeleteOrganizer(organizerID)
 }
 
-func (eventService *EventService) GetEventMediaDetails(mediaID, eventID uint) entities.Media {
+func (eventService *EventService) GetEventMediaDetails(mediaID, eventID uint) *entities.Media {
 	var notFoundError exceptions.NotFoundError
 	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
 	if !mediaExist {
@@ -659,7 +659,7 @@ func (eventService *EventService) CreateEventMedia(eventID uint, mediaName strin
 	mediaPath := fmt.Sprintf("media/events/%d/resources/%s", eventID, mediaFile.Filename)
 	eventService.awsS3Service.UploadObject(enums.SessionsBucket, mediaPath, mediaFile)
 
-	mediaModel := entities.Media{
+	mediaModel := &entities.Media{
 		Name:    mediaName,
 		Path:    mediaPath,
 		EventID: eventID,

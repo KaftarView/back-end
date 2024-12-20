@@ -18,84 +18,84 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-func (repo *UserRepository) FindByUserID(userID uint) (entities.User, bool) {
+func (repo *UserRepository) FindByUserID(userID uint) (*entities.User, bool) {
 	var user entities.User
 	result := repo.db.First(&user, userID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return user, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return user, true
+	return &user, true
 }
 
-func (repo *UserRepository) FindActiveOrVerifiedUserByUsername(username string) (entities.User, bool) {
+func (repo *UserRepository) FindActiveOrVerifiedUserByUsername(username string) (*entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("name = ?", username).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return user, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
 	if user.Verified || time.Since(user.UpdatedAt) < 2*time.Minute {
-		return user, true
+		return &user, true
 	}
 	repo.db.Delete(&user)
-	return user, false
+	return nil, false
 }
 
-func (repo *UserRepository) FindActiveOrVerifiedUserByEmail(email string) (entities.User, bool) {
+func (repo *UserRepository) FindActiveOrVerifiedUserByEmail(email string) (*entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return user, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
 	if user.Verified || time.Since(user.UpdatedAt) < 2*time.Minute {
-		return user, true
+		return &user, true
 	}
 	repo.db.Delete(&user)
-	return user, false
+	return nil, false
 }
 
-func (repo *UserRepository) FindByUsernameAndVerified(username string, verified bool) (entities.User, bool) {
+func (repo *UserRepository) FindByUsernameAndVerified(username string, verified bool) (*entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("name = ? AND verified = ?", username, verified).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			if time.Since(user.UpdatedAt) < 2*time.Minute {
-				return user, true
+				return &user, true
 			}
-			return user, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return user, true
+	return &user, true
 }
 
-func (repo *UserRepository) FindByEmailAndVerified(email string, verified bool) (entities.User, bool) {
+func (repo *UserRepository) FindByEmailAndVerified(email string, verified bool) (*entities.User, bool) {
 	var user entities.User
 	result := repo.db.Where("email = ? AND verified = ?", email, verified).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return user, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return user, true
+	return &user, true
 }
 
-func (repo *UserRepository) UpdateUserToken(user entities.User, token string) {
+func (repo *UserRepository) UpdateUserToken(user *entities.User, token string) {
 	user.Token = token
-	repo.db.Save(&user)
+	repo.db.Save(user)
 }
 
 func (repo *UserRepository) CreateNewUser(
-	username string, email string, password string, token string, verified bool) entities.User {
+	username string, email string, password string, token string, verified bool) *entities.User {
 	user := entities.User{
 		Name:     username,
 		Email:    email,
@@ -107,25 +107,25 @@ func (repo *UserRepository) CreateNewUser(
 	if result.Error != nil {
 		panic(result.Error)
 	}
-	return user
+	return &user
 }
 
-func (repo *UserRepository) ActivateUserAccount(user entities.User) {
+func (repo *UserRepository) ActivateUserAccount(user *entities.User) {
 	user.Verified = true
 	user.Token = ""
-	if err := repo.db.Save(&user).Error; err != nil {
+	if err := repo.db.Save(user).Error; err != nil {
 		panic(err)
 	}
 }
 
-func (repo *UserRepository) UpdateUserPassword(user entities.User, password string) {
+func (repo *UserRepository) UpdateUserPassword(user *entities.User, password string) {
 	user.Password = password
 	user.Token = ""
-	repo.db.Save(&user)
+	repo.db.Save(user)
 }
 
-func (repo *UserRepository) FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeekAgo time.Time) []entities.User {
-	var users []entities.User
+func (repo *UserRepository) FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeekAgo time.Time) []*entities.User {
+	var users []*entities.User
 	err := repo.db.Where(
 		"verified = ? AND created_at >= ? AND created_at < ?",
 		false, startOfWeekAgo, endOfWeekAgo).Find(&users).Error
@@ -135,55 +135,55 @@ func (repo *UserRepository) FindUnverifiedUsersWeekAgo(startOfWeekAgo, endOfWeek
 	return users
 }
 
-func (repo *UserRepository) FindRoleByType(roleType string) (entities.Role, bool) {
+func (repo *UserRepository) FindRoleByType(roleType string) (*entities.Role, bool) {
 	var role entities.Role
 	result := repo.db.Where("type = ?", roleType).First(&role)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return role, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return role, true
+	return &role, true
 }
 
-func (repo *UserRepository) FindRoleByID(roleID uint) (entities.Role, bool) {
+func (repo *UserRepository) FindRoleByID(roleID uint) (*entities.Role, bool) {
 	var role entities.Role
 	result := repo.db.First(&role, roleID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return role, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return role, true
+	return &role, true
 }
 
-func (repo *UserRepository) FindPermissionByID(permissionID uint) (entities.Permission, bool) {
+func (repo *UserRepository) FindPermissionByID(permissionID uint) (*entities.Permission, bool) {
 	var permission entities.Permission
 	result := repo.db.First(&permission, permissionID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return permission, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return permission, true
+	return &permission, true
 }
 
-func (repo *UserRepository) FindPermissionByType(permissionType enums.PermissionType) (entities.Permission, bool) {
+func (repo *UserRepository) FindPermissionByType(permissionType enums.PermissionType) (*entities.Permission, bool) {
 	var permission entities.Permission
 	result := repo.db.Where("type = ?", permissionType).First(&permission)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return permission, false
+			return nil, false
 		}
 		panic(result.Error)
 	}
-	return permission, true
+	return &permission, true
 }
 
-func (repo *UserRepository) CreateNewRole(roleType string) entities.Role {
+func (repo *UserRepository) CreateNewRole(roleType string) *entities.Role {
 	role := entities.Role{
 		Type: roleType,
 	}
@@ -191,10 +191,10 @@ func (repo *UserRepository) CreateNewRole(roleType string) entities.Role {
 	if result.Error != nil {
 		panic(result.Error)
 	}
-	return role
+	return &role
 }
 
-func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionType) entities.Permission {
+func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionType) *entities.Permission {
 	permission := entities.Permission{
 		Type: permissionType,
 	}
@@ -202,17 +202,17 @@ func (repo *UserRepository) CreateNewPermission(permissionType enums.PermissionT
 	if result.Error != nil {
 		panic(result.Error)
 	}
-	return permission
+	return &permission
 }
 
-func (repo *UserRepository) AssignRoleToUser(user entities.User, role entities.Role) {
-	if err := repo.db.Model(&user).Association("Roles").Append(&role); err != nil {
+func (repo *UserRepository) AssignRoleToUser(user *entities.User, role *entities.Role) {
+	if err := repo.db.Model(user).Association("Roles").Append(role); err != nil {
 		panic(err)
 	}
 }
 
-func (repo *UserRepository) AssignPermissionToRole(role entities.Role, permission entities.Permission) {
-	if err := repo.db.Model(&role).Association("Permissions").Append(&permission); err != nil {
+func (repo *UserRepository) AssignPermissionToRole(role *entities.Role, permission *entities.Permission) {
+	if err := repo.db.Model(role).Association("Permissions").Append(permission); err != nil {
 		panic(err)
 	}
 }
@@ -239,20 +239,20 @@ func (repo *UserRepository) FindPermissionsByRole(roleID uint) []enums.Permissio
 	return permissionTypes
 }
 
-func (repo *UserRepository) FindAllRolesWithPermissions() []entities.Role {
-	var roles []entities.Role
+func (repo *UserRepository) FindAllRolesWithPermissions() []*entities.Role {
+	var roles []*entities.Role
 	result := repo.db.Preload("Permissions").Find(&roles)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return []entities.Role{}
+			return nil
 		}
 		panic(result.Error)
 	}
 	return roles
 }
 
-func (repo *UserRepository) FindUsersByRoleID(roleID uint) []entities.User {
-	var users []entities.User
+func (repo *UserRepository) FindUsersByRoleID(roleID uint) []*entities.User {
+	var users []*entities.User
 	result := repo.db.
 		Joins("JOIN user_roles ON user_roles.user_id = users.id").
 		Where("user_roles.role_id = ?", roleID).
@@ -260,7 +260,7 @@ func (repo *UserRepository) FindUsersByRoleID(roleID uint) []entities.User {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return []entities.User{}
+			return nil
 		}
 		panic(result.Error)
 	}
@@ -276,24 +276,24 @@ func (repo *UserRepository) DeleteRoleByRoleID(roleID uint) {
 	}
 }
 
-func (repo *UserRepository) DeleteRolePermission(role entities.Role, permission entities.Permission) {
-	if err := repo.db.Model(&role).Association("Permissions").Delete(&permission); err != nil {
+func (repo *UserRepository) DeleteRolePermission(role *entities.Role, permission *entities.Permission) {
+	if err := repo.db.Model(role).Association("Permissions").Delete(permission); err != nil {
 		panic(err)
 	}
 }
 
-func (repo *UserRepository) DeleteUserRole(user entities.User, role entities.Role) {
-	if err := repo.db.Model(&user).Association("Roles").Delete(&role); err != nil {
+func (repo *UserRepository) DeleteUserRole(user *entities.User, role *entities.Role) {
+	if err := repo.db.Model(user).Association("Roles").Delete(role); err != nil {
 		panic(err)
 	}
 }
 
-func (repo *UserRepository) FindAllPermissions() []entities.Permission {
-	var permissions []entities.Permission
+func (repo *UserRepository) FindAllPermissions() []*entities.Permission {
+	var permissions []*entities.Permission
 	result := repo.db.Find(&permissions)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return []entities.Permission{}
+			return nil
 		}
 		panic(result.Error)
 	}

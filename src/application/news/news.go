@@ -38,7 +38,7 @@ func NewNewsService(
 
 const bannerPathFormat = "banners/podcasts/%d/images/%s"
 
-func (newsService *NewsService) CreateNews(newsDetails dto.RequestNewsDetails) entities.News {
+func (newsService *NewsService) CreateNews(newsDetails dto.RequestNewsDetails) *entities.News {
 	var conflictError exceptions.ConflictError
 	_, newsExist := newsService.newsRepository.FindNewsByTitle(newsDetails.Title)
 	if newsExist {
@@ -60,7 +60,7 @@ func (newsService *NewsService) CreateNews(newsDetails dto.RequestNewsDetails) e
 		newsService.awsS3Service.UploadObject(enums.BannersBucket, banner2Path, newsDetails.Banner2)
 	}
 
-	newsModel := entities.News{
+	newsModel := &entities.News{
 		ID:          commentable.CID,
 		Title:       newsDetails.Title,
 		Description: newsDetails.Description,
@@ -217,7 +217,7 @@ func (newsService *NewsService) GetNewsList(page, pageSize int) []dto.NewsDetail
 }
 
 func (newsService *NewsService) FilterNewsByCategory(categories []string, page, pageSize int) []dto.NewsDetailsResponse {
-	var newsList []entities.News
+	var newsList []*entities.News
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {
 		newsList, _ = newsService.newsRepository.FindAllNews(offset, pageSize)

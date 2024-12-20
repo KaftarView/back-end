@@ -130,7 +130,7 @@ func (userService *UserService) ActivateUser(email, otp string) {
 	userService.userRepository.ActivateUserAccount(user)
 }
 
-func (userService *UserService) AuthenticateUser(username string, password string) (user entities.User) {
+func (userService *UserService) AuthenticateUser(username string, password string) (user *entities.User) {
 	user, verifiedUserExist := userService.userRepository.FindByUsernameAndVerified(username, true)
 	if !verifiedUserExist {
 		loginError := exceptions.NewLoginError()
@@ -197,7 +197,7 @@ func (userService *UserService) ResetPasswordService(email, password, confirmPas
 	userService.userRepository.UpdateUserPassword(user, hashedPassword)
 }
 
-func (userService *UserService) CreateNewRole(name string) entities.Role {
+func (userService *UserService) CreateNewRole(name string) *entities.Role {
 	var registrationError exceptions.UserRegistrationError
 	_, roleExist := userService.userRepository.FindRoleByType(name)
 	if roleExist {
