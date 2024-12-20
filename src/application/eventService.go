@@ -528,16 +528,6 @@ func (eventService *EventService) GetDiscountDetails(discountID uint) dto.Discou
 	return discountDetails
 }
 
-func (eventService *EventService) GetListEventMedia(eventID uint) []*entities.Media {
-	var notFoundError exceptions.NotFoundError
-	media, mediaExist := eventService.eventRepository.FindAllEventMedia(eventID)
-	if !mediaExist {
-		notFoundError.ErrorField = eventService.constants.ErrorField.Media
-		panic(notFoundError)
-	}
-	return media
-}
-
 func (eventService *EventService) GetListOfCategories() []string {
 	categoryNames := eventService.eventRepository.FindAllCategories()
 	return categoryNames
@@ -690,5 +680,37 @@ func (eventService *EventService) SearchEvents(query string, page, pageSize int,
 			Banner:      banner,
 		}
 	}
+	return eventsDetails
+}
+
+func (eventService *EventService) FilterEventsByCategories(categories []string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+	var eventsList []*entities.Event
+	offset := (page - 1) * pageSize
+	if len(categories) == 0 {
+		eventsList, _ = eventService.eventRepository.FindEventsByStatus(allowedStatus)
+	} else {
+		eventsList = eventService.eventRepository.FindEventsByCategoryName(categories, offset, pageSize, allowedStatus)
+	}
+
+	eventsDetails := make([]dto.EventDetailsResponse, len(eventsList))
+	for i, event := range eventsList {
+		banner := ""
+		if event.BannerPath != "" {
+			banner = eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+		}
+
+		eventsDetails[i] = dto.EventDetailsResponse{
+			ID:          event.ID,
+			CreatedAt:   event.CreatedAt,
+			Name:        event.Name,
+			Status:      event.Status.String(),
+			Description: event.Description,
+			FromDate:    event.FromDate,
+			ToDate:      event.ToDate,
+			VenueType:   event.VenueType.String(),
+			Banner:      banner,
+		}
+	}
+
 	return eventsDetails
 }

@@ -22,6 +22,7 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 const queryByIDAndEventID = "id = ? AND event_id = ?"
 const queryByID = "id = ?"
 const queryByEventID = "event_id = ?"
+const queryByStatusIn = "status IN ?"
 
 func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location string, fromDate, toDate time.Time) (*entities.Event, bool) {
 	var existingEvent entities.Event
@@ -268,7 +269,7 @@ func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email
 
 func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]*entities.Event, bool) {
 	var events []*entities.Event
-	result := repo.db.Where("status IN ?", allowedStatus).Find(&events)
+	result := repo.db.Where(queryByStatusIn, allowedStatus).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false
@@ -387,7 +388,7 @@ func (repo *EventRepository) FullTextSearch(query string, allowedStatus []enums.
 
 	result := repo.db.Model(&entities.Event{}).
 		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
-		Where("status IN ?", allowedStatus).
+		Where(queryByStatusIn, allowedStatus).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&events)
@@ -398,5 +399,27 @@ func (repo *EventRepository) FullTextSearch(query string, allowedStatus []enums.
 		}
 		panic(result.Error)
 	}
+	return events
+}
+
+func (repo *EventRepository) FindEventsByCategoryName(categories []string, offset, pageSize int, allowedStatus []enums.EventStatus) []*entities.Event {
+	var events []*entities.Event
+
+	result := repo.db.
+		Joins("JOIN event_categories ON events.id = event_categories.event_id").
+		Joins("JOIN categories ON categories.id = event_categories.category_id").
+		Where("categories.name IN ?", categories).
+		Where(queryByStatusIn, allowedStatus).
+		Limit(pageSize).
+		Offset(offset).
+		Find(&events)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+
 	return events
 }
