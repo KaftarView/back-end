@@ -3,6 +3,7 @@ package repository_database
 import (
 	"first-project/src/entities"
 	"first-project/src/enums"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 const queryByIDAndEventID = "id = ? AND event_id = ?"
 const queryByID = "id = ?"
 const queryByEventID = "event_id = ?"
+const queryByStatusIn = "status IN ?"
 
 func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location string, fromDate, toDate time.Time) (*entities.Event, bool) {
 	var existingEvent entities.Event
@@ -265,9 +267,9 @@ func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email
 	return organizer
 }
 
-func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]*entities.Event, bool) {
+func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus, offset, pageSize int) ([]*entities.Event, bool) {
 	var events []*entities.Event
-	result := repo.db.Where("status IN ?", allowedStatus).Find(&events)
+	result := repo.db.Where(queryByStatusIn, allowedStatus).Offset(offset).Limit(pageSize).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false
@@ -376,4 +378,49 @@ func (repo *EventRepository) UpdateEventDiscount(discount *entities.Discount) {
 	if result.Error != nil {
 		panic(result.Error)
 	}
+}
+
+func (repo *EventRepository) FullTextSearch(query string, allowedStatus []enums.EventStatus, offset, pageSize int) []*entities.Event {
+	var events []*entities.Event
+
+	repo.db.Exec(`ALTER TABLE events ADD FULLTEXT INDEX idx_name_description (name, description)`)
+	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
+
+	result := repo.db.Model(&entities.Event{}).
+		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Where(queryByStatusIn, allowedStatus).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&events)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return events
+}
+
+func (repo *EventRepository) FindEventsByCategoryName(categories []string, offset, pageSize int, allowedStatus []enums.EventStatus) []*entities.Event {
+	var events []*entities.Event
+
+	result := repo.db.
+		Distinct("events.*").
+		Joins("JOIN event_categories ON events.id = event_categories.event_id").
+		Joins("JOIN categories ON categories.id = event_categories.category_id").
+		Where("categories.name IN ?", categories).
+		Where(queryByStatusIn, allowedStatus).
+		Limit(pageSize).
+		Offset(offset).
+		Find(&events)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+
+	return events
 }

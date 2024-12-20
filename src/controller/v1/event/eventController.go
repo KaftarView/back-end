@@ -40,8 +40,19 @@ func getTemplatePath(c *gin.Context, transKey string) string {
 }
 
 func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
+	type allEventsListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[allEventsListParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
-	events := eventController.eventService.GetEventsList(allowedStatus)
+	events := eventController.eventService.GetEventsList(allowedStatus, param.Page, param.PageSize)
 
 	controller.Response(c, 200, "", events)
 }
@@ -443,8 +454,19 @@ func (eventController *EventController) UnpublishEvent(c *gin.Context) {
 }
 
 func (eventController *EventController) ListPublicEvents(c *gin.Context) {
+	type publicEventsListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[publicEventsListParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
 	allowedStatus := []enums.EventStatus{enums.Published}
-	events := eventController.eventService.GetEventsList(allowedStatus)
+	events := eventController.eventService.GetEventsList(allowedStatus, param.Page, param.PageSize)
 
 	controller.Response(c, 200, "", events)
 }
@@ -465,6 +487,78 @@ func (ec *EventController) ListCategories(c *gin.Context) {
 	controller.Response(c, 200, "", categoryList)
 }
 
+func (eventController *EventController) SearchEventsForAdmin(c *gin.Context) {
+	type searchEventForAdminParams struct {
+		Query    string `form:"query"`
+		Page     int    `form:"page"`
+		PageSize int    `form:"pageSize"`
+	}
+	param := controller.Validated[searchEventForAdminParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	events := eventController.eventService.SearchEvents(param.Query, param.Page, param.PageSize, allowedStatus)
+
+	controller.Response(c, 200, "", events)
+}
+
 func (eventController *EventController) SearchPublicEvents(c *gin.Context) {
-	// some code here ...
+	type searchPublicEventParams struct {
+		Query    string `form:"query"`
+		Page     int    `form:"page"`
+		PageSize int    `form:"pageSize"`
+	}
+	param := controller.Validated[searchPublicEventParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
+	events := eventController.eventService.SearchEvents(param.Query, param.Page, param.PageSize, allowedStatus)
+
+	controller.Response(c, 200, "", events)
+}
+
+func (eventController *EventController) FilterEventsForAdmin(c *gin.Context) {
+	type filterEventForAdminParams struct {
+		Categories []string `form:"categories"`
+		Page       int      `form:"page"`
+		PageSize   int      `form:"pageSize"`
+	}
+	param := controller.Validated[filterEventForAdminParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
+	events := eventController.eventService.FilterEventsByCategories(param.Categories, param.Page, param.PageSize, allowedStatus)
+
+	controller.Response(c, 200, "", events)
+}
+
+func (eventController *EventController) FilterPublicEvents(c *gin.Context) {
+	type filterPublicEventParams struct {
+		Categories []string `form:"categories"`
+		Page       int      `form:"page"`
+		PageSize   int      `form:"pageSize"`
+	}
+	param := controller.Validated[filterPublicEventParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
+	events := eventController.eventService.FilterEventsByCategories(param.Categories, param.Page, param.PageSize, allowedStatus)
+
+	controller.Response(c, 200, "", events)
 }

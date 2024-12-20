@@ -38,8 +38,9 @@ func NewPodcastService(
 	}
 }
 
-func (podcastService *PodcastService) GetPodcastList() []dto.PodcastDetailsResponse {
-	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts()
+func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.PodcastDetailsResponse {
+	offset := (page - 1) * pageSize
+	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
 	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
 	for i, podcast := range podcasts {
 		banner := ""
@@ -239,8 +240,9 @@ func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint)
 	podcastService.podcastRepository.UnSubscribePodcast(podcast, user)
 }
 
-func (podcastService *PodcastService) GetEpisodesList() []dto.EpisodeDetailsResponse {
-	episodes, _ := podcastService.podcastRepository.FindAllEpisodes()
+func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
+	offset := (page - 1) * pageSize
+	episodes, _ := podcastService.podcastRepository.FindAllEpisodes(offset, pageSize)
 	episodesDetails := make([]dto.EpisodeDetailsResponse, len(episodes))
 	for i, episode := range episodes {
 		banner := ""
@@ -387,4 +389,62 @@ func (podcastService *PodcastService) DeleteEpisode(episodeID uint) {
 	if err := tx.Commit().Error; err != nil {
 		panic(err)
 	}
+}
+
+func (podcastService *PodcastService) SearchEvents(query string, page, pageSize int) []dto.PodcastDetailsResponse {
+	var podcasts []*entities.Podcast
+	offset := (page - 1) * pageSize
+	if query != "" {
+		podcasts = podcastService.podcastRepository.FullTextSearch(query, offset, pageSize)
+	} else {
+		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
+	}
+
+	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
+	for i, podcast := range podcasts {
+		banner := ""
+		if podcast.BannerPath != "" {
+			banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, podcast.BannerPath, 8*time.Hour)
+		}
+		publisher, _ := podcastService.userRepository.FindByUserID(podcast.PublisherID)
+		podcastsDetails[i] = dto.PodcastDetailsResponse{
+			ID:               podcast.ID,
+			CreatedAt:        podcast.CreatedAt,
+			Name:             podcast.Name,
+			Description:      podcast.Description,
+			Banner:           banner,
+			Publisher:        publisher.Name,
+			SubscribersCount: len(podcast.Subscribers),
+		}
+	}
+	return podcastsDetails
+}
+
+func (podcastService *PodcastService) FilterPodcastsByCategory(categories []string, page, pageSize int) []dto.PodcastDetailsResponse {
+	var podcasts []*entities.Podcast
+	offset := (page - 1) * pageSize
+	if len(categories) == 0 {
+		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
+	} else {
+		podcasts = podcastService.podcastRepository.FindPodcastsByCategoryName(categories, offset, pageSize)
+	}
+
+	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
+	for i, podcast := range podcasts {
+		banner := ""
+		if podcast.BannerPath != "" {
+			banner = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, podcast.BannerPath, 8*time.Hour)
+		}
+		publisher, _ := podcastService.userRepository.FindByUserID(podcast.PublisherID)
+		podcastsDetails[i] = dto.PodcastDetailsResponse{
+			ID:               podcast.ID,
+			CreatedAt:        podcast.CreatedAt,
+			Name:             podcast.Name,
+			Description:      podcast.Description,
+			Banner:           banner,
+			Publisher:        publisher.Name,
+			SubscribersCount: len(podcast.Subscribers),
+		}
+	}
+	return podcastsDetails
 }

@@ -122,6 +122,24 @@ func (newsController *NewsController) GetNewsList(c *gin.Context) {
 	controller.Response(c, 200, "", news)
 }
 
+func (newsController *NewsController) SearchNews(c *gin.Context) {
+	type searchNewsForAdminParams struct {
+		Query    string `form:"query"`
+		Page     int    `form:"page"`
+		PageSize int    `form:"pageSize"`
+	}
+	param := controller.Validated[searchNewsForAdminParams](c, &newsController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	news := newsController.newsService.SearchNews(param.Query, param.Page, param.PageSize)
+
+	controller.Response(c, 200, "", news)
+}
+
 func (newsController *NewsController) FilterNewsByCategory(c *gin.Context) {
 	type filterNewsByCategoryParams struct {
 		Categories []string `form:"categories"`

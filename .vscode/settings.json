@@ -5,6 +5,7 @@
     "AWSS",
     "Commentable",
     "Commentables",
+    "FULLTEXT",
     "galidator",
     "gocron",
     "godotenv",

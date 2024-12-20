@@ -43,6 +43,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
 	newsController := controller_v1_news.NewNewsController(di.Constants, newsService)
+	const (
+		searchEndpoint = "/search"
+		filterEndpoint = "/filter"
+	)
 
 	public := routerGroup.Group("/public")
 	{
@@ -51,7 +55,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		events := public.Group("/events")
 		{
 			events.GET("/published", eventController.ListPublicEvents)
-			events.GET("/search", eventController.SearchPublicEvents)
+			events.GET(searchEndpoint, eventController.SearchPublicEvents)
+			events.GET(filterEndpoint, eventController.FilterPublicEvents)
 
 			eventSubGroup := events.Group("/:eventID")
 			{
@@ -65,6 +70,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			podcasts.GET("", podcastController.GetPodcastsList)
 			podcasts.GET("/:podcastID", podcastController.GetPodcastDetails)
 			podcasts.GET("/:podcastID/episodes", podcastController.GetEpisodesList)
+			podcasts.GET(searchEndpoint, podcastController.SearchPodcast)
+			podcasts.GET(filterEndpoint, podcastController.FilterPodcastByCategory)
 		}
 
 		public.GET("comments/:postID", commentController.GetComments)
@@ -73,7 +80,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		{
 			news.GET("", newsController.GetNewsList)
 			news.GET("/:newsID", newsController.GetNewsDetails)
-			news.GET("/filter", newsController.FilterNewsByCategory)
+			news.GET(searchEndpoint, newsController.SearchNews)
+			news.GET(filterEndpoint, newsController.FilterNewsByCategory)
 		}
 	}
 

@@ -2,6 +2,7 @@ package repository_database
 
 import (
 	"first-project/src/entities"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -99,6 +100,7 @@ func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, 
 	var news []*entities.News
 
 	result := repo.db.
+		Distinct("news.*").
 		Joins("JOIN news_categories ON news.id = news_categories.news_id").
 		Joins("JOIN categories ON categories.id = news_categories.category_id").
 		Where("categories.name IN ?", categories).
@@ -133,4 +135,25 @@ func (repo *NewsRepository) FindNewsCategoriesByNews(news *entities.News) []enti
 		panic(err)
 	}
 	return news.Categories
+}
+
+func (repo *NewsRepository) FullTextSearch(query string, offset, pageSize int) []*entities.News {
+	var news []*entities.News
+
+	repo.db.Exec(`ALTER TABLE news ADD FULLTEXT INDEX idx_title_description_content_content2 (title, description, content, content2)`)
+	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
+
+	result := repo.db.Model(&entities.News{}).
+		Where("MATCH(title, description, content, content2) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&news)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return news
 }

@@ -53,6 +53,8 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			readGroup.GET("/event-details/:eventID", eventController.GetEventDetailsForAdmin)
 			readGroup.GET("/ticket-details/:eventID", eventController.GetAllTicketDetails)
 			readGroup.GET("/discount-details/:eventID", eventController.GetAllDiscountDetails)
+			readGroup.GET("/search", eventController.SearchEventsForAdmin)
+			readGroup.GET("/filter", eventController.FilterEventsForAdmin)
 
 			readGroup.GET("ticket/:ticketID", eventController.GetTicketDetails)
 			readGroup.GET("discount/:discountID", eventController.GetDiscountDetails)
