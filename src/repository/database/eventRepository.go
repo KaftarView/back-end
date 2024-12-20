@@ -3,6 +3,7 @@ package repository_database
 import (
 	"first-project/src/entities"
 	"first-project/src/enums"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -376,4 +377,26 @@ func (repo *EventRepository) UpdateEventDiscount(discount *entities.Discount) {
 	if result.Error != nil {
 		panic(result.Error)
 	}
+}
+
+func (repo *EventRepository) FullTextSearch(query string, allowedStatus []enums.EventStatus, offset, pageSize int) []*entities.Event {
+	var events []*entities.Event
+
+	repo.db.Exec(`ALTER TABLE events ADD FULLTEXT INDEX idx_name_description (name, description)`)
+	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
+
+	result := repo.db.Model(&entities.Event{}).
+		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Where("status IN ?", allowedStatus).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&events)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return events
 }

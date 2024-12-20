@@ -666,3 +666,29 @@ func (eventService *EventService) CreateEventMedia(eventID uint, mediaName strin
 	}
 	eventService.eventRepository.CreateNewMedia(mediaModel)
 }
+
+func (eventService *EventService) SearchEvents(query string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+	var events []*entities.Event
+	offset := (page - 1) * pageSize
+	if query != "" {
+		events = eventService.eventRepository.FullTextSearch(query, allowedStatus, offset, pageSize)
+	} else {
+		events, _ = eventService.eventRepository.FindEventsByStatus(allowedStatus)
+	}
+	eventsDetails := make([]dto.EventDetailsResponse, len(events))
+	for i, event := range events {
+		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+		eventsDetails[i] = dto.EventDetailsResponse{
+			ID:          event.ID,
+			CreatedAt:   event.CreatedAt,
+			Name:        event.Name,
+			Status:      event.Status.String(),
+			Description: event.Description,
+			FromDate:    event.FromDate,
+			ToDate:      event.ToDate,
+			VenueType:   event.VenueType.String(),
+			Banner:      banner,
+		}
+	}
+	return eventsDetails
+}
