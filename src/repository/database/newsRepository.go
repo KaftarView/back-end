@@ -2,7 +2,6 @@ package repository_database
 
 import (
 	"first-project/src/entities"
-	"first-project/src/enums"
 	"log"
 
 	"gorm.io/gorm"
@@ -18,10 +17,34 @@ func NewNewsRepository(db *gorm.DB) *NewsRepository {
 	}
 }
 
+func (repo *NewsRepository) FindNewsByTitle(name string) (entities.News, bool) {
+	var news entities.News
+	result := repo.db.First(&news, "title = ?", name)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return news, false
+		}
+		panic(result.Error)
+	}
+	return news, true
+}
+
+func (repo *NewsRepository) FindNewsByID(newsID uint) (entities.News, bool) {
+	var news entities.News
+	result := repo.db.First(&news, queryByID, newsID)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return news, false
+		}
+		panic(result.Error)
+	}
+	return news, true
+}
+
 func (repo *NewsRepository) CreateNews(news entities.News) entities.News {
-
 	err := repo.db.Create(&news).Error
-
 	if err != nil {
 		panic(err)
 	}
@@ -29,13 +52,13 @@ func (repo *NewsRepository) CreateNews(news entities.News) entities.News {
 }
 func (repo *NewsRepository) UpdateNewsBannerByNewsID(mediaPaths string, eventID uint) {
 	var news entities.News
-	if err := repo.db.Model(&news).Where("id = ?", eventID).Update("banner_paths", mediaPaths).Error; err != nil {
+	if err := repo.db.Model(&news).Where(queryByID, eventID).Update("banner_paths", mediaPaths).Error; err != nil {
 		panic(err)
 	}
 }
 func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	var news entities.News
-	query := repo.db.Where("id = ?", id)
+	query := repo.db.Where(queryByID, id)
 	err := query.First(&news).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -47,79 +70,51 @@ func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	return &news, true
 }
 
-func (repo *NewsRepository) UpdateNews(newsID uint, title, description, content, content2 string, categories []entities.Category, author string) (*entities.News, error) {
-	var news entities.News
-	query := repo.db.Where("id = ?", newsID).First(&news)
-	if query.Error != nil {
-		if query.Error == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
-		return nil, query.Error
-	}
-
-	news.Title = title
-	news.Description = description
-	news.Content = content
-	news.Content2 = content2
-	news.Categories = categories
-	news.Author = author
-
+func (repo *NewsRepository) UpdateNews(news entities.News) {
 	err := repo.db.Save(&news).Error
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &news, nil
 }
 
-func (repo *NewsRepository) DeleteNews(id uint) {
-	query := repo.db.Where("id = ?", id)
-	err := query.Delete(&entities.News{}).Error
+func (repo *NewsRepository) DeleteNews(newsID uint) {
+	err := repo.db.Unscoped().Delete(&entities.News{}, newsID).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *NewsRepository) GetAllNews(categories []string, limit int, offset int) ([]entities.News, error) {
+func (repo *NewsRepository) FindAllNews(offset, pageSize int) ([]entities.News, bool) {
 	var news []entities.News
-	if len(categories) == 0 {
-		err := repo.db.Limit(limit).
-			Offset(offset).
-			Find(&news).Error
-		if err != nil {
-			return nil, err
+	result := repo.db.Offset(offset).Limit(pageSize).Find(&news)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return news, false
 		}
-		return news, nil
+		panic(result.Error)
 	}
-	err := repo.db.Joins("JOIN news_categories ON news.id = news_categories.news_id").
+	return news, true
+}
+
+func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, pageSize int) []entities.News {
+	var news []entities.News
+
+	result := repo.db.
+		Joins("JOIN news_categories ON news.id = news_categories.news_id").
 		Joins("JOIN categories ON categories.id = news_categories.category_id").
 		Where("categories.name IN ?", categories).
-		Limit(limit).
+		Limit(pageSize).
 		Offset(offset).
-		Find(&news).Error
-	if err != nil {
-		return nil, err
-	}
-	log.Print(categories)
-	return news, nil
-}
+		Find(&news)
 
-func (repo *NewsRepository) GetTopKNews(limit int, categories []enums.CategoryType) ([]entities.News, error) {
-	var news []entities.News
-	query := repo.db.Order("published_at DESC").Limit(limit)
-	if len(categories) > 0 {
-		query = query.Where("category IN ?", categories)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []entities.News{}
+		}
+		panic(result.Error)
 	}
-	err := query.Find(&news).Error
-	if err != nil {
-		return nil, err
-	}
-	return news, nil
-}
 
-func (repo *NewsRepository) FindNewsCategories(news entities.News) entities.News {
-	if err := repo.db.Model(&news).Association("Categories").Find(&news.Categories); err != nil {
-		panic(err)
-	}
 	return news
 }
 
@@ -133,4 +128,11 @@ func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []enti
 		categories = append(categories, category)
 	}
 	return categories
+}
+
+func (repo *NewsRepository) FindNewsCategoriesByNews(news entities.News) []entities.Category {
+	if err := repo.db.Model(&news).Association("Categories").Find(&news.Categories); err != nil {
+		panic(err)
+	}
+	return news.Categories
 }

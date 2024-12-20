@@ -9,9 +9,11 @@ import (
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
+	application_news "first-project/src/application/news"
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_general "first-project/src/controller/v1/general"
+	controller_v1_news "first-project/src/controller/v1/news"
 	controller_v1_private "first-project/src/controller/v1/private"
 	repository_database "first-project/src/repository/database"
 	repository_cache "first-project/src/repository/redis"
@@ -22,6 +24,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	eventRepository := repository_database.NewEventRepository(db)
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
+	newsRepository := repository_database.NewNewsRepository(db)
 	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
 
 	jwtService := application_jwt.NewJWTToken()
@@ -32,12 +35,14 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
+	newsService := application_news.NewNewsService(di.Constants, awsService, commentRepository, newsRepository, userRepository)
 
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, emailService)
 	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
 	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
+	newsController := controller_v1_news.NewNewsController(di.Constants, newsService)
 
 	public := routerGroup.Group("/public")
 	{
@@ -63,6 +68,13 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		}
 
 		public.GET("comments/:postID", commentController.GetComments)
+
+		news := public.Group("/news")
+		{
+			news.GET("", newsController.GetNewsList)
+			news.GET("/:newsID", newsController.GetNewsDetails)
+			news.GET("/filter", newsController.FilterNewsByCategory)
+		}
 	}
 
 	auth := routerGroup.Group("/auth")

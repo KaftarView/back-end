@@ -34,7 +34,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
-	newsService := application_news.NewNewsService(newsRepository)
+	newsService := application_news.NewNewsService(di.Constants, awsService, commentRepository, newsRepository, userRepository)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 
@@ -42,7 +42,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	roleController := controller_v1_private.NewRoleController(di.Constants, userService)
-	newsController := controller_v1_news.NewNewsController(di.Constants, newsService, awsService)
+	newsController := controller_v1_news.NewNewsController(di.Constants, newsService)
 
 	events := routerGroup.Group("/events")
 	{
@@ -182,16 +182,10 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	news.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageNews}))
 	{
 		news.POST("", newsController.CreateNews)
-		news.GET("", newsController.GetNewsList)
-		news.GET("/topK", newsController.GetTopKNews)
-
 		newsSubGroup := news.Group("/:newsID")
 		{
-			newsSubGroup.GET("", newsController.GetNewsByID)
 			newsSubGroup.PUT("", newsController.UpdateNews)
 			newsSubGroup.DELETE("", newsController.DeleteNews)
 		}
-
-		news.GET("/filter", newsController.GetNewsByCategory)
 	}
 }

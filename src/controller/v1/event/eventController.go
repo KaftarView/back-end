@@ -114,7 +114,7 @@ func (eventController *EventController) CreateEvent(c *gin.Context) {
 		VenueType   string                `form:"venueType" validate:"required"`
 		Location    string                `form:"location"`
 		Banner      *multipart.FileHeader `form:"banner"`
-		Categories  []string              `form:"category"`
+		Categories  []string              `form:"categories"`
 	}
 	param := controller.Validated[createEventParams](c, &eventController.constants.Context)
 	eventController.eventService.ValidateEventCreationDetails(
@@ -315,7 +315,7 @@ func (eventController *EventController) UpdateEvent(c *gin.Context) {
 		VenueType   *string               `form:"eventType" validate:"omitempty"`
 		Location    *string               `form:"address"`
 		Banner      *multipart.FileHeader `form:"banner"`
-		Categories  *[]string             `form:"category"`
+		Categories  *[]string             `form:"categories"`
 		EventID     uint                  `uri:"eventID" binding:"required"`
 	}
 

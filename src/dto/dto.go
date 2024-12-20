@@ -171,3 +171,37 @@ type PermissionDetailsResponse struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+
+type RequestNewsDetails struct {
+	Title       string                `json:"title"`
+	Description string                `json:"description"`
+	Content     string                `json:"content"`
+	Content2    string                `json:"content2"`
+	Banner      *multipart.FileHeader `json:"banner"`
+	Banner2     *multipart.FileHeader `json:"banner2"`
+	Categories  []string              `json:"categories"`
+	AuthorID    uint                  `json:"authorID"`
+}
+
+type RequestUpdateNewsDetails struct {
+	ID          uint                  `json:"newsID"`
+	Title       *string               `json:"title"`
+	Description *string               `json:"description"`
+	Content     *string               `json:"content"`
+	Content2    *string               `json:"content2"`
+	Banner      *multipart.FileHeader `json:"banner"`
+	Banner2     *multipart.FileHeader `json:"banner2"`
+	Categories  *[]string             `json:"categories"`
+}
+
+type NewsDetailsResponse struct {
+	ID          uint     `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Content     string   `json:"content"`
+	Content2    string   `json:"content2"`
+	Banner      string   `json:"banner"`
+	Banner2     string   `json:"banner2"`
+	Categories  []string `json:"categories"`
+	Author      string   `json:"author"`
+}
