@@ -267,9 +267,9 @@ func (repo *EventRepository) CreateOrganizerForEventID(eventID uint, name, email
 	return organizer
 }
 
-func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus) ([]*entities.Event, bool) {
+func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatus, offset, pageSize int) ([]*entities.Event, bool) {
 	var events []*entities.Event
-	result := repo.db.Where(queryByStatusIn, allowedStatus).Find(&events)
+	result := repo.db.Where(queryByStatusIn, allowedStatus).Offset(offset).Limit(pageSize).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false

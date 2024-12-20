@@ -38,8 +38,9 @@ func NewPodcastService(
 	}
 }
 
-func (podcastService *PodcastService) GetPodcastList() []dto.PodcastDetailsResponse {
-	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts()
+func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.PodcastDetailsResponse {
+	offset := (page - 1) * pageSize
+	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
 	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
 	for i, podcast := range podcasts {
 		banner := ""
@@ -239,8 +240,9 @@ func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint)
 	podcastService.podcastRepository.UnSubscribePodcast(podcast, user)
 }
 
-func (podcastService *PodcastService) GetEpisodesList() []dto.EpisodeDetailsResponse {
-	episodes, _ := podcastService.podcastRepository.FindAllEpisodes()
+func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
+	offset := (page - 1) * pageSize
+	episodes, _ := podcastService.podcastRepository.FindAllEpisodes(offset, pageSize)
 	episodesDetails := make([]dto.EpisodeDetailsResponse, len(episodes))
 	for i, episode := range episodes {
 		banner := ""
@@ -395,7 +397,7 @@ func (podcastService *PodcastService) SearchEvents(query string, page, pageSize 
 	if query != "" {
 		podcasts = podcastService.podcastRepository.FullTextSearch(query, offset, pageSize)
 	} else {
-		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts()
+		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
 	}
 
 	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
@@ -422,7 +424,7 @@ func (podcastService *PodcastService) FilterPodcastsByCategory(categories []stri
 	var podcasts []*entities.Podcast
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {
-		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts()
+		podcasts, _ = podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
 	} else {
 		podcasts = podcastService.podcastRepository.FindPodcastsByCategoryName(categories, offset, pageSize)
 	}

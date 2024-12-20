@@ -40,8 +40,19 @@ func getTemplatePath(c *gin.Context, transKey string) string {
 }
 
 func (eventController *EventController) GetEventsListForAdmin(c *gin.Context) {
+	type allEventsListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[allEventsListParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Draft, enums.Completed, enums.Cancelled}
-	events := eventController.eventService.GetEventsList(allowedStatus)
+	events := eventController.eventService.GetEventsList(allowedStatus, param.Page, param.PageSize)
 
 	controller.Response(c, 200, "", events)
 }
@@ -443,8 +454,19 @@ func (eventController *EventController) UnpublishEvent(c *gin.Context) {
 }
 
 func (eventController *EventController) ListPublicEvents(c *gin.Context) {
+	type publicEventsListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[publicEventsListParams](c, &eventController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
 	allowedStatus := []enums.EventStatus{enums.Published}
-	events := eventController.eventService.GetEventsList(allowedStatus)
+	events := eventController.eventService.GetEventsList(allowedStatus, param.Page, param.PageSize)
 
 	controller.Response(c, 200, "", events)
 }

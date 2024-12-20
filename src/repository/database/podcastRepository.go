@@ -53,10 +53,12 @@ func (repo *PodcastRepository) FindCategoriesByNames(categoryNames []string) []e
 	return categories
 }
 
-func (repo *PodcastRepository) FindAllPodcasts() ([]*entities.Podcast, bool) {
+func (repo *PodcastRepository) FindAllPodcasts(offset, pageSize int) ([]*entities.Podcast, bool) {
 	var podcasts []*entities.Podcast
 	result := repo.db.
 		Preload("Subscribers").
+		Offset(offset).
+		Limit(pageSize).
 		Find(&podcasts)
 
 	if result.Error != nil {
@@ -170,9 +172,9 @@ func (repo *PodcastRepository) FindPodcastEpisodeByName(name string, podcastID u
 	return &episode, true
 }
 
-func (repo *PodcastRepository) FindAllEpisodes() ([]*entities.Episode, bool) {
+func (repo *PodcastRepository) FindAllEpisodes(offset, pageSize int) ([]*entities.Episode, bool) {
 	var podcasts []*entities.Episode
-	result := repo.db.Find(&podcasts)
+	result := repo.db.Offset(offset).Limit(pageSize).Find(&podcasts)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

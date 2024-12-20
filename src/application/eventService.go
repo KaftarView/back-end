@@ -362,8 +362,9 @@ func (eventService *EventService) GetEventByID(eventID uint) *entities.Event {
 	return event
 }
 
-func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
-	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus)
+func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus, page, pageSize int) []dto.EventDetailsResponse {
+	offset := (page - 1) * pageSize
+	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus, offset, pageSize)
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
 	for i, event := range events {
 		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
@@ -663,7 +664,7 @@ func (eventService *EventService) SearchEvents(query string, page, pageSize int,
 	if query != "" {
 		events = eventService.eventRepository.FullTextSearch(query, allowedStatus, offset, pageSize)
 	} else {
-		events, _ = eventService.eventRepository.FindEventsByStatus(allowedStatus)
+		events, _ = eventService.eventRepository.FindEventsByStatus(allowedStatus, offset, pageSize)
 	}
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
 	for i, event := range events {
@@ -687,7 +688,7 @@ func (eventService *EventService) FilterEventsByCategories(categories []string, 
 	var eventsList []*entities.Event
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {
-		eventsList, _ = eventService.eventRepository.FindEventsByStatus(allowedStatus)
+		eventsList, _ = eventService.eventRepository.FindEventsByStatus(allowedStatus, offset, pageSize)
 	} else {
 		eventsList = eventService.eventRepository.FindEventsByCategoryName(categories, offset, pageSize, allowedStatus)
 	}

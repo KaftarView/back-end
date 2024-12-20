@@ -25,7 +25,18 @@ func NewPodcastController(
 }
 
 func (podcastController *PodcastController) GetPodcastsList(c *gin.Context) {
-	podcasts := podcastController.podcastService.GetPodcastList()
+	type podcastListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[podcastListParams](c, &podcastController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	podcasts := podcastController.podcastService.GetPodcastList(param.Page, param.PageSize)
 	controller.Response(c, 200, "", podcasts)
 }
 
@@ -109,7 +120,18 @@ func (podcastController *PodcastController) UnSubscribePodcast(c *gin.Context) {
 }
 
 func (podcastController *PodcastController) GetEpisodesList(c *gin.Context) {
-	episodes := podcastController.podcastService.GetEpisodesList()
+	type episodeListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[episodeListParams](c, &podcastController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	episodes := podcastController.podcastService.GetEpisodesList(param.Page, param.PageSize)
 	controller.Response(c, 200, "", episodes)
 }
 
