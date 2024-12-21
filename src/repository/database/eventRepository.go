@@ -53,7 +53,7 @@ func (repo *EventRepository) FindDuplicatedEvent(name, venueType, location strin
 }
 
 func (repo *EventRepository) CreateNewEvent(event *entities.Event) *entities.Event {
-	result := repo.db.Create(&event)
+	result := repo.db.Create(event)
 	if result.Error != nil {
 		panic(result.Error)
 	}

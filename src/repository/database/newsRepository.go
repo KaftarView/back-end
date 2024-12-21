@@ -44,18 +44,13 @@ func (repo *NewsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
 }
 
 func (repo *NewsRepository) CreateNews(news *entities.News) *entities.News {
-	err := repo.db.Create(&news).Error
+	err := repo.db.Create(news).Error
 	if err != nil {
 		panic(err)
 	}
 	return news
 }
-func (repo *NewsRepository) UpdateNewsBannerByNewsID(mediaPaths string, eventID uint) {
-	var news entities.News
-	if err := repo.db.Model(&news).Where(queryByID, eventID).Update("banner_paths", mediaPaths).Error; err != nil {
-		panic(err)
-	}
-}
+
 func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	var news entities.News
 	query := repo.db.Where(queryByID, id)

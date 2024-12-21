@@ -8,4 +8,6 @@ type Journal struct {
 	Description     string `gorm:"type:text"`
 	BannerPath      string `gorm:"type:text"`
 	JournalFilePath string `gorm:"type:text"`
+	AuthorID        uint   `gorm:"not null;index"`
+	Author          User   `gorm:"foreignKey:AuthorID"`
 }
