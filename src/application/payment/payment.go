@@ -2,9 +2,9 @@ package application_payment
 
 import (
 	"context"
-	"first-project/src/application/payment/zarinpal"
 	"first-project/src/bootstrap"
 	"first-project/src/exceptions"
+	"first-project/src/pkg/zarinpal"
 )
 
 type PaymentService struct {

@@ -10,9 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
-	zarinpalerror "first-project/src/application/payment/zarinpal/errors"
+	zarinpalerror "first-project/src/pkg/zarinpal/errors"
 
-	config "first-project/src/application/payment/zarinpal/config"
+	config "first-project/src/pkg/zarinpal/config"
 )
 
 func (z *ZarinPalService) Verify(ctx context.Context, authority string, amount int, orderID string) (*VerifyResponseData, error) {

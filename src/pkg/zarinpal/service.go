@@ -3,7 +3,7 @@ package zarinpal
 import (
 	"fmt"
 
-	config "first-project/src/application/payment/zarinpal/config"
+	config "first-project/src/pkg/zarinpal/config"
 
 	"go.uber.org/zap"
 )
