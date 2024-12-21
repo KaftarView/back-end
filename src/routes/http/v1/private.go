@@ -8,6 +8,7 @@ import (
 	application_news "first-project/src/application/news"
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
+	controller_v1_journal "first-project/src/controller/v1/journal"
 	controller_v1_news "first-project/src/controller/v1/news"
 	controller_v1_private "first-project/src/controller/v1/private"
 	"first-project/src/enums"
@@ -25,6 +26,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
 	newsRepository := repository_database.NewNewsRepository(db)
+	journalRepository := repository_database.NewJournalRepository(db)
 
 	jwtService := application_jwt.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
@@ -35,6 +37,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	newsService := application_news.NewNewsService(di.Constants, awsService, commentRepository, newsRepository, userRepository)
+	journalService := application.NewJournalService(di.Constants, awsService, journalRepository)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 
@@ -43,6 +46,7 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	roleController := controller_v1_private.NewRoleController(di.Constants, userService)
 	newsController := controller_v1_news.NewNewsController(di.Constants, newsService)
+	journalController := controller_v1_journal.NewJournalController(di.Constants, journalService)
 
 	events := routerGroup.Group("/events")
 	{
@@ -188,6 +192,17 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		{
 			newsSubGroup.PUT("", newsController.UpdateNews)
 			newsSubGroup.DELETE("", newsController.DeleteNews)
+		}
+	}
+
+	journals := routerGroup.Group("/journal")
+	journals.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageJournal}))
+	{
+		journals.POST("", journalController.CreateJournal)
+		journalSubGroup := journals.Group("/:journalID")
+		{
+			journalSubGroup.PUT("", journalController.UpdateJournal)
+			journalSubGroup.DELETE("", journalController.DeleteJournal)
 		}
 	}
 }
