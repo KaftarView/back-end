@@ -16,15 +16,6 @@ func NewPaymentController(paymentService *application_payment.PaymentService) *P
 }
 
 func (pc *PaymentController) ZarinPayTest(c *gin.Context) {
-	res, err := pc.paymentService.ZarinPay(100000, "http://localhost:8080/v1/events/event-details/14", "Dr", "alos@gmail.com")
-	if err != nil {
-		Response(c, 400, "Fail", nil)
-	} else {
-		Response(c, http.StatusOK, "success", res)
-	}
-
-}
-
-func (pc *PaymentController) Verify(c *gin.Context) {
-	Response(c, http.StatusOK, "success", nil)
+	res := pc.paymentService.ZarinPay(100000, "http://localhost:8080/v1/events/event-details/14", "Dr", "alos@gmail.com", "09120000000")
+	Response(c, http.StatusOK, "success", res)
 }

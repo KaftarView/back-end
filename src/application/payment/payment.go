@@ -17,18 +17,19 @@ func NewPaymentService(PayInfo *bootstrap.PayInfo) *PaymentService {
 	}
 }
 
-func (ps *PaymentService) ZarinPay(amount uint, callBackUrl string, description string, email string) (string, error) {
+func (ps *PaymentService) ZarinPay(amount uint, callBackUrl string, description string, email string, mobile string) string {
 	var merch = ps.PayInfo.ZarinMerchantID
 	service, err := zarinpal.NewService(merch)
 	if err != nil {
-		return "", exceptions.PaymentServerError{Message: "Failed to initialize payment service"}
+		var PaymentServerError = exceptions.NewPaymentServerError()
+		panic(PaymentServerError)
 	}
 
 	request := &zarinpal.PaymentRequestDto{
 		Amount:      int(amount),
 		Description: description,
 		Email:       email,
-		Mobile:      "09120000000",
+		Mobile:      mobile,
 		Currency:    "IRR",
 		CallbackURL: callBackUrl,
 	}
@@ -36,8 +37,9 @@ func (ps *PaymentService) ZarinPay(amount uint, callBackUrl string, description 
 	ctx := context.Background()
 	paymentURL, err := service.Request(ctx, request)
 	if err != nil {
-		return "", exceptions.PaymentError{Message: "Unknown error occurred during payment", Code: 500}
+		var PaymentError = exceptions.NewPaymentError()
+		panic(PaymentError)
 	}
 
-	return paymentURL, nil
+	return paymentURL
 }

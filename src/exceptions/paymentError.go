@@ -4,11 +4,14 @@ import "fmt"
 
 type PaymentError struct {
 	Message string
-	Code    int
+}
+
+func NewPaymentError() PaymentError {
+	return PaymentError{Message: "Unknown error occurred during payment processing"}
 }
 
 func (e PaymentError) Error() string {
-	return fmt.Sprintf("Payment Error - Code: %d, Message: %s", e.Code, e.Message)
+	return e.Message
 }
 
 type InvalidPaymentRequestError struct {
@@ -24,14 +27,10 @@ type PaymentServerError struct {
 	Message string
 }
 
+func NewPaymentServerError() PaymentServerError {
+	return PaymentServerError{Message: "Failed to initialize payment service"}
+}
+
 func (e PaymentServerError) Error() string {
 	return fmt.Sprintf("Payment Server Error - Message: %s", e.Message)
-}
-
-type UnhandledPaymentError struct {
-	Message string
-}
-
-func (e UnhandledPaymentError) Error() string {
-	return fmt.Sprintf("Erro in Payment %s", e.Message)
 }

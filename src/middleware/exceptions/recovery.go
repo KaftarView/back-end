@@ -61,8 +61,6 @@ func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err erro
 		handleInvalidPaymentRequest(c, recovery.constants.Translator)
 	} else if _, ok := err.(exceptions.PaymentServerError); ok {
 		handlePaymentServerError(c, recovery.constants.Translator)
-	} else if _, ok := err.(exceptions.UnhandledPaymentError); ok {
-		unhandledPaymentError(c, recovery.constants.Translator)
 	} else {
 		unhandledErrors(c, err, recovery.constants.Translator)
 	}
@@ -176,11 +174,5 @@ func handleInvalidPaymentRequest(c *gin.Context, transKey string) {
 func handlePaymentServerError(c *gin.Context, transKey string) {
 	trans := controller.GetTranslator(c, transKey)
 	message, _ := trans.T("errors.paymentServerError")
-	controller.Response(c, http.StatusInternalServerError, message, nil)
-}
-
-func unhandledPaymentError(c *gin.Context, transKey string) {
-	trans := controller.GetTranslator(c, transKey)
-	message, _ := trans.T("errors.unhandledPaymentError")
 	controller.Response(c, http.StatusInternalServerError, message, nil)
 }
