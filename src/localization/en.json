@@ -71,6 +71,9 @@
         "deletePodcastEpisode": "Podcast episode deleted successfully.",
         "subscribePodcast": "Successfully subscribed to podcast.",
         "unSubscribePodcast": "Successfully unsubscribed from podcast.",
-        "deletePodcast": "Podcast deleted successfully."
+        "deletePodcast": "Podcast deleted successfully.",
+        "createJournal": "Journal created successfully.",
+        "updateJournal": "Journal created successfully.",
+        "deleteJournal" :"Journal deleted successfully."
     }
 }

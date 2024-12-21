@@ -174,7 +174,7 @@ func (newsService *NewsService) GetNewsDetails(newsID uint) dto.NewsDetailsRespo
 		Title:       news.Title,
 		Description: news.Description,
 		Content:     news.Content,
-		Content2:    news.Content,
+		Content2:    news.Content2,
 		Banner:      banner1URL,
 		Banner2:     banner2URL,
 		Categories:  categoryNames,

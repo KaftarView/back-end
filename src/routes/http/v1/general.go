@@ -13,6 +13,7 @@ import (
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_general "first-project/src/controller/v1/general"
+	controller_v1_journal "first-project/src/controller/v1/journal"
 	controller_v1_news "first-project/src/controller/v1/news"
 	controller_v1_private "first-project/src/controller/v1/private"
 	repository_database "first-project/src/repository/database"
@@ -25,6 +26,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
 	newsRepository := repository_database.NewNewsRepository(db)
+	journalRepository := repository_database.NewJournalRepository(db)
 	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
 
 	jwtService := application_jwt.NewJWTToken()
@@ -36,6 +38,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	newsService := application_news.NewNewsService(di.Constants, awsService, commentRepository, newsRepository, userRepository)
+	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, emailService)
 	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
@@ -43,6 +46,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
 	newsController := controller_v1_news.NewNewsController(di.Constants, newsService)
+	journalController := controller_v1_journal.NewJournalController(di.Constants, journalService)
+
 	const (
 		searchEndpoint = "/search"
 		filterEndpoint = "/filter"
@@ -82,6 +87,12 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			news.GET("/:newsID", newsController.GetNewsDetails)
 			news.GET(searchEndpoint, newsController.SearchNews)
 			news.GET(filterEndpoint, newsController.FilterNewsByCategory)
+		}
+
+		journals := public.Group("/journals")
+		{
+			journals.GET("", journalController.GetJournalsList)
+			journals.GET(searchEndpoint, journalController.SearchJournals)
 		}
 	}
 

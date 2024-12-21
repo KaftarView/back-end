@@ -10,7 +10,7 @@ const (
 	EditEvent
 	PublishEvent
 	ManageNews
-	ManageBlogs
+	ManageJournal
 	ManagePodcasts
 	ModerateComments
 	ViewReports
@@ -33,8 +33,8 @@ func (p PermissionType) String() string {
 		return "PublishEvent"
 	case ManageNews:
 		return "ManageNews"
-	case ManageBlogs:
-		return "ManageBlogs"
+	case ManageJournal:
+		return "ManageJournal"
 	case ManagePodcasts:
 		return "ManagePodcasts"
 	case ModerateComments:
@@ -56,7 +56,7 @@ func GetAllPermissionTypes() []PermissionType {
 		EditEvent,
 		PublishEvent,
 		ManageNews,
-		ManageBlogs,
+		ManageJournal,
 		ModerateComments,
 		ViewReports,
 		All,
