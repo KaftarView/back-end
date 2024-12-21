@@ -61,7 +61,15 @@ func (journalController *JournalController) UpdateJournal(c *gin.Context) {
 }
 
 func (journalController *JournalController) DeleteJournal(c *gin.Context) {
-	// some code here ...
+	type deleteJournalParams struct {
+		JournalID uint `uri:"journalID" validate:"required"`
+	}
+	param := controller.Validated[deleteJournalParams](c, &journalController.constants.Context)
+	journalController.journalService.DeleteJournal(param.JournalID)
+
+	trans := controller.GetTranslator(c, journalController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.deleteJournal")
+	controller.Response(c, 200, message, nil)
 }
 
 func (journalController *JournalController) SearchJournals(c *gin.Context) {

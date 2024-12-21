@@ -99,3 +99,21 @@ func (journalService *JournalService) UpdateJournal(journalID uint, name, descri
 
 	journalService.journalRepository.UpdateJournal(journal)
 }
+
+func (journalService *JournalService) DeleteJournal(journalID uint) {
+	var notFoundError exceptions.NotFoundError
+	journal, journalExist := journalService.journalRepository.FindJournalByID(journalID)
+	if !journalExist {
+		notFoundError.ErrorField = journalService.constants.ErrorField.Journal
+		panic(notFoundError)
+	}
+
+	if journal.BannerPath != "" {
+		journalService.awsS3Service.DeleteObject(enums.BannersBucket, journal.BannerPath)
+	}
+	if journal.JournalFilePath != "" {
+		journalService.awsS3Service.DeleteObject(enums.SessionsBucket, journal.JournalFilePath)
+	}
+
+	journalService.journalRepository.DeleteJournal(journalID)
+}

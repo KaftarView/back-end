@@ -54,3 +54,10 @@ func (repo *JournalRepository) UpdateJournal(journal *entities.Journal) {
 		panic(err)
 	}
 }
+
+func (repo *JournalRepository) DeleteJournal(journalID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Journal{}, journalID).Error
+	if err != nil {
+		panic(err)
+	}
+}
