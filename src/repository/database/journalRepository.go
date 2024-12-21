@@ -40,6 +40,19 @@ func (repo *JournalRepository) FindJournalByName(name string) (*entities.Journal
 	return &journal, true
 }
 
+func (repo *JournalRepository) FindAllJournals(offset, pageSize int) ([]*entities.Journal, bool) {
+	var journals []*entities.Journal
+	result := repo.db.Offset(offset).Limit(pageSize).Find(&journals)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return journals, true
+}
+
 func (repo *JournalRepository) CreateJournal(journal *entities.Journal) *entities.Journal {
 	err := repo.db.Create(journal).Error
 	if err != nil {

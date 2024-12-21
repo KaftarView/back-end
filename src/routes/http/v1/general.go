@@ -38,7 +38,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
 	newsService := application_news.NewNewsService(di.Constants, awsService, commentRepository, newsRepository, userRepository)
-	journalService := application.NewJournalService(di.Constants, awsService, journalRepository)
+	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
 	eventController := controller_v1_event.NewEventController(di.Constants, eventService, emailService)
 	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)

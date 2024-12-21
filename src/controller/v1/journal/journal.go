@@ -25,7 +25,20 @@ func NewJournalController(
 }
 
 func (journalController *JournalController) GetJournalsList(c *gin.Context) {
-	// some code here ...
+	type getJournalsListParams struct {
+		Page     int `form:"page"`
+		PageSize int `form:"pageSize"`
+	}
+	param := controller.Validated[getJournalsListParams](c, &journalController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	journals := journalController.journalService.GetJournalsList(param.Page, param.PageSize)
+
+	controller.Response(c, 200, "", journals)
 }
 
 func (journalController *JournalController) CreateJournal(c *gin.Context) {

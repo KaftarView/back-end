@@ -205,3 +205,12 @@ type NewsDetailsResponse struct {
 	Categories  []string `json:"categories"`
 	Author      string   `json:"author"`
 }
+
+type JournalsListResponse struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Banner      string `json:"banner"`
+	JournalFile string `json:"journal_file"`
+	Author      string `json:"author"`
+}

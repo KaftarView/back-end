@@ -3,30 +3,63 @@ package application
 import (
 	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
+	"first-project/src/dto"
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
 	"fmt"
 	"mime/multipart"
+	"time"
 )
 
 type JournalService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
+	userRepository    *repository_database.UserRepository
 	journalRepository *repository_database.JournalRepository
 }
 
 func NewJournalService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
+	userRepository *repository_database.UserRepository,
 	journalRepository *repository_database.JournalRepository,
 ) *JournalService {
 	return &JournalService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
+		userRepository:    userRepository,
 		journalRepository: journalRepository,
 	}
+}
+
+func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.JournalsListResponse {
+	offset := (page - 1) * pageSize
+	journalsList, _ := journalService.journalRepository.FindAllJournals(offset, pageSize)
+
+	journalsDetails := make([]dto.JournalsListResponse, len(journalsList))
+	for i, journal := range journalsList {
+		banner := ""
+		if journal.BannerPath != "" {
+			banner = journalService.awsS3Service.GetPresignedURL(enums.BannersBucket, journal.BannerPath, 8*time.Hour)
+		}
+		file := ""
+		if journal.JournalFilePath != "" {
+			banner = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
+		}
+		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
+		journalsDetails[i] = dto.JournalsListResponse{
+			ID:          journal.ID,
+			Name:        journal.Name,
+			Description: journal.Description,
+			Banner:      banner,
+			JournalFile: file,
+			Author:      author.Name,
+		}
+	}
+
+	return journalsDetails
 }
 
 func (journalService *JournalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
