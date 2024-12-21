@@ -16,6 +16,18 @@ func NewJournalRepository(db *gorm.DB) *JournalRepository {
 	}
 }
 
+func (repo *JournalRepository) FindJournalByID(journalID uint) (*entities.Journal, bool) {
+	var journal entities.Journal
+	result := repo.db.First(&journal, "id = ?", journalID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &journal, true
+}
+
 func (repo *JournalRepository) FindJournalByName(name string) (*entities.Journal, bool) {
 	var journal entities.Journal
 	result := repo.db.First(&journal, "name = ?", name)

@@ -45,7 +45,19 @@ func (journalController *JournalController) CreateJournal(c *gin.Context) {
 }
 
 func (journalController *JournalController) UpdateJournal(c *gin.Context) {
-	// some code here ...
+	type updateJournalParams struct {
+		Name        *string               `form:"name" validate:"omitempty,max=50"`
+		Description *string               `form:"description"`
+		Banner      *multipart.FileHeader `form:"banner"`
+		JournalFile *multipart.FileHeader `form:"file"`
+		JournalID   uint                  `uri:"journalID" validate:"required"`
+	}
+	param := controller.Validated[updateJournalParams](c, &journalController.constants.Context)
+	journalController.journalService.UpdateJournal(param.JournalID, param.Name, param.Description, param.Banner, param.JournalFile)
+
+	trans := controller.GetTranslator(c, journalController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateJournal")
+	controller.Response(c, 200, message, nil)
 }
 
 func (journalController *JournalController) DeleteJournal(c *gin.Context) {
