@@ -52,6 +52,7 @@ func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.
 		journalsDetails[i] = dto.JournalsListResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
+			CreatedAt:   journal.CreatedAt,
 			Description: journal.Description,
 			Banner:      banner,
 			JournalFile: file,
@@ -174,6 +175,7 @@ func (journalService *JournalService) SearchJournals(query string, page, pageSiz
 		journalsDetails[i] = dto.JournalsListResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
+			CreatedAt:   journal.CreatedAt,
 			Description: journal.Description,
 			Banner:      banner,
 			JournalFile: file,

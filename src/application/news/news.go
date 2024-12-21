@@ -172,6 +172,7 @@ func (newsService *NewsService) GetNewsDetails(newsID uint) dto.NewsDetailsRespo
 	newsDetails := dto.NewsDetailsResponse{
 		ID:          newsID,
 		Title:       news.Title,
+		CreatedAt:   news.CreatedAt,
 		Description: news.Description,
 		Content:     news.Content,
 		Content2:    news.Content2,
@@ -206,6 +207,7 @@ func (newsService *NewsService) GetNewsList(page, pageSize int) []dto.NewsDetail
 		newsDetails[i] = dto.NewsDetailsResponse{
 			ID:          news.ID,
 			Title:       news.Title,
+			CreatedAt:   news.CreatedAt,
 			Description: news.Description,
 			Banner:      banner,
 			Categories:  categoryNames,
@@ -243,6 +245,7 @@ func (newsService *NewsService) SearchNews(query string, page, pageSize int) []d
 		newsDetails[i] = dto.NewsDetailsResponse{
 			ID:          news.ID,
 			Title:       news.Title,
+			CreatedAt:   news.CreatedAt,
 			Description: news.Description,
 			Banner:      banner,
 			Categories:  categoryNames,
@@ -275,6 +278,7 @@ func (newsService *NewsService) FilterNewsByCategory(categories []string, page, 
 		newsDetails[i] = dto.NewsDetailsResponse{
 			ID:          news.ID,
 			Title:       news.Title,
+			CreatedAt:   news.CreatedAt,
 			Description: news.Description,
 			Banner:      banner,
 			Categories:  categories,

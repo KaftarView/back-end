@@ -195,22 +195,24 @@ type RequestUpdateNewsDetails struct {
 }
 
 type NewsDetailsResponse struct {
-	ID          uint     `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Content     string   `json:"content"`
-	Content2    string   `json:"content2"`
-	Banner      string   `json:"banner"`
-	Banner2     string   `json:"banner2"`
-	Categories  []string `json:"categories"`
-	Author      string   `json:"author"`
+	ID          uint      `json:"id"`
+	Title       string    `json:"title"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description string    `json:"description"`
+	Content     string    `json:"content"`
+	Content2    string    `json:"content2"`
+	Banner      string    `json:"banner"`
+	Banner2     string    `json:"banner2"`
+	Categories  []string  `json:"categories"`
+	Author      string    `json:"author"`
 }
 
 type JournalsListResponse struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Banner      string `json:"banner"`
-	JournalFile string `json:"journal_file"`
-	Author      string `json:"author"`
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description string    `json:"description"`
+	Banner      string    `json:"banner"`
+	JournalFile string    `json:"journal_file"`
+	Author      string    `json:"author"`
 }

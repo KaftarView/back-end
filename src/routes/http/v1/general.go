@@ -78,7 +78,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			podcasts.GET(searchEndpoint, podcastController.SearchPodcast)
 			podcasts.GET(filterEndpoint, podcastController.FilterPodcastByCategory)
 		}
-
+		episodes := public.Group("/episodes")
+		{
+			episodes.GET("/:episodeID", podcastController.GetEpisodeDetails)
+		}
 		public.GET("comments/:postID", commentController.GetComments)
 
 		news := public.Group("/news")

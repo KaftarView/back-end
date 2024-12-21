@@ -135,6 +135,16 @@ func (podcastController *PodcastController) GetEpisodesList(c *gin.Context) {
 	controller.Response(c, 200, "", episodes)
 }
 
+func (podcastController *PodcastController) GetEpisodeDetails(c *gin.Context) {
+	type episodeListParams struct {
+		EpisodeID uint `uri:"episodeID" validate:"required"`
+	}
+	param := controller.Validated[episodeListParams](c, &podcastController.constants.Context)
+	episodes := podcastController.podcastService.GetEpisodeDetails(param.EpisodeID)
+
+	controller.Response(c, 200, "", episodes)
+}
+
 func (podcastController *PodcastController) CreateEpisode(c *gin.Context) {
 	type createEpisodeParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`
