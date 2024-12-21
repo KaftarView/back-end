@@ -251,7 +251,7 @@ func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.
 		}
 		audio := ""
 		if episode.AudioPath != "" {
-			audio = podcastService.awsS3Service.GetPresignedURL(enums.BannersBucket, episode.AudioPath, 8*time.Hour)
+			audio = podcastService.awsS3Service.GetPresignedURL(enums.PodcastsBucket, episode.AudioPath, 8*time.Hour)
 		}
 		publisher, _ := podcastService.userRepository.FindByUserID(episode.PublisherID)
 		episodesDetails[i] = dto.EpisodeDetailsResponse{

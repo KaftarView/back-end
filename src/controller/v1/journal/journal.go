@@ -86,5 +86,19 @@ func (journalController *JournalController) DeleteJournal(c *gin.Context) {
 }
 
 func (journalController *JournalController) SearchJournals(c *gin.Context) {
-	// some code here ...
+	type searchJournalsParams struct {
+		Query    string `form:"query"`
+		Page     int    `form:"page"`
+		PageSize int    `form:"pageSize"`
+	}
+	param := controller.Validated[searchJournalsParams](c, &journalController.constants.Context)
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	journals := journalController.journalService.SearchJournals(param.Query, param.Page, param.PageSize)
+
+	controller.Response(c, 200, "", journals)
 }

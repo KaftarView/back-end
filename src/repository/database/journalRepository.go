@@ -2,6 +2,7 @@ package repository_database
 
 import (
 	"first-project/src/entities"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -73,4 +74,25 @@ func (repo *JournalRepository) DeleteJournal(journalID uint) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (repo *JournalRepository) FullTextSearch(query string, offset, pageSize int) []*entities.Journal {
+	var journals []*entities.Journal
+
+	repo.db.Exec(`ALTER TABLE journals ADD FULLTEXT INDEX idx_name_description (name, description)`)
+	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
+
+	result := repo.db.Model(&entities.Journal{}).
+		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&journals)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return journals
 }

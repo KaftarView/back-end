@@ -150,3 +150,36 @@ func (journalService *JournalService) DeleteJournal(journalID uint) {
 
 	journalService.journalRepository.DeleteJournal(journalID)
 }
+
+func (journalService *JournalService) SearchJournals(query string, page, pageSize int) []dto.JournalsListResponse {
+	var journalsList []*entities.Journal
+	offset := (page - 1) * pageSize
+	if query != "" {
+		journalsList = journalService.journalRepository.FullTextSearch(query, offset, pageSize)
+	} else {
+		journalsList, _ = journalService.journalRepository.FindAllJournals(offset, pageSize)
+	}
+
+	journalsDetails := make([]dto.JournalsListResponse, len(journalsList))
+	for i, journal := range journalsList {
+		banner := ""
+		if journal.BannerPath != "" {
+			banner = journalService.awsS3Service.GetPresignedURL(enums.BannersBucket, journal.BannerPath, 8*time.Hour)
+		}
+		file := ""
+		if journal.JournalFilePath != "" {
+			banner = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
+		}
+		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
+		journalsDetails[i] = dto.JournalsListResponse{
+			ID:          journal.ID,
+			Name:        journal.Name,
+			Description: journal.Description,
+			Banner:      banner,
+			JournalFile: file,
+			Author:      author.Name,
+		}
+	}
+
+	return journalsDetails
+}
