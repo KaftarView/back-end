@@ -40,6 +40,6 @@ func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB,
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 
 	protected := v1.Group("")
-	protected.Use(authMiddleware.Authentication)
+	protected.Use(authMiddleware.AuthRequired)
 	routes_http_v1.SetupPrivateRoutes(protected, di, db, rdb)
 }
