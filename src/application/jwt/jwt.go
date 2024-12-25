@@ -46,7 +46,7 @@ func (jt *JWTToken) GenerateJWT(userID uint) (string, string) {
 	return accessTokenString, refreshTokenString
 }
 
-func (jt *JWTToken) VerifyToken(tokenString string) jwt.MapClaims {
+func (jt *JWTToken) VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	jwtKeys := jwt_keys.GetJWTKeys()
 	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -56,8 +56,8 @@ func (jt *JWTToken) VerifyToken(tokenString string) jwt.MapClaims {
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims
+		return claims, nil
 	}
 	unauthorizedError := exceptions.NewUnauthorizedError()
-	panic(unauthorizedError)
+	return nil, unauthorizedError
 }

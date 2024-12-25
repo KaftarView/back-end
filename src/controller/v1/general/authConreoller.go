@@ -28,7 +28,10 @@ func (authController *AuthController) RefreshToken(c *gin.Context) {
 	param := controller.Validated[refreshTokenParams](c, &authController.constants.Context)
 
 	jwt_keys.SetupJWTKeys(c, authController.constants.Context.IsLoadedJWTKeys, "./src/jwtKeys")
-	claims := authController.jwtService.VerifyToken(param.RefreshToken)
+	claims, err := authController.jwtService.VerifyToken(param.RefreshToken)
+	if err != nil {
+		panic(err)
+	}
 	userID := uint(claims["sub"].(float64))
 	accessToken, _ := authController.jwtService.GenerateJWT(userID)
 
