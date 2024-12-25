@@ -46,7 +46,7 @@ func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.
 		}
 		file := ""
 		if journal.JournalFilePath != "" {
-			banner = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
+			file = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
 		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
 		journalsDetails[i] = dto.JournalsListResponse{
