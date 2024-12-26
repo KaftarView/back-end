@@ -135,32 +135,32 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		podcastEpisodes.DELETE("/:episodeID", podcastController.DeleteEpisode)
 	}
 
-	users := routerGroup.Group("")
-	users.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageUsers, enums.ManageRoles}))
+	accessManagement := routerGroup.Group("")
+	accessManagement.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageUsers, enums.ManageRoles}))
 	{
-		roles := users.Group("/roles")
+		roles := accessManagement.Group("/roles")
 		{
 			roles.GET("", roleController.GetRolesList)
 			roles.POST("", roleController.CreateRole)
 
 			roleSubGroup := roles.Group("/:roleID")
 			{
-				roleSubGroup.GET("", roleController.GetRoleOwners)
+				roleSubGroup.GET("/owners", roleController.GetRoleOwners)
 				roleSubGroup.DELETE("", roleController.DeleteRole)
 
 				rolePermissions := roleSubGroup.Group("/permissions")
 				{
-					rolePermissions.POST("", roleController.UpdateRole)
+					rolePermissions.PUT("", roleController.UpdateRole)
 					rolePermissions.DELETE("/:permissionID", roleController.DeleteRolePermission)
 				}
 			}
 		}
 
-		users.GET("/permissions", roleController.GetPermissionsList)
+		accessManagement.GET("/permissions", roleController.GetPermissionsList)
 
-		userRoles := users.Group("/users/roles")
+		userRoles := accessManagement.Group("/users/roles")
 		{
-			userRoles.POST("", roleController.UpdateUserRoles)
+			userRoles.PUT("", roleController.UpdateUserRoles)
 			userRoles.DELETE("/:roleID", roleController.DeleteUserRole)
 		}
 	}
