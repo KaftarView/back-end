@@ -55,34 +55,35 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 	public := routerGroup.Group("/public")
 	{
-		public.GET("/categories", eventController.ListCategories)
+		categories := routerGroup.Group("/categories")
+		{
+			categories.GET("", eventController.ListCategories)
+		}
 
 		events := public.Group("/events")
 		{
 			events.GET("/published", eventController.ListPublicEvents)
 			events.GET(searchEndpoint, eventController.SearchPublicEvents)
 			events.GET(filterEndpoint, eventController.FilterPublicEvents)
-
-			eventSubGroup := events.Group("/:eventID")
-			{
-				eventSubGroup.GET("", eventController.GetPublicEventDetails)
-				eventSubGroup.GET("/tickets", eventController.GetAvailableTicketDetails)
-			}
 		}
 
 		podcasts := public.Group("/podcasts")
 		{
 			podcasts.GET("", podcastController.GetPodcastsList)
-			podcasts.GET("/:podcastID", podcastController.GetPodcastDetails)
 			podcasts.GET("/:podcastID/episodes", podcastController.GetEpisodesList)
 			podcasts.GET(searchEndpoint, podcastController.SearchPodcast)
 			podcasts.GET(filterEndpoint, podcastController.FilterPodcastByCategory)
 		}
+
 		episodes := public.Group("/episodes")
 		{
 			episodes.GET("/:episodeID", podcastController.GetEpisodeDetails)
 		}
-		public.GET("comments/:postID", commentController.GetComments)
+
+		comments := routerGroup.Group("/comments/:postID")
+		{
+			comments.GET("", commentController.GetComments)
+		}
 
 		news := public.Group("/news")
 		{

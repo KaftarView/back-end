@@ -20,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
+func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
 	eventRepository := repository_database.NewEventRepository(db)
 	commentRepository := repository_database.NewCommentRepository(db)
@@ -51,17 +51,21 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	events := routerGroup.Group("/events")
 	{
 		readGroup := events.Group("")
-		readGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageEvent}))
+		readGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.ManageEvent, enums.ReviewEvent}))
 		{
 			readGroup.GET("", eventController.GetEventsListForAdmin)
-			readGroup.GET("/event-details/:eventID", eventController.GetEventDetailsForAdmin)
-			readGroup.GET("/ticket-details/:eventID", eventController.GetAllTicketDetails)
-			readGroup.GET("/discount-details/:eventID", eventController.GetAllDiscountDetails)
 			readGroup.GET("/search", eventController.SearchEventsForAdmin)
 			readGroup.GET("/filter", eventController.FilterEventsForAdmin)
 
 			readGroup.GET("ticket/:ticketID", eventController.GetTicketDetails)
 			readGroup.GET("discount/:discountID", eventController.GetDiscountDetails)
+
+			readSingleEventGroup := readGroup.Group("/:eventID")
+			{
+				readSingleEventGroup.GET("", eventController.GetEventDetailsForAdmin)
+				readSingleEventGroup.GET("/tickets", eventController.GetAllTicketDetails)
+				readSingleEventGroup.GET("/discounts", eventController.GetAllDiscountDetails)
+			}
 		}
 
 		createGroup := events.Group("")
@@ -74,11 +78,13 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		}
 
 		manageEventsGroup := events.Group("")
-		manageEventsGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.EditEvent}))
+		manageEventsGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.ManageEvent}))
 		{
 			eventSubGroup := events.Group("/:eventID")
 			{
 				eventSubGroup.PUT("", eventController.UpdateEvent)
+				eventSubGroup.POST("/publish", eventController.PublishEvent)
+				eventSubGroup.POST("/unpublish", eventController.UnpublishEvent)
 				eventSubGroup.DELETE("", eventController.DeleteEvent)
 				eventSubGroup.POST("/media", eventController.UploadEventMedia)
 			}
@@ -98,35 +104,15 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			manageEventsGroup.DELETE("/organizer/:organizerID", eventController.DeleteOrganizer)
 			manageEventsGroup.DELETE("/media/:mediaId", eventController.DeleteEventMedia)
 		}
-
-		publishGroup := events.Group("/:eventID")
-		publishGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.PublishEvent}))
-		{
-			publishGroup.POST("/publish", eventController.PublishEvent)
-			publishGroup.POST("/unpublish", eventController.UnpublishEvent)
-		}
 	}
 
 	comments := routerGroup.Group("/comments")
+	comments.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ModerateComments}))
 	{
-		comments.POST("/post/:postID", commentController.CreateComment)
-
-		commentSubGroup := comments.Group("/:commentID")
-		{
-			commentSubGroup.PUT("", commentController.EditComment)
-			commentSubGroup.DELETE("", commentController.DeleteCommentByUser)
-		}
-
-		moderateCommentsGroup := comments.Group("/admin")
-		moderateCommentsGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ModerateComments}))
-		{
-			moderateCommentsGroup.DELETE("/:commentID", commentController.DeleteCommentByAdmin)
-		}
+		comments.DELETE("/:commentID", commentController.DeleteCommentByAdmin)
 	}
 
 	podcasts := routerGroup.Group("/podcasts")
-	podcasts.POST("/:podcastID/subscribe", podcastController.SubscribePodcast)
-	podcasts.DELETE("/:podcastID/subscribe", podcastController.UnSubscribePodcast)
 	podcasts.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
 		podcasts.POST("", podcastController.CreatePodcast)
@@ -147,11 +133,6 @@ func SetupPrivateRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	{
 		podcastEpisodes.PUT("/:episodeID", podcastController.UpdateEpisode)
 		podcastEpisodes.DELETE("/:episodeID", podcastController.DeleteEpisode)
-	}
-
-	profile := routerGroup.Group("/profile")
-	{
-		profile.GET("") // some sample api here ...
 	}
 
 	users := routerGroup.Group("")

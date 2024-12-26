@@ -76,7 +76,7 @@ func (eventController *EventController) GetAllTicketDetails(c *gin.Context) {
 	controller.Response(c, 200, "", ticketDetails)
 }
 
-func (eventController *EventController) GetAvailableTicketDetails(c *gin.Context) {
+func (eventController *EventController) GetAvailableEventTicketsList(c *gin.Context) {
 	type getEventParams struct {
 		EventID uint `uri:"eventID" validate:"required"`
 	}

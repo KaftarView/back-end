@@ -98,16 +98,16 @@ type EventMediaDetails struct {
 
 type EventDetailsResponse struct {
 	ID          uint      `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt   time.Time `json:"createdAt"`
 	Name        string    `json:"name"`
 	Status      string    `json:"status"`
 	Description string    `json:"description"`
-	BasePrice   float64   `json:"base_price"`
-	MinCapacity uint      `json:"min_capacity"`
-	MaxCapacity uint      `json:"max_capacity"`
-	FromDate    time.Time `json:"from_date"`
-	ToDate      time.Time `json:"to_date"`
-	VenueType   string    `json:"venue_type"`
+	BasePrice   float64   `json:"basePrice"`
+	MinCapacity uint      `json:"minCapacity"`
+	MaxCapacity uint      `json:"maxCapacity"`
+	FromDate    time.Time `json:"fromDate"`
+	ToDate      time.Time `json:"toDate"`
+	VenueType   string    `json:"venueType"`
 	Categories  []string  `json:"categories"`
 	Location    string    `json:"location"`
 	Banner      string    `json:"banner"`
