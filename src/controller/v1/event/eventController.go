@@ -482,11 +482,6 @@ func (eventController *EventController) GetPublicEventDetails(c *gin.Context) {
 	controller.Response(c, 200, "", eventDetails)
 }
 
-func (ec *EventController) ListCategories(c *gin.Context) {
-	categoryList := ec.eventService.GetListOfCategories()
-	controller.Response(c, 200, "", categoryList)
-}
-
 func (eventController *EventController) SearchEventsForAdmin(c *gin.Context) {
 	type searchEventForAdminParams struct {
 		Query    string `form:"query"`

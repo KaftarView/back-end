@@ -147,6 +147,7 @@ type PodcastDetailsResponse struct {
 	Publisher        string    `json:"publisher"`
 	Categories       []string  `json:"categories"`
 	SubscribersCount int       `json:"subscribers_count"`
+	IsSubscribed     bool      `json:"is_subscribed"`
 }
 
 type EpisodeDetailsResponse struct {

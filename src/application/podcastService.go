@@ -16,6 +16,7 @@ import (
 type PodcastService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
+	categoryService   *CategoryService
 	podcastRepository *repository_database.PodcastRepository
 	commentRepository *repository_database.CommentRepository
 	userRepository    *repository_database.UserRepository
@@ -24,6 +25,7 @@ type PodcastService struct {
 func NewPodcastService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
+	categoryService *CategoryService,
 	podcastRepository *repository_database.PodcastRepository,
 	commentRepository *repository_database.CommentRepository,
 	userRepository *repository_database.UserRepository,
@@ -32,6 +34,7 @@ func NewPodcastService(
 	return &PodcastService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
+		categoryService:   categoryService,
 		podcastRepository: podcastRepository,
 		commentRepository: commentRepository,
 		userRepository:    userRepository,
@@ -61,12 +64,17 @@ func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.P
 	return podcastsDetails
 }
 
-func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
+func (podcastService *PodcastService) GetPodcastDetails(podcastID uint, userID any) dto.PodcastDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastID)
 	if !podcastExist {
 		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
 		panic(notFoundError)
+	}
+
+	isSubscribed := false
+	if userID != nil {
+		isSubscribed = podcastService.podcastRepository.ExistSubscriberByID(podcast, userID.(uint))
 	}
 
 	banner := ""
@@ -90,6 +98,7 @@ func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.Podc
 		Publisher:        publisher.Name,
 		Categories:       categories,
 		SubscribersCount: len(podcast.Subscribers),
+		IsSubscribed:     isSubscribed,
 	}
 
 	return podcastDetails
@@ -104,7 +113,8 @@ func (podcastService *PodcastService) CreatePodcast(name, description string, ca
 			podcastService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	categories := podcastService.podcastRepository.FindCategoriesByNames(categoryNames)
+
+	categories := podcastService.categoryService.GetCategoriesByName(categoryNames)
 	commentable := podcastService.commentRepository.CreateNewCommentable()
 
 	tx := podcastService.podcastRepository.BeginTransaction()
@@ -134,7 +144,7 @@ func (podcastService *PodcastService) CreatePodcast(name, description string, ca
 	return podcast
 }
 
-func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, description *string, Categories *[]string, banner *multipart.FileHeader) {
+func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, description *string, categories *[]string, banner *multipart.FileHeader) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
@@ -160,8 +170,9 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 	if description != nil {
 		podcast.Description = *description
 	}
-	if Categories != nil {
-		podcast.Categories = podcastService.podcastRepository.FindCategoriesByNames(*Categories)
+	if categories != nil {
+		categoryModels := podcastService.categoryService.GetCategoriesByName(*categories)
+		podcastService.podcastRepository.UpdatePodcastCategories(podcastID, categoryModels)
 	}
 	if banner != nil {
 		if podcast.BannerPath != "" {

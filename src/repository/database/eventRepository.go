@@ -60,19 +60,6 @@ func (repo *EventRepository) CreateNewEvent(event *entities.Event) *entities.Eve
 	return event
 }
 
-func (repo *EventRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
-	var categories []entities.Category
-
-	for _, categoryName := range categoryNames {
-		var category entities.Category
-		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
-			panic(err)
-		}
-		categories = append(categories, category)
-	}
-	return categories
-}
-
 func (repo *EventRepository) FindEventByID(eventID uint) (*entities.Event, bool) {
 	var event entities.Event
 	result := repo.db.First(&event, queryByID, eventID)
@@ -221,6 +208,13 @@ func (repo *EventRepository) CreateNewDiscount(discount *entities.Discount) *ent
 	return discount
 }
 
+func (repo *EventRepository) UpdateEventCategories(eventID uint, categories []entities.Category) {
+	err := repo.db.Model(&entities.Event{ID: eventID}).Association("Categories").Replace(categories)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (repo *EventRepository) UpdateEvent(event *entities.Event) {
 	if err := repo.db.Save(event).Error; err != nil {
 		panic(err)
@@ -277,18 +271,6 @@ func (repo *EventRepository) FindEventsByStatus(allowedStatus []enums.EventStatu
 		panic(result.Error)
 	}
 	return events, true
-}
-
-func (repo *EventRepository) FindAllCategories() []string {
-	var categoryNames []string
-	result := repo.db.Model(&entities.Category{}).Pluck("name", &categoryNames)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return []string{}
-		}
-		panic(result.Error)
-	}
-	return categoryNames
 }
 
 func (repo *EventRepository) DeleteEvent(eventID uint) {

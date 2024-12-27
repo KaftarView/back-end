@@ -16,6 +16,7 @@ import (
 type EventService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
+	categoryService   *CategoryService
 	eventRepository   *repository_database.EventRepository
 	commentRepository *repository_database.CommentRepository
 }
@@ -23,12 +24,14 @@ type EventService struct {
 func NewEventService(
 	constants *bootstrap.Constants,
 	awsService *application_aws.S3service,
+	categoryService *CategoryService,
 	eventRepository *repository_database.EventRepository,
 	commentRepository *repository_database.CommentRepository,
 ) *EventService {
 	return &EventService{
 		constants:         constants,
 		awsS3Service:      awsService,
+		categoryService:   categoryService,
 		eventRepository:   eventRepository,
 		commentRepository: commentRepository,
 	}
@@ -64,7 +67,7 @@ func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetai
 		}
 	}
 
-	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+	categories := eventService.categoryService.GetCategoriesByName(eventDetails.Categories)
 	commentable := eventService.commentRepository.CreateNewCommentable()
 
 	bannerPath := fmt.Sprintf("banners/events/%d/images/%s", commentable.CID, eventDetails.Banner.Filename)
@@ -322,8 +325,8 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 	}
 
 	if updateDetails.Categories != nil {
-		categories := eventService.eventRepository.FindCategoriesByNames(*updateDetails.Categories)
-		event.Categories = categories
+		categories := eventService.categoryService.GetCategoriesByName(*updateDetails.Categories)
+		eventService.eventRepository.UpdateEventCategories(updateDetails.ID, categories)
 	}
 
 	if updateDetails.Name != nil {
@@ -527,11 +530,6 @@ func (eventService *EventService) GetDiscountDetails(discountID uint) dto.Discou
 	}
 
 	return discountDetails
-}
-
-func (eventService *EventService) GetListOfCategories() []string {
-	categoryNames := eventService.eventRepository.FindAllCategories()
-	return categoryNames
 }
 
 func (eventService *EventService) DeleteEvent(eventID uint) {

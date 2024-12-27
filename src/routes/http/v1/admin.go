@@ -5,7 +5,6 @@ import (
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
-	application_news "first-project/src/application/news"
 	"first-project/src/bootstrap"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_journal "first-project/src/controller/v1/journal"
@@ -22,6 +21,7 @@ import (
 
 func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
+	categoryRepository := repository_database.NewCategoryRepository(db)
 	eventRepository := repository_database.NewEventRepository(db)
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
@@ -32,11 +32,12 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	otpService := application.NewOTPService()
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
-	eventService := application.NewEventService(di.Constants, awsService, eventRepository, commentRepository)
+	categoryService := application.NewCategoryService(di.Constants, categoryRepository)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
-	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
 	userService := application.NewUserService(di.Constants, userRepository, otpService)
-	newsService := application_news.NewNewsService(di.Constants, awsService, commentRepository, newsRepository, userRepository)
+	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository)
 	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
@@ -45,7 +46,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	roleController := controller_v1_private.NewRoleController(di.Constants, userService)
-	newsController := controller_v1_news.NewNewsController(di.Constants, newsService)
+	adminNewsController := controller_v1_news.NewAdminNewsController(di.Constants, newsService)
 	journalController := controller_v1_journal.NewJournalController(di.Constants, journalService)
 
 	events := routerGroup.Group("/events")
@@ -168,11 +169,11 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	news := routerGroup.Group("/news")
 	news.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageNews}))
 	{
-		news.POST("", newsController.CreateNews)
+		news.POST("", adminNewsController.CreateNews)
 		newsSubGroup := news.Group("/:newsID")
 		{
-			newsSubGroup.PUT("", newsController.UpdateNews)
-			newsSubGroup.DELETE("", newsController.DeleteNews)
+			newsSubGroup.PUT("", adminNewsController.UpdateNews)
+			newsSubGroup.DELETE("", adminNewsController.DeleteNews)
 		}
 	}
 

@@ -1,4 +1,4 @@
-package application_news
+package application
 
 import (
 	application_aws "first-project/src/application/aws"
@@ -15,6 +15,7 @@ import (
 type NewsService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
+	categoryService   *CategoryService
 	commentRepository *repository_database.CommentRepository
 	newsRepository    *repository_database.NewsRepository
 	userRepository    *repository_database.UserRepository
@@ -23,6 +24,7 @@ type NewsService struct {
 func NewNewsService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
+	categoryService *CategoryService,
 	commentRepository *repository_database.CommentRepository,
 	newsRepository *repository_database.NewsRepository,
 	userRepository *repository_database.UserRepository,
@@ -30,6 +32,7 @@ func NewNewsService(
 	return &NewsService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
+		categoryService:   categoryService,
 		commentRepository: commentRepository,
 		newsRepository:    newsRepository,
 		userRepository:    userRepository,
@@ -48,7 +51,7 @@ func (newsService *NewsService) CreateNews(newsDetails dto.RequestNewsDetails) *
 		panic(conflictError)
 	}
 
-	categories := newsService.newsRepository.FindCategoriesByNames(newsDetails.Categories)
+	categories := newsService.categoryService.GetCategoriesByName(newsDetails.Categories)
 	commentable := newsService.commentRepository.CreateNewCommentable()
 
 	bannerPath := fmt.Sprintf(bannerPathFormat, commentable.CID, newsDetails.Banner.Filename)
@@ -122,7 +125,8 @@ func (newsService *NewsService) UpdateNews(newsDetails dto.RequestUpdateNewsDeta
 		news.Banner2Path = banner2Path
 	}
 	if newsDetails.Categories != nil {
-		news.Categories = newsService.newsRepository.FindCategoriesByNames(*newsDetails.Categories)
+		categories := newsService.categoryService.GetCategoriesByName(*newsDetails.Categories)
+		newsService.newsRepository.UpdateNewsCategories(newsDetails.ID, categories)
 	}
 
 	newsService.newsRepository.UpdateNews(news)

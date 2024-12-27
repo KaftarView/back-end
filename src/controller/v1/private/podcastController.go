@@ -45,7 +45,8 @@ func (podcastController *PodcastController) GetPodcastDetails(c *gin.Context) {
 		PodcastID uint `uri:"podcastID" validate:"required"`
 	}
 	param := controller.Validated[podcastDetailsParams](c, &podcastController.constants.Context)
-	podcast := podcastController.podcastService.GetPodcastDetails(param.PodcastID)
+	userID, _ := c.Get(podcastController.constants.Context.UserID)
+	podcast := podcastController.podcastService.GetPodcastDetails(param.PodcastID, userID)
 	controller.Response(c, 200, "", podcast)
 }
 

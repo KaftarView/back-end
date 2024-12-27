@@ -64,6 +64,13 @@ func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	return &news, true
 }
 
+func (repo *NewsRepository) UpdateNewsCategories(newsID uint, categories []entities.Category) {
+	err := repo.db.Model(&entities.News{ID: newsID}).Association("Categories").Replace(categories)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (repo *NewsRepository) UpdateNews(news *entities.News) {
 	err := repo.db.Save(news).Error
 	if err != nil {
@@ -111,18 +118,6 @@ func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, 
 	}
 
 	return news
-}
-
-func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
-	var categories []entities.Category
-	for _, categoryName := range categoryNames {
-		var category entities.Category
-		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
-			panic(err)
-		}
-		categories = append(categories, category)
-	}
-	return categories
 }
 
 func (repo *NewsRepository) FindNewsCategoriesByNews(news *entities.News) []entities.Category {

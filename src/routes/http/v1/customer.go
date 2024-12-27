@@ -18,6 +18,7 @@ import (
 
 func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
+	categoryRepository := repository_database.NewCategoryRepository(db)
 	eventRepository := repository_database.NewEventRepository(db)
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
@@ -25,9 +26,10 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	jwtService := application_jwt.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
-	eventService := application.NewEventService(di.Constants, awsService, eventRepository, commentRepository)
+	categoryService := application.NewCategoryService(di.Constants, categoryRepository)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
-	podcastService := application.NewPodcastService(di.Constants, awsService, podcastRepository, commentRepository, userRepository)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 

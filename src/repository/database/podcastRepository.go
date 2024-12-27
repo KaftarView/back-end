@@ -33,24 +33,18 @@ func (repo *PodcastRepository) CreatePodcast(tx *gorm.DB, podcast *entities.Podc
 	return podcast
 }
 
-func (repo *PodcastRepository) UpdatePodcast(tx *gorm.DB, podcast *entities.Podcast) {
-	err := tx.Save(podcast).Error
+func (repo *PodcastRepository) UpdatePodcastCategories(podcastID uint, categories []entities.Category) {
+	err := repo.db.Model(&entities.Podcast{ID: podcastID}).Association("Categories").Replace(categories)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
-	var categories []entities.Category
-
-	for _, categoryName := range categoryNames {
-		var category entities.Category
-		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
-			panic(err)
-		}
-		categories = append(categories, category)
+func (repo *PodcastRepository) UpdatePodcast(tx *gorm.DB, podcast *entities.Podcast) {
+	err := tx.Save(podcast).Error
+	if err != nil {
+		panic(err)
 	}
-	return categories
 }
 
 func (repo *PodcastRepository) FindAllPodcasts(offset, pageSize int) ([]*entities.Podcast, bool) {
