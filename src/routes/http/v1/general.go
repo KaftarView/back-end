@@ -13,10 +13,10 @@ import (
 	controller_v1_category "first-project/src/controller/v1/category"
 	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
-	controller_v1_general "first-project/src/controller/v1/general"
 	controller_v1_journal "first-project/src/controller/v1/journal"
 	controller_v1_news "first-project/src/controller/v1/news"
 	controller_v1_private "first-project/src/controller/v1/private"
+	controller_v1_user "first-project/src/controller/v1/user"
 	repository_database "first-project/src/repository/database"
 	repository_cache "first-project/src/repository/redis"
 )
@@ -46,11 +46,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	categoryController := controller_v1_category.NewGeneralCategoryController(categoryService)
 	generalEventController := controller_v1_event.NewGeneralEventController(di.Constants, eventService, emailService)
 	generalCommentController := controller_v1_comment.NewGeneralCommentController(di.Constants, commentService)
-	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
-	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
+	generalUserController := controller_v1_user.NewGeneralUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
 	generalNewsController := controller_v1_news.NewGeneralNewsController(di.Constants, newsService)
-	journalController := controller_v1_journal.NewGeneralJournalController(di.Constants, journalService)
+	generalJournalController := controller_v1_journal.NewGeneralJournalController(di.Constants, journalService)
 
 	const (
 		searchEndpoint = "/search"
@@ -100,19 +99,19 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		journals := public.Group("/journals")
 		{
-			journals.GET("", journalController.GetJournalsList)
-			journals.GET(searchEndpoint, journalController.SearchJournals)
+			journals.GET("", generalJournalController.GetJournalsList)
+			journals.GET(searchEndpoint, generalJournalController.SearchJournals)
 		}
 	}
 
 	auth := routerGroup.Group("/auth")
 	{
-		auth.POST("/register", userController.Register)
-		auth.POST("/register/verify", userController.VerifyEmail)
-		auth.POST("/login", userController.Login)
-		auth.POST("/forgot-password", userController.ForgotPassword)
-		auth.POST("/confirm-otp", userController.ConfirmOTP)
-		auth.PUT("/reset-password", userController.ResetPassword)
-		auth.POST("/refresh-token", authController.RefreshToken)
+		auth.POST("/register", generalUserController.Register)
+		auth.POST("/register/verify", generalUserController.VerifyEmail)
+		auth.POST("/login", generalUserController.Login)
+		auth.POST("/forgot-password", generalUserController.ForgotPassword)
+		auth.POST("/confirm-otp", generalUserController.ConfirmOTP)
+		auth.PUT("/reset-password", generalUserController.ResetPassword)
+		auth.POST("/refresh-token", generalUserController.RefreshToken)
 	}
 }

@@ -10,6 +10,7 @@ type Constants struct {
 	ErrorTag      ErrorTag
 	Redis         Redis
 	ObjectStorage Object
+	JWTKeysPath   string
 }
 
 type Context struct {
@@ -123,7 +124,8 @@ func NewConstants() *Constants {
 			AlreadySubscribed:       "alreadySubscribed",
 			NotSubscribe:            "notSubscribed",
 		},
-		Redis: Redis{},
+		Redis:       Redis{},
+		JWTKeysPath: "./src/jwtKeys",
 	}
 }
 

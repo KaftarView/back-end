@@ -11,6 +11,7 @@ import (
 	controller_v1_journal "first-project/src/controller/v1/journal"
 	controller_v1_news "first-project/src/controller/v1/news"
 	controller_v1_private "first-project/src/controller/v1/private"
+	controller_v1_user "first-project/src/controller/v1/user"
 	"first-project/src/enums"
 	middleware_authentication "first-project/src/middleware/Authentication"
 	repository_database "first-project/src/repository/database"
@@ -46,9 +47,9 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	adminEventController := controller_v1_event.NewAdminEventController(di.Constants, eventService, emailService)
 	adminCommentController := controller_v1_comment.NewAdminCommentController(di.Constants, commentService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
-	roleController := controller_v1_private.NewRoleController(di.Constants, userService)
+	adminUserController := controller_v1_user.NewAdminUserController(di.Constants, userService)
 	adminNewsController := controller_v1_news.NewAdminNewsController(di.Constants, newsService)
-	journalController := controller_v1_journal.NewAdminJournalController(di.Constants, journalService)
+	adminJournalController := controller_v1_journal.NewAdminJournalController(di.Constants, journalService)
 
 	events := routerGroup.Group("/events")
 	{
@@ -142,28 +143,28 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	{
 		roles := accessManagement.Group("/roles")
 		{
-			roles.GET("", roleController.GetRolesList)
-			roles.POST("", roleController.CreateRole)
+			roles.GET("", adminUserController.GetRolesList)
+			roles.POST("", adminUserController.CreateRole)
 
 			roleSubGroup := roles.Group("/:roleID")
 			{
-				roleSubGroup.GET("/owners", roleController.GetRoleOwners)
-				roleSubGroup.DELETE("", roleController.DeleteRole)
+				roleSubGroup.GET("/owners", adminUserController.GetRoleOwners)
+				roleSubGroup.DELETE("", adminUserController.DeleteRole)
 
 				rolePermissions := roleSubGroup.Group("/permissions")
 				{
-					rolePermissions.PUT("", roleController.UpdateRole)
-					rolePermissions.DELETE("/:permissionID", roleController.DeleteRolePermission)
+					rolePermissions.PUT("", adminUserController.UpdateRole)
+					rolePermissions.DELETE("/:permissionID", adminUserController.DeleteRolePermission)
 				}
 			}
 		}
 
-		accessManagement.GET("/permissions", roleController.GetPermissionsList)
+		accessManagement.GET("/permissions", adminUserController.GetPermissionsList)
 
 		userRoles := accessManagement.Group("/users/roles")
 		{
-			userRoles.PUT("", roleController.UpdateUserRoles)
-			userRoles.DELETE("/:roleID", roleController.DeleteUserRole)
+			userRoles.PUT("", adminUserController.UpdateUserRoles)
+			userRoles.DELETE("/:roleID", adminUserController.DeleteUserRole)
 		}
 	}
 
@@ -181,11 +182,11 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	journals := routerGroup.Group("/journal")
 	journals.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageJournal}))
 	{
-		journals.POST("", journalController.CreateJournal)
+		journals.POST("", adminJournalController.CreateJournal)
 		journalSubGroup := journals.Group("/:journalID")
 		{
-			journalSubGroup.PUT("", journalController.UpdateJournal)
-			journalSubGroup.DELETE("", journalController.DeleteJournal)
+			journalSubGroup.PUT("", adminJournalController.UpdateJournal)
+			journalSubGroup.DELETE("", adminJournalController.DeleteJournal)
 		}
 	}
 }
