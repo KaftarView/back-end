@@ -48,7 +48,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	roleController := controller_v1_private.NewRoleController(di.Constants, userService)
 	adminNewsController := controller_v1_news.NewAdminNewsController(di.Constants, newsService)
-	journalController := controller_v1_journal.NewJournalController(di.Constants, journalService)
+	journalController := controller_v1_journal.NewAdminJournalController(di.Constants, journalService)
 
 	events := routerGroup.Group("/events")
 	{

@@ -50,7 +50,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
 	generalNewsController := controller_v1_news.NewGeneralNewsController(di.Constants, newsService)
-	journalController := controller_v1_journal.NewJournalController(di.Constants, journalService)
+	journalController := controller_v1_journal.NewGeneralJournalController(di.Constants, journalService)
 
 	const (
 		searchEndpoint = "/search"
