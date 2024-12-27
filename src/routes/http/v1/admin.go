@@ -10,7 +10,7 @@ import (
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_journal "first-project/src/controller/v1/journal"
 	controller_v1_news "first-project/src/controller/v1/news"
-	controller_v1_private "first-project/src/controller/v1/private"
+	controller_v1_podcast "first-project/src/controller/v1/podcast"
 	controller_v1_user "first-project/src/controller/v1/user"
 	"first-project/src/enums"
 	middleware_authentication "first-project/src/middleware/Authentication"
@@ -46,7 +46,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 
 	adminEventController := controller_v1_event.NewAdminEventController(di.Constants, eventService, emailService)
 	adminCommentController := controller_v1_comment.NewAdminCommentController(di.Constants, commentService)
-	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
+	adminPodcastController := controller_v1_podcast.NewAdminPodcastController(di.Constants, podcastService)
 	adminUserController := controller_v1_user.NewAdminUserController(di.Constants, userService)
 	adminNewsController := controller_v1_news.NewAdminNewsController(di.Constants, newsService)
 	adminJournalController := controller_v1_journal.NewAdminJournalController(di.Constants, journalService)
@@ -118,15 +118,15 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	podcasts := routerGroup.Group("/podcasts")
 	podcasts.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
-		podcasts.POST("", podcastController.CreatePodcast)
+		podcasts.POST("", adminPodcastController.CreatePodcast)
 		podcastSubGroup := podcasts.Group("/:podcastID")
 		{
-			podcastSubGroup.PUT("", podcastController.UpdatePodcast)
-			podcastSubGroup.DELETE("", podcastController.DeletePodcast)
+			podcastSubGroup.PUT("", adminPodcastController.UpdatePodcast)
+			podcastSubGroup.DELETE("", adminPodcastController.DeletePodcast)
 
 			podcastEpisodesSubRouter := podcastSubGroup.Group("/episodes")
 			{
-				podcastEpisodesSubRouter.POST("", podcastController.CreateEpisode)
+				podcastEpisodesSubRouter.POST("", adminPodcastController.CreateEpisode)
 			}
 		}
 	}
@@ -134,8 +134,8 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	podcastEpisodes := routerGroup.Group("/episodes")
 	podcastEpisodes.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
-		podcastEpisodes.PUT("/:episodeID", podcastController.UpdateEpisode)
-		podcastEpisodes.DELETE("/:episodeID", podcastController.DeleteEpisode)
+		podcastEpisodes.PUT("/:episodeID", adminPodcastController.UpdateEpisode)
+		podcastEpisodes.DELETE("/:episodeID", adminPodcastController.DeleteEpisode)
 	}
 
 	accessManagement := routerGroup.Group("")

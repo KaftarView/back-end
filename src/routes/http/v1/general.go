@@ -15,7 +15,8 @@ import (
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_journal "first-project/src/controller/v1/journal"
 	controller_v1_news "first-project/src/controller/v1/news"
-	controller_v1_private "first-project/src/controller/v1/private"
+	controller_v1_podcast "first-project/src/controller/v1/podcast"
+
 	controller_v1_user "first-project/src/controller/v1/user"
 	repository_database "first-project/src/repository/database"
 	repository_cache "first-project/src/repository/redis"
@@ -43,10 +44,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository)
 	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
-	categoryController := controller_v1_category.NewGeneralCategoryController(categoryService)
+	generalCategoryController := controller_v1_category.NewGeneralCategoryController(categoryService)
 	generalEventController := controller_v1_event.NewGeneralEventController(di.Constants, eventService, emailService)
 	generalCommentController := controller_v1_comment.NewGeneralCommentController(di.Constants, commentService)
-	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
+	generalPodcastController := controller_v1_podcast.NewGeneralPodcastController(di.Constants, podcastService)
 	generalUserController := controller_v1_user.NewGeneralUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
 	generalNewsController := controller_v1_news.NewGeneralNewsController(di.Constants, newsService)
 	generalJournalController := controller_v1_journal.NewGeneralJournalController(di.Constants, journalService)
@@ -60,7 +61,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	{
 		categories := public.Group("/categories")
 		{
-			categories.GET("", categoryController.GetListCategoryNames)
+			categories.GET("", generalCategoryController.GetListCategoryNames)
 		}
 
 		events := public.Group("/events")
@@ -73,15 +74,16 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		podcasts := public.Group("/podcasts")
 		{
-			podcasts.GET("", podcastController.GetPodcastsList)
-			podcasts.GET("/:podcastID/episodes", podcastController.GetEpisodesList)
-			podcasts.GET(searchEndpoint, podcastController.SearchPodcast)
-			podcasts.GET(filterEndpoint, podcastController.FilterPodcastByCategory)
+			podcasts.GET("", generalPodcastController.GetPodcastsList)
+			podcasts.GET(searchEndpoint, generalPodcastController.SearchPodcast)
+			podcasts.GET(filterEndpoint, generalPodcastController.FilterPodcastByCategory)
+			podcasts.GET("/:podcastID/episodes", generalPodcastController.GetEpisodesList)
+			podcasts.GET("/:podcastID", generalPodcastController.GetPodcastDetails)
 		}
 
 		episodes := public.Group("/episodes")
 		{
-			episodes.GET("/:episodeID", podcastController.GetEpisodeDetails)
+			episodes.GET("/:episodeID", generalPodcastController.GetEpisodeDetails)
 		}
 
 		comments := routerGroup.Group("/comments/:postID")

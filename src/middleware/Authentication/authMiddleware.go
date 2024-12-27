@@ -50,28 +50,9 @@ func (am *AuthMiddleware) AuthRequired(c *gin.Context) {
 		panic(unauthorizedError)
 	}
 	jwt_keys.SetupJWTKeys(c, am.constants.Context.IsLoadedJWTKeys, am.constants.JWTKeysPath)
-	claims, err := am.jwtService.VerifyToken(tokenString)
-	if err != nil {
-		panic(err)
-	}
+	claims := am.jwtService.VerifyToken(tokenString)
 
 	c.Set(am.constants.Context.UserID, uint(claims["sub"].(float64)))
-
-	c.Next()
-}
-
-func (am *AuthMiddleware) OptionalAuth(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-
-	parts := strings.Split(authHeader, " ")
-	if len(parts) == 2 && parts[0] == "Bearer" {
-		tokenString := parts[1]
-		jwt_keys.SetupJWTKeys(c, am.constants.Context.IsLoadedJWTKeys, am.constants.JWTKeysPath)
-		claims, err := am.jwtService.VerifyToken(tokenString)
-		if err == nil {
-			c.Set(am.constants.Context.UserID, uint(claims["sub"].(float64)))
-		}
-	}
 
 	c.Next()
 }

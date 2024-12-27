@@ -4,12 +4,11 @@ import (
 	"first-project/src/application"
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
-	controller_v1_private "first-project/src/controller/v1/private"
-	middleware_authentication "first-project/src/middleware/Authentication"
+	controller_v1_podcast "first-project/src/controller/v1/podcast"
+
 	repository_database "first-project/src/repository/database"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +23,6 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
 
-	jwtService := application_jwt.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository)
@@ -32,19 +30,16 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
 
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
-
 	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
 	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
-	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
+	customerPodcastController := controller_v1_podcast.NewCustomerPodcastController(di.Constants, podcastService)
 
 	event := routerGroup.Group("/events/:eventID")
 	{
-		event.GET("/tickets", authMiddleware.AuthRequired, customerEventController.GetAvailableEventTicketsList)
+		event.GET("/tickets", customerEventController.GetAvailableEventTicketsList)
 	}
 
 	comments := routerGroup.Group("/comments")
-	comments.Use(authMiddleware.AuthRequired)
 	{
 		comments.POST("/post/:postID", customerCommentController.CreateComment)
 
@@ -55,20 +50,14 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 		}
 	}
 
-	podcast := routerGroup.Group("/podcasts/:podcastID")
+	podcast := routerGroup.Group("/podcasts/:podcastID/subscribe")
 	{
-		podcast.GET("", authMiddleware.OptionalAuth, podcastController.GetPodcastDetails)
-
-		podcastSubscription := podcast.Group("/subscribe")
-		podcastSubscription.Use(authMiddleware.AuthRequired)
-		{
-			podcastSubscription.POST("", podcastController.SubscribePodcast)
-			podcastSubscription.DELETE("", podcastController.UnSubscribePodcast)
-		}
+		podcast.POST("", customerPodcastController.SubscribePodcast)
+		podcast.DELETE("", customerPodcastController.UnSubscribePodcast)
+		podcast.GET("/status", customerPodcastController.SubscribeStatus)
 	}
 
 	profile := routerGroup.Group("/profile")
-	profile.Use(authMiddleware.AuthRequired)
 	{
 		profile.GET("") // some sample api here ...
 	}

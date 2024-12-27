@@ -173,10 +173,7 @@ func (generalUserController *GeneralUserController) RefreshToken(c *gin.Context)
 	jwt_keys.SetupJWTKeys(c,
 		generalUserController.constants.Context.IsLoadedJWTKeys,
 		generalUserController.constants.JWTKeysPath)
-	claims, err := generalUserController.jwtService.VerifyToken(param.RefreshToken)
-	if err != nil {
-		panic(err)
-	}
+	claims := generalUserController.jwtService.VerifyToken(param.RefreshToken)
 	userID := uint(claims["sub"].(float64))
 	accessToken, _ := generalUserController.jwtService.GenerateJWT(userID)
 

@@ -64,17 +64,12 @@ func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.P
 	return podcastsDetails
 }
 
-func (podcastService *PodcastService) GetPodcastDetails(podcastID uint, userID any) dto.PodcastDetailsResponse {
+func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastID)
 	if !podcastExist {
 		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
 		panic(notFoundError)
-	}
-
-	isSubscribed := false
-	if userID != nil {
-		isSubscribed = podcastService.podcastRepository.ExistSubscriberByID(podcast, userID.(uint))
 	}
 
 	banner := ""
@@ -98,7 +93,6 @@ func (podcastService *PodcastService) GetPodcastDetails(podcastID uint, userID a
 		Publisher:        publisher.Name,
 		Categories:       categories,
 		SubscribersCount: len(podcast.Subscribers),
-		IsSubscribed:     isSubscribed,
 	}
 
 	return podcastDetails
@@ -249,6 +243,22 @@ func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint)
 	}
 
 	podcastService.podcastRepository.UnSubscribePodcast(podcast, user)
+}
+
+func (podcastService *PodcastService) IsUserSubscribedPodcast(podcastID, userID uint) bool {
+	var notFoundError exceptions.NotFoundError
+	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
+	if !podcastExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.Podcast
+		panic(notFoundError)
+	}
+	_, userExist := podcastService.userRepository.FindByUserID(userID)
+	if !userExist {
+		notFoundError.ErrorField = podcastService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+
+	return podcastService.podcastRepository.ExistSubscriberByID(podcast, userID)
 }
 
 func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
