@@ -31,7 +31,7 @@ func NewAdminEventController(
 	}
 }
 
-func (adminEventController *AdminEventController) GetEventsListForAdmin(c *gin.Context) {
+func (adminEventController *AdminEventController) GetEventsList(c *gin.Context) {
 	type allEventsListParams struct {
 		Page     int `form:"page"`
 		PageSize int `form:"pageSize"`
@@ -49,13 +49,13 @@ func (adminEventController *AdminEventController) GetEventsListForAdmin(c *gin.C
 	controller.Response(c, 200, "", events)
 }
 
-func (adminEventController *AdminEventController) SearchEventsForAdmin(c *gin.Context) {
-	type searchEventForAdminParams struct {
+func (adminEventController *AdminEventController) SearchEvents(c *gin.Context) {
+	type searchEventsParams struct {
 		Query    string `form:"query"`
 		Page     int    `form:"page"`
 		PageSize int    `form:"pageSize"`
 	}
-	param := controller.Validated[searchEventForAdminParams](c, &adminEventController.constants.Context)
+	param := controller.Validated[searchEventsParams](c, &adminEventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}
@@ -68,13 +68,13 @@ func (adminEventController *AdminEventController) SearchEventsForAdmin(c *gin.Co
 	controller.Response(c, 200, "", events)
 }
 
-func (adminEventController *AdminEventController) FilterEventsForAdmin(c *gin.Context) {
-	type filterEventForAdminParams struct {
+func (adminEventController *AdminEventController) FilterEvents(c *gin.Context) {
+	type filterEventsParams struct {
 		Categories []string `form:"categories"`
 		Page       int      `form:"page"`
 		PageSize   int      `form:"pageSize"`
 	}
-	param := controller.Validated[filterEventForAdminParams](c, &adminEventController.constants.Context)
+	param := controller.Validated[filterEventsParams](c, &adminEventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}
@@ -105,7 +105,7 @@ func (adminEventController *AdminEventController) GetDiscountDetails(c *gin.Cont
 	controller.Response(c, 200, "", discountDetails)
 }
 
-func (adminEventController *AdminEventController) GetEventDetailsForAdmin(c *gin.Context) {
+func (adminEventController *AdminEventController) GetEventDetails(c *gin.Context) {
 	type getEventParams struct {
 		EventID uint `uri:"eventID" validate:"required"`
 	}

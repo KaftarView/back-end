@@ -11,6 +11,7 @@ import (
 	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_category "first-project/src/controller/v1/category"
+	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_general "first-project/src/controller/v1/general"
 	controller_v1_journal "first-project/src/controller/v1/journal"
@@ -43,8 +44,8 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
 	categoryController := controller_v1_category.NewGeneralCategoryController(categoryService)
-	eventController := controller_v1_event.NewEventController(di.Constants, eventService, emailService)
-	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
+	generalEventController := controller_v1_event.NewGeneralEventController(di.Constants, eventService, emailService)
+	generalCommentController := controller_v1_comment.NewGeneralCommentController(di.Constants, commentService)
 	authController := controller_v1_general.NewAuthController(di.Constants, jwtService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 	userController := controller_v1_general.NewUserController(di.Constants, userService, emailService, userCache, otpService, jwtService)
@@ -65,10 +66,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		events := public.Group("/events")
 		{
-			events.GET("/published", eventController.ListPublicEvents)
-			events.GET(searchEndpoint, eventController.SearchPublicEvents)
-			events.GET(filterEndpoint, eventController.FilterPublicEvents)
-			events.GET("/:eventID", eventController.GetPublicEventDetails)
+			events.GET("/published", generalEventController.ListEvents)
+			events.GET(searchEndpoint, generalEventController.SearchEvents)
+			events.GET(filterEndpoint, generalEventController.FilterEvents)
+			events.GET("/:eventID", generalEventController.GetEventDetails)
 		}
 
 		podcasts := public.Group("/podcasts")
@@ -86,7 +87,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 
 		comments := routerGroup.Group("/comments/:postID")
 		{
-			comments.GET("", commentController.GetComments)
+			comments.GET("", generalCommentController.GetComments)
 		}
 
 		news := public.Group("/news")

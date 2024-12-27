@@ -6,6 +6,7 @@ import (
 	application_communication "first-project/src/application/communication/emailService"
 	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
+	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_private "first-project/src/controller/v1/private"
 	middleware_authentication "first-project/src/middleware/Authentication"
@@ -33,24 +34,24 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 
-	eventController := controller_v1_event.NewEventController(di.Constants, eventService, emailService)
-	commentController := controller_v1_private.NewCommentController(di.Constants, commentService)
+	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
+	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
 	podcastController := controller_v1_private.NewPodcastController(di.Constants, podcastService)
 
 	event := routerGroup.Group("/events/:eventID")
 	{
-		event.GET("/tickets", authMiddleware.AuthRequired, eventController.GetAvailableEventTicketsList)
+		event.GET("/tickets", authMiddleware.AuthRequired, customerEventController.GetAvailableEventTicketsList)
 	}
 
 	comments := routerGroup.Group("/comments")
 	comments.Use(authMiddleware.AuthRequired)
 	{
-		comments.POST("/post/:postID", commentController.CreateComment)
+		comments.POST("/post/:postID", customerCommentController.CreateComment)
 
 		commentSubGroup := comments.Group("/:commentID")
 		{
-			commentSubGroup.PUT("", commentController.EditComment)
-			commentSubGroup.DELETE("", commentController.DeleteCommentByUser)
+			commentSubGroup.PUT("", customerCommentController.EditComment)
+			commentSubGroup.DELETE("", customerCommentController.DeleteComment)
 		}
 	}
 

@@ -28,12 +28,12 @@ func NewGeneralEventController(
 	}
 }
 
-func (generalEventController *GeneralEventController) ListPublicEvents(c *gin.Context) {
-	type publicEventsListParams struct {
+func (generalEventController *GeneralEventController) ListEvents(c *gin.Context) {
+	type eventsListParams struct {
 		Page     int `form:"page"`
 		PageSize int `form:"pageSize"`
 	}
-	param := controller.Validated[publicEventsListParams](c, &generalEventController.constants.Context)
+	param := controller.Validated[eventsListParams](c, &generalEventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}
@@ -46,13 +46,13 @@ func (generalEventController *GeneralEventController) ListPublicEvents(c *gin.Co
 	controller.Response(c, 200, "", events)
 }
 
-func (generalEventController *GeneralEventController) SearchPublicEvents(c *gin.Context) {
-	type searchPublicEventParams struct {
+func (generalEventController *GeneralEventController) SearchEvents(c *gin.Context) {
+	type searchEventParams struct {
 		Query    string `form:"query"`
 		Page     int    `form:"page"`
 		PageSize int    `form:"pageSize"`
 	}
-	param := controller.Validated[searchPublicEventParams](c, &generalEventController.constants.Context)
+	param := controller.Validated[searchEventParams](c, &generalEventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}
@@ -65,13 +65,13 @@ func (generalEventController *GeneralEventController) SearchPublicEvents(c *gin.
 	controller.Response(c, 200, "", events)
 }
 
-func (generalEventController *GeneralEventController) FilterPublicEvents(c *gin.Context) {
-	type filterPublicEventParams struct {
+func (generalEventController *GeneralEventController) FilterEvents(c *gin.Context) {
+	type filterEventParams struct {
 		Categories []string `form:"categories"`
 		Page       int      `form:"page"`
 		PageSize   int      `form:"pageSize"`
 	}
-	param := controller.Validated[filterPublicEventParams](c, &generalEventController.constants.Context)
+	param := controller.Validated[filterEventParams](c, &generalEventController.constants.Context)
 	if param.Page == 0 {
 		param.Page = 1
 	}
@@ -84,11 +84,11 @@ func (generalEventController *GeneralEventController) FilterPublicEvents(c *gin.
 	controller.Response(c, 200, "", events)
 }
 
-func (generalEventController *GeneralEventController) GetPublicEventDetails(c *gin.Context) {
-	type getPublicEventParams struct {
+func (generalEventController *GeneralEventController) GetEventDetails(c *gin.Context) {
+	type getEventDetailsParams struct {
 		EventID uint `uri:"eventID" validate:"required"`
 	}
-	param := controller.Validated[getPublicEventParams](c, &generalEventController.constants.Context)
+	param := controller.Validated[getEventDetailsParams](c, &generalEventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
 	eventDetails := generalEventController.eventService.GetEventDetails(allowedStatus, param.EventID)
 
