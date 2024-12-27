@@ -39,7 +39,6 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 
 	event := routerGroup.Group("/events/:eventID")
 	{
-		event.GET("", authMiddleware.OptionalAuth, eventController.GetPublicEventDetails)
 		event.GET("/tickets", authMiddleware.AuthRequired, eventController.GetAvailableEventTicketsList)
 	}
 
