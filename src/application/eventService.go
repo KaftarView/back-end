@@ -50,7 +50,7 @@ func (eventService *EventService) ValidateEventCreationDetails(
 	}
 }
 
-func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetails) *entities.Event {
+func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventRequest) *entities.Event {
 	enumStatus := enums.Draft
 	eventStatuses := enums.GetAllEventStatus()
 	for _, eventStatus := range eventStatuses {
@@ -109,7 +109,7 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 	}
 }
 
-func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketDetails) *entities.Ticket {
+func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketRequest) *entities.Ticket {
 	ticketDetailsModel := &entities.Ticket{
 		Name:           ticketDetails.Name,
 		Description:    ticketDetails.Description,
@@ -125,7 +125,7 @@ func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTick
 	return ticket
 }
 
-func (eventService *EventService) UpdateEventTicket(ticketDetails dto.EditTicketDetails) {
+func (eventService *EventService) UpdateEventTicket(ticketDetails dto.UpdateTicketRequest) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByID(ticketDetails.TicketID)
@@ -186,7 +186,7 @@ func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode s
 	}
 }
 
-func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountDetails) *entities.Discount {
+func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountRequest) *entities.Discount {
 	var enumDiscountType enums.DiscountType
 	discountTypes := enums.GetAllDiscountTypes()
 	for _, discountType := range discountTypes {
@@ -210,7 +210,7 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-func (eventService *EventService) UpdateEventDiscount(discountDetails dto.EditDiscountDetails) {
+func (eventService *EventService) UpdateEventDiscount(discountDetails dto.UpdateDiscountRequest) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 
@@ -261,7 +261,7 @@ func (eventService *EventService) UpdateEventDiscount(discountDetails dto.EditDi
 	eventService.eventRepository.UpdateEventDiscount(discount)
 }
 
-func updateBasicDetails(event *entities.Event, updateDetails dto.UpdateEventDetails) {
+func updateBasicDetails(event *entities.Event, updateDetails dto.UpdateEventRequest) {
 	if updateDetails.Description != nil {
 		event.Description = *updateDetails.Description
 	}
@@ -291,7 +291,7 @@ func (eventService *EventService) updateEventBanner(event *entities.Event, banne
 	}
 }
 
-func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetails) {
+func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventRequest) {
 	event, eventExist := eventService.eventRepository.FindEventByID(updateDetails.ID)
 	if !eventExist {
 		var notFoundError exceptions.NotFoundError
@@ -370,6 +370,11 @@ func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatu
 	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus, offset, pageSize)
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
 	for i, event := range events {
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
 		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
@@ -381,6 +386,8 @@ func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatu
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
 			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
 		}
 	}
 	return eventsDetails
@@ -403,8 +410,8 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	event = eventService.eventRepository.FindEventCategoriesByEvent(event)
-	categoryNames := make([]string, len(event.Categories))
+	categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+	categoryNames := make([]string, len(categories))
 	for i, category := range event.Categories {
 		categoryNames[i] = category.Name
 	}
@@ -666,6 +673,11 @@ func (eventService *EventService) SearchEvents(query string, page, pageSize int,
 	}
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
 	for i, event := range events {
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
 		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
@@ -677,6 +689,8 @@ func (eventService *EventService) SearchEvents(query string, page, pageSize int,
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
 			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
 		}
 	}
 	return eventsDetails
@@ -693,11 +707,15 @@ func (eventService *EventService) FilterEventsByCategories(categories []string, 
 
 	eventsDetails := make([]dto.EventDetailsResponse, len(eventsList))
 	for i, event := range eventsList {
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
 		banner := ""
 		if event.BannerPath != "" {
 			banner = eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
 		}
-
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
 			CreatedAt:   event.CreatedAt,
@@ -708,6 +726,8 @@ func (eventService *EventService) FilterEventsByCategories(categories []string, 
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
 			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
 		}
 	}
 

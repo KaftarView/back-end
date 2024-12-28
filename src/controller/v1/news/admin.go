@@ -37,7 +37,7 @@ func (adminNewsController *AdminNewsController) CreateNews(c *gin.Context) {
 	}
 	param := controller.Validated[createNewsParams](c, &adminNewsController.constants.Context)
 	userID, _ := c.Get(adminNewsController.constants.Context.UserID)
-	newsDetails := dto.RequestNewsDetails{
+	newsDetails := dto.CreateNewsRequest{
 		Title:       param.Title,
 		Description: param.Description,
 		Content:     param.Content,
@@ -66,7 +66,7 @@ func (adminNewsController *AdminNewsController) UpdateNews(c *gin.Context) {
 		NewsID      uint                  `uri:"newsID" validate:"required"`
 	}
 	param := controller.Validated[editNewsParams](c, &adminNewsController.constants.Context)
-	newsUpdatingDetails := dto.RequestUpdateNewsDetails{
+	newsUpdatingDetails := dto.UpdateNewsRequest{
 		ID:          param.NewsID,
 		Title:       param.Title,
 		Description: param.Description,

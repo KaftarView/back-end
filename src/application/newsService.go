@@ -41,7 +41,7 @@ func NewNewsService(
 
 const bannerPathFormat = "banners/podcasts/%d/images/%s"
 
-func (newsService *NewsService) CreateNews(newsDetails dto.RequestNewsDetails) *entities.News {
+func (newsService *NewsService) CreateNews(newsDetails dto.CreateNewsRequest) *entities.News {
 	var conflictError exceptions.ConflictError
 	_, newsExist := newsService.newsRepository.FindNewsByTitle(newsDetails.Title)
 	if newsExist {
@@ -80,7 +80,7 @@ func (newsService *NewsService) CreateNews(newsDetails dto.RequestNewsDetails) *
 	return newsModel
 }
 
-func (newsService *NewsService) UpdateNews(newsDetails dto.RequestUpdateNewsDetails) {
+func (newsService *NewsService) UpdateNews(newsDetails dto.UpdateNewsRequest) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	news, newsExist := newsService.newsRepository.FindNewsByID(newsDetails.ID)

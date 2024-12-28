@@ -153,7 +153,7 @@ func (adminEventController *AdminEventController) CreateEvent(c *gin.Context) {
 		param.Name, param.VenueType, param.Location, param.FromDate, param.ToDate,
 	)
 
-	eventDetails := dto.RequestEventDetails{
+	eventDetails := dto.CreateEventRequest{
 		Name:        param.Name,
 		Status:      param.Status,
 		Categories:  param.Categories,
@@ -190,7 +190,7 @@ func (adminEventController *AdminEventController) AddEventTicket(c *gin.Context)
 	param := controller.Validated[addEventTicketParams](c, &adminEventController.constants.Context)
 	adminEventController.eventService.ValidateNewEventTicketDetails(param.Name, param.EventID)
 
-	ticketDetails := dto.CreateTicketDetails{
+	ticketDetails := dto.CreateTicketRequest{
 		Name:           param.Name,
 		Description:    param.Description,
 		Price:          param.Price,
@@ -224,7 +224,7 @@ func (adminEventController *AdminEventController) AddEventDiscount(c *gin.Contex
 	param := controller.Validated[addEventDiscountParams](c, &adminEventController.constants.Context)
 	adminEventController.eventService.ValidateNewEventDiscountDetails(param.Code, param.EventID)
 
-	discountDetails := dto.CreateDiscountDetails{
+	discountDetails := dto.CreateDiscountRequest{
 		Code:       param.Code,
 		Type:       param.Type,
 		Value:      param.Value,
@@ -327,7 +327,7 @@ func (adminEventController *AdminEventController) UpdateEvent(c *gin.Context) {
 
 	param := controller.Validated[updateEventParams](c, &adminEventController.constants.Context)
 
-	eventDetails := dto.UpdateEventDetails{
+	eventDetails := dto.UpdateEventRequest{
 		ID:          param.EventID,
 		Name:        param.Name,
 		Status:      param.Status,
@@ -375,7 +375,7 @@ func (adminEventController *AdminEventController) UpdateEventTicket(c *gin.Conte
 		TicketID       uint       `uri:"ticketID" validate:"required"`
 	}
 	param := controller.Validated[EditEventTicketParams](c, &adminEventController.constants.Context)
-	ticketDetails := dto.EditTicketDetails{
+	ticketDetails := dto.UpdateTicketRequest{
 		Name:           param.Name,
 		Description:    param.Description,
 		Price:          param.Price,
@@ -419,7 +419,7 @@ func (adminEventController *AdminEventController) UpdateEventDiscount(c *gin.Con
 	}
 	param := controller.Validated[updateEventDiscountParams](c, &adminEventController.constants.Context)
 
-	discountDetails := dto.EditDiscountDetails{
+	discountDetails := dto.UpdateDiscountRequest{
 		Code:           param.Code,
 		Type:           param.Type,
 		Value:          param.Value,

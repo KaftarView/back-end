@@ -25,11 +25,12 @@ func NewCommentService(
 	}
 }
 
-func (commentService *CommentService) GetPostComments(commentableID uint) []dto.CommentDetails {
+func (commentService *CommentService) GetPostComments(commentableID uint) []dto.CommentDetailsResponse {
 	comments := commentService.commentRepository.GetCommentsByEventID(commentableID)
-	var commentsDetails []dto.CommentDetails
+	var commentsDetails []dto.CommentDetailsResponse
 	for _, comment := range comments {
-		commentsDetails = append(commentsDetails, dto.CommentDetails{
+		commentsDetails = append(commentsDetails, dto.CommentDetailsResponse{
+			ID:          comment.ID,
 			Content:     comment.Content,
 			IsModerated: comment.IsModerated,
 			AuthorName:  comment.Author.Name,

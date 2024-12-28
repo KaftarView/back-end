@@ -73,11 +73,11 @@ func (repo *EventRepository) FindEventByID(eventID uint) (*entities.Event, bool)
 	return &event, true
 }
 
-func (repo *EventRepository) FindEventCategoriesByEvent(event *entities.Event) *entities.Event {
+func (repo *EventRepository) FindEventCategoriesByEvent(event *entities.Event) []entities.Category {
 	if err := repo.db.Model(event).Association("Categories").Find(&event.Categories); err != nil {
 		panic(err)
 	}
-	return event
+	return event.Categories
 }
 
 func (repo *EventRepository) FindTicketsByEventID(eventID uint, availability []bool) ([]*entities.Ticket, bool) {

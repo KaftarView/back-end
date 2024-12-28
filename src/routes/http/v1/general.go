@@ -86,7 +86,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			episodes.GET("/:episodeID", generalPodcastController.GetEpisodeDetails)
 		}
 
-		comments := routerGroup.Group("/comments/:postID")
+		comments := public.Group("/comments/:postID")
 		{
 			comments.GET("", generalCommentController.GetComments)
 		}

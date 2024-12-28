@@ -291,7 +291,7 @@ func (userService *UserService) GetRolesList() []dto.RoleDetailsResponse {
 	return rolesDetails
 }
 
-func (userService *UserService) GetRoleOwners(roleID uint) map[string]string {
+func (userService *UserService) GetRoleOwners(roleID uint) []dto.UserDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, roleExist := userService.userRepository.FindRoleByID(roleID)
 	if !roleExist {
@@ -299,9 +299,12 @@ func (userService *UserService) GetRoleOwners(roleID uint) map[string]string {
 		panic(notFoundError)
 	}
 	users := userService.userRepository.FindUsersByRoleID(roleID)
-	userDetails := make(map[string]string)
-	for _, user := range users {
-		userDetails[user.Email] = user.Name
+	userDetails := make([]dto.UserDetailsResponse, len(users))
+	for i, user := range users {
+		userDetails[i] = dto.UserDetailsResponse{
+			Name:  user.Name,
+			Email: user.Email,
+		}
 	}
 	return userDetails
 }

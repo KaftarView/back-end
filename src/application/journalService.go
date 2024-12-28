@@ -34,11 +34,11 @@ func NewJournalService(
 	}
 }
 
-func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.JournalsListResponse {
+func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.JournalDetailsResponse {
 	offset := (page - 1) * pageSize
 	journalsList, _ := journalService.journalRepository.FindAllJournals(offset, pageSize)
 
-	journalsDetails := make([]dto.JournalsListResponse, len(journalsList))
+	journalsDetails := make([]dto.JournalDetailsResponse, len(journalsList))
 	for i, journal := range journalsList {
 		banner := ""
 		if journal.BannerPath != "" {
@@ -49,7 +49,7 @@ func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.
 			file = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
 		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
-		journalsDetails[i] = dto.JournalsListResponse{
+		journalsDetails[i] = dto.JournalDetailsResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
 			CreatedAt:   journal.CreatedAt,
@@ -152,7 +152,7 @@ func (journalService *JournalService) DeleteJournal(journalID uint) {
 	journalService.journalRepository.DeleteJournal(journalID)
 }
 
-func (journalService *JournalService) SearchJournals(query string, page, pageSize int) []dto.JournalsListResponse {
+func (journalService *JournalService) SearchJournals(query string, page, pageSize int) []dto.JournalDetailsResponse {
 	var journalsList []*entities.Journal
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -161,7 +161,7 @@ func (journalService *JournalService) SearchJournals(query string, page, pageSiz
 		journalsList, _ = journalService.journalRepository.FindAllJournals(offset, pageSize)
 	}
 
-	journalsDetails := make([]dto.JournalsListResponse, len(journalsList))
+	journalsDetails := make([]dto.JournalDetailsResponse, len(journalsList))
 	for i, journal := range journalsList {
 		banner := ""
 		if journal.BannerPath != "" {
@@ -172,7 +172,7 @@ func (journalService *JournalService) SearchJournals(query string, page, pageSiz
 			banner = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
 		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
-		journalsDetails[i] = dto.JournalsListResponse{
+		journalsDetails[i] = dto.JournalDetailsResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
 			CreatedAt:   journal.CreatedAt,
