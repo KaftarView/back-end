@@ -1,7 +1,7 @@
 package controller_v1_journal
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 
@@ -10,12 +10,12 @@ import (
 
 type GeneralJournalController struct {
 	constants      *bootstrap.Constants
-	journalService *application.JournalService
+	journalService application_interfaces.JournalService
 }
 
 func NewGeneralJournalController(
 	constants *bootstrap.Constants,
-	journalService *application.JournalService,
+	journalService application_interfaces.JournalService,
 ) *GeneralJournalController {
 	return &GeneralJournalController{
 		constants:      constants,

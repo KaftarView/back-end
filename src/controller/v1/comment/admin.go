@@ -1,7 +1,7 @@
 package controller_v1_comment
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 
@@ -10,12 +10,12 @@ import (
 
 type AdminCommentController struct {
 	constants      *bootstrap.Constants
-	commentService *application.CommentService
+	commentService application_interfaces.CommentService
 }
 
 func NewAdminCommentController(
 	constants *bootstrap.Constants,
-	commentService *application.CommentService,
+	commentService application_interfaces.CommentService,
 ) *AdminCommentController {
 	return &AdminCommentController{
 		constants:      constants,

@@ -2,6 +2,7 @@ package application
 
 import (
 	application_aws "first-project/src/application/aws"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
@@ -12,10 +13,10 @@ import (
 	"time"
 )
 
-type NewsService struct {
+type newsService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
-	categoryService   *CategoryService
+	categoryService   application_interfaces.CategoryService
 	commentRepository *repository_database.CommentRepository
 	newsRepository    *repository_database.NewsRepository
 	userRepository    *repository_database.UserRepository
@@ -24,12 +25,12 @@ type NewsService struct {
 func NewNewsService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
-	categoryService *CategoryService,
+	categoryService application_interfaces.CategoryService,
 	commentRepository *repository_database.CommentRepository,
 	newsRepository *repository_database.NewsRepository,
 	userRepository *repository_database.UserRepository,
-) *NewsService {
-	return &NewsService{
+) *newsService {
+	return &newsService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		categoryService:   categoryService,
@@ -41,7 +42,7 @@ func NewNewsService(
 
 const bannerPathFormat = "banners/podcasts/%d/images/%s"
 
-func (newsService *NewsService) CreateNews(newsDetails dto.CreateNewsRequest) *entities.News {
+func (newsService *newsService) CreateNews(newsDetails dto.CreateNewsRequest) *entities.News {
 	var conflictError exceptions.ConflictError
 	_, newsExist := newsService.newsRepository.FindNewsByTitle(newsDetails.Title)
 	if newsExist {
@@ -80,7 +81,7 @@ func (newsService *NewsService) CreateNews(newsDetails dto.CreateNewsRequest) *e
 	return newsModel
 }
 
-func (newsService *NewsService) UpdateNews(newsDetails dto.UpdateNewsRequest) {
+func (newsService *newsService) UpdateNews(newsDetails dto.UpdateNewsRequest) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	news, newsExist := newsService.newsRepository.FindNewsByID(newsDetails.ID)
@@ -132,7 +133,7 @@ func (newsService *NewsService) UpdateNews(newsDetails dto.UpdateNewsRequest) {
 	newsService.newsRepository.UpdateNews(news)
 }
 
-func (newsService *NewsService) DeleteNews(newsID uint) {
+func (newsService *newsService) DeleteNews(newsID uint) {
 	var notFoundError exceptions.NotFoundError
 	news, newsExist := newsService.newsRepository.FindNewsByID(newsID)
 	if !newsExist {
@@ -148,7 +149,7 @@ func (newsService *NewsService) DeleteNews(newsID uint) {
 	newsService.newsRepository.DeleteNews(newsID)
 }
 
-func (newsService *NewsService) GetNewsDetails(newsID uint) dto.NewsDetailsResponse {
+func (newsService *newsService) GetNewsDetails(newsID uint) dto.NewsDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	news, newsExist := newsService.newsRepository.FindNewsByID(newsID)
 	if !newsExist {
@@ -189,7 +190,7 @@ func (newsService *NewsService) GetNewsDetails(newsID uint) dto.NewsDetailsRespo
 	return newsDetails
 }
 
-func (newsService *NewsService) GetNewsList(page, pageSize int) []dto.NewsDetailsResponse {
+func (newsService *newsService) GetNewsList(page, pageSize int) []dto.NewsDetailsResponse {
 	offset := (page - 1) * pageSize
 	newsList, _ := newsService.newsRepository.FindAllNews(offset, pageSize)
 
@@ -222,7 +223,7 @@ func (newsService *NewsService) GetNewsList(page, pageSize int) []dto.NewsDetail
 	return newsDetails
 }
 
-func (newsService *NewsService) SearchNews(query string, page, pageSize int) []dto.NewsDetailsResponse {
+func (newsService *newsService) SearchNews(query string, page, pageSize int) []dto.NewsDetailsResponse {
 	var newsList []*entities.News
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -259,7 +260,7 @@ func (newsService *NewsService) SearchNews(query string, page, pageSize int) []d
 	return newsDetails
 }
 
-func (newsService *NewsService) FilterNewsByCategory(categories []string, page, pageSize int) []dto.NewsDetailsResponse {
+func (newsService *newsService) FilterNewsByCategory(categories []string, page, pageSize int) []dto.NewsDetailsResponse {
 	var newsList []*entities.News
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {

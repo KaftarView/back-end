@@ -1,7 +1,7 @@
 package controller_v1_journal
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"mime/multipart"
@@ -11,12 +11,12 @@ import (
 
 type AdminJournalController struct {
 	constants      *bootstrap.Constants
-	journalService *application.JournalService
+	journalService application_interfaces.JournalService
 }
 
 func NewAdminJournalController(
 	constants *bootstrap.Constants,
-	journalService *application.JournalService,
+	journalService application_interfaces.JournalService,
 ) *AdminJournalController {
 	return &AdminJournalController{
 		constants:      constants,

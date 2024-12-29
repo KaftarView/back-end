@@ -1,7 +1,7 @@
 package controller_v1_user
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 
@@ -10,12 +10,12 @@ import (
 
 type AdminUserController struct {
 	constants   *bootstrap.Constants
-	userService *application.UserService
+	userService application_interfaces.UserService
 }
 
 func NewAdminUserController(
 	constants *bootstrap.Constants,
-	userService *application.UserService,
+	userService application_interfaces.UserService,
 ) *AdminUserController {
 	return &AdminUserController{
 		constants:   constants,

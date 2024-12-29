@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type JournalService struct {
+type journalService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
 	userRepository    *repository_database.UserRepository
@@ -25,8 +25,8 @@ func NewJournalService(
 	awsS3Service *application_aws.S3service,
 	userRepository *repository_database.UserRepository,
 	journalRepository *repository_database.JournalRepository,
-) *JournalService {
-	return &JournalService{
+) *journalService {
+	return &journalService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		userRepository:    userRepository,
@@ -34,7 +34,7 @@ func NewJournalService(
 	}
 }
 
-func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.JournalDetailsResponse {
+func (journalService *journalService) GetJournalsList(page, pageSize int) []dto.JournalDetailsResponse {
 	offset := (page - 1) * pageSize
 	journalsList, _ := journalService.journalRepository.FindAllJournals(offset, pageSize)
 
@@ -63,7 +63,7 @@ func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.
 	return journalsDetails
 }
 
-func (journalService *JournalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
+func (journalService *journalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
 	var conflictError exceptions.ConflictError
 	_, journalExist := journalService.journalRepository.FindJournalByName(name)
 	if journalExist {
@@ -92,7 +92,7 @@ func (journalService *JournalService) CreateJournal(name, description string, ba
 	return journalModel
 }
 
-func (journalService *JournalService) UpdateJournal(journalID uint, name, description *string, banner, journalFile *multipart.FileHeader) {
+func (journalService *journalService) UpdateJournal(journalID uint, name, description *string, banner, journalFile *multipart.FileHeader) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	journal, journalExist := journalService.journalRepository.FindJournalByID(journalID)
@@ -134,7 +134,7 @@ func (journalService *JournalService) UpdateJournal(journalID uint, name, descri
 	journalService.journalRepository.UpdateJournal(journal)
 }
 
-func (journalService *JournalService) DeleteJournal(journalID uint) {
+func (journalService *journalService) DeleteJournal(journalID uint) {
 	var notFoundError exceptions.NotFoundError
 	journal, journalExist := journalService.journalRepository.FindJournalByID(journalID)
 	if !journalExist {
@@ -152,7 +152,7 @@ func (journalService *JournalService) DeleteJournal(journalID uint) {
 	journalService.journalRepository.DeleteJournal(journalID)
 }
 
-func (journalService *JournalService) SearchJournals(query string, page, pageSize int) []dto.JournalDetailsResponse {
+func (journalService *journalService) SearchJournals(query string, page, pageSize int) []dto.JournalDetailsResponse {
 	var journalsList []*entities.Journal
 	offset := (page - 1) * pageSize
 	if query != "" {

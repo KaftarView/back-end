@@ -1,7 +1,7 @@
 package controller_v1_news
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/dto"
@@ -12,12 +12,12 @@ import (
 
 type AdminNewsController struct {
 	constants   *bootstrap.Constants
-	newsService *application.NewsService
+	newsService application_interfaces.NewsService
 }
 
 func NewAdminNewsController(
 	constants *bootstrap.Constants,
-	newsService *application.NewsService,
+	newsService application_interfaces.NewsService,
 ) *AdminNewsController {
 	return &AdminNewsController{
 		constants:   constants,

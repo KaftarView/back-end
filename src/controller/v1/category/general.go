@@ -1,17 +1,17 @@
 package controller_v1_category
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/controller"
 
 	"github.com/gin-gonic/gin"
 )
 
 type GeneralCategoryController struct {
-	categoryService *application.CategoryService
+	categoryService application_interfaces.CategoryService
 }
 
-func NewGeneralCategoryController(categoryService *application.CategoryService) *GeneralCategoryController {
+func NewGeneralCategoryController(categoryService application_interfaces.CategoryService) *GeneralCategoryController {
 	return &GeneralCategoryController{categoryService: categoryService}
 }
 

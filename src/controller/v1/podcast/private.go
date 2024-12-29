@@ -1,7 +1,7 @@
 package controller_v1_podcast
 
 import (
-	"first-project/src/application"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"mime/multipart"
@@ -11,12 +11,12 @@ import (
 
 type AdminPodcastController struct {
 	constants      *bootstrap.Constants
-	podcastService *application.PodcastService
+	podcastService application_interfaces.PodcastService
 }
 
 func NewAdminPodcastController(
 	constants *bootstrap.Constants,
-	podcastService *application.PodcastService,
+	podcastService application_interfaces.PodcastService,
 ) *AdminPodcastController {
 	return &AdminPodcastController{
 		constants:      constants,

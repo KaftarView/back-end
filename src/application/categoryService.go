@@ -6,7 +6,7 @@ import (
 	repository_database "first-project/src/repository/database"
 )
 
-type CategoryService struct {
+type categoryService struct {
 	constants          *bootstrap.Constants
 	categoryRepository *repository_database.CategoryRepository
 }
@@ -14,18 +14,18 @@ type CategoryService struct {
 func NewCategoryService(
 	constants *bootstrap.Constants,
 	categoryRepository *repository_database.CategoryRepository,
-) *CategoryService {
-	return &CategoryService{
+) *categoryService {
+	return &categoryService{
 		constants:          constants,
 		categoryRepository: categoryRepository,
 	}
 }
 
-func (categoryService *CategoryService) GetListCategoryNames() []string {
+func (categoryService *categoryService) GetListCategoryNames() []string {
 	return categoryService.categoryRepository.FindAllCategories()
 }
 
-func (categoryService *CategoryService) GetCategoriesByName(categoryNames []string) []entities.Category {
+func (categoryService *categoryService) GetCategoriesByName(categoryNames []string) []entities.Category {
 	var categories []entities.Category
 	for _, name := range categoryNames {
 		category := categoryService.categoryRepository.CreateOrGetCategoryByName(name)

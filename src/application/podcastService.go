@@ -2,6 +2,7 @@ package application
 
 import (
 	application_aws "first-project/src/application/aws"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
@@ -13,10 +14,10 @@ import (
 	"time"
 )
 
-type PodcastService struct {
+type podcastService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
-	categoryService   *CategoryService
+	categoryService   application_interfaces.CategoryService
 	podcastRepository *repository_database.PodcastRepository
 	commentRepository *repository_database.CommentRepository
 	userRepository    *repository_database.UserRepository
@@ -25,13 +26,13 @@ type PodcastService struct {
 func NewPodcastService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
-	categoryService *CategoryService,
+	categoryService application_interfaces.CategoryService,
 	podcastRepository *repository_database.PodcastRepository,
 	commentRepository *repository_database.CommentRepository,
 	userRepository *repository_database.UserRepository,
 
-) *PodcastService {
-	return &PodcastService{
+) *podcastService {
+	return &podcastService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		categoryService:   categoryService,
@@ -41,7 +42,7 @@ func NewPodcastService(
 	}
 }
 
-func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.PodcastDetailsResponse {
+func (podcastService *podcastService) GetPodcastList(page, pageSize int) []dto.PodcastDetailsResponse {
 	offset := (page - 1) * pageSize
 	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts(offset, pageSize)
 	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
@@ -64,7 +65,7 @@ func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.P
 	return podcastsDetails
 }
 
-func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
+func (podcastService *podcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastID)
 	if !podcastExist {
@@ -98,7 +99,7 @@ func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.Podc
 	return podcastDetails
 }
 
-func (podcastService *PodcastService) CreatePodcast(name, description string, categoryNames []string, banner *multipart.FileHeader, publisherID uint) *entities.Podcast {
+func (podcastService *podcastService) CreatePodcast(name, description string, categoryNames []string, banner *multipart.FileHeader, publisherID uint) *entities.Podcast {
 	var conflictError exceptions.ConflictError
 	_, podcastExist := podcastService.podcastRepository.FindPodcastByName(name)
 	if podcastExist {
@@ -138,7 +139,7 @@ func (podcastService *PodcastService) CreatePodcast(name, description string, ca
 	return podcast
 }
 
-func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, description *string, categories *[]string, banner *multipart.FileHeader) {
+func (podcastService *podcastService) UpdatePodcast(podcastID uint, name, description *string, categories *[]string, banner *multipart.FileHeader) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
@@ -183,7 +184,7 @@ func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, descri
 	}
 }
 
-func (podcastService *PodcastService) DeletePodcast(podcastID uint) {
+func (podcastService *podcastService) DeletePodcast(podcastID uint) {
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastID)
 	if !podcastExist {
@@ -197,7 +198,7 @@ func (podcastService *PodcastService) DeletePodcast(podcastID uint) {
 	}
 }
 
-func (podcastService *PodcastService) SubscribePodcast(podcastID, userID uint) {
+func (podcastService *podcastService) SubscribePodcast(podcastID, userID uint) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
@@ -221,7 +222,7 @@ func (podcastService *PodcastService) SubscribePodcast(podcastID, userID uint) {
 	podcastService.podcastRepository.SubscribePodcast(podcast, user)
 }
 
-func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint) {
+func (podcastService *podcastService) UnSubscribePodcast(podcastID, userID uint) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
@@ -245,7 +246,7 @@ func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint)
 	podcastService.podcastRepository.UnSubscribePodcast(podcast, user)
 }
 
-func (podcastService *PodcastService) IsUserSubscribedPodcast(podcastID, userID uint) bool {
+func (podcastService *podcastService) IsUserSubscribedPodcast(podcastID, userID uint) bool {
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
 	if !podcastExist {
@@ -261,7 +262,7 @@ func (podcastService *PodcastService) IsUserSubscribedPodcast(podcastID, userID 
 	return podcastService.podcastRepository.ExistSubscriberByID(podcast, userID)
 }
 
-func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
+func (podcastService *podcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
 	offset := (page - 1) * pageSize
 	episodes, _ := podcastService.podcastRepository.FindAllEpisodes(offset, pageSize)
 	episodesDetails := make([]dto.EpisodeDetailsResponse, len(episodes))
@@ -288,7 +289,7 @@ func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.
 	return episodesDetails
 }
 
-func (podcastService *PodcastService) GetEpisodeDetails(episodeID uint) dto.EpisodeDetailsResponse {
+func (podcastService *podcastService) GetEpisodeDetails(episodeID uint) dto.EpisodeDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(episodeID)
 	if !episodeExist {
@@ -317,7 +318,7 @@ func (podcastService *PodcastService) GetEpisodeDetails(episodeID uint) dto.Epis
 	return episodeDetails
 }
 
-func (podcastService *PodcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {
+func (podcastService *podcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	_, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastID)
@@ -363,7 +364,7 @@ func (podcastService *PodcastService) CreateEpisode(name, description string, ba
 	return episode
 }
 
-func (podcastService *PodcastService) UpdateEpisode(episodeID uint, name, description *string, banner, audio *multipart.FileHeader) {
+func (podcastService *podcastService) UpdateEpisode(episodeID uint, name, description *string, banner, audio *multipart.FileHeader) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(episodeID)
@@ -414,7 +415,7 @@ func (podcastService *PodcastService) UpdateEpisode(episodeID uint, name, descri
 	}
 }
 
-func (podcastService *PodcastService) DeleteEpisode(episodeID uint) {
+func (podcastService *podcastService) DeleteEpisode(episodeID uint) {
 	var notFoundError exceptions.NotFoundError
 	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(episodeID)
 	if !episodeExist {
@@ -441,7 +442,7 @@ func (podcastService *PodcastService) DeleteEpisode(episodeID uint) {
 	}
 }
 
-func (podcastService *PodcastService) SearchEvents(query string, page, pageSize int) []dto.PodcastDetailsResponse {
+func (podcastService *podcastService) SearchEvents(query string, page, pageSize int) []dto.PodcastDetailsResponse {
 	var podcasts []*entities.Podcast
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -470,7 +471,7 @@ func (podcastService *PodcastService) SearchEvents(query string, page, pageSize 
 	return podcastsDetails
 }
 
-func (podcastService *PodcastService) FilterPodcastsByCategory(categories []string, page, pageSize int) []dto.PodcastDetailsResponse {
+func (podcastService *podcastService) FilterPodcastsByCategory(categories []string, page, pageSize int) []dto.PodcastDetailsResponse {
 	var podcasts []*entities.Podcast
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {
