@@ -6,17 +6,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type CategoryRepository struct {
+type categoryRepository struct {
 	db *gorm.DB
 }
 
-func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
-	return &CategoryRepository{
+func NewCategoryRepository(db *gorm.DB) *categoryRepository {
+	return &categoryRepository{
 		db: db,
 	}
 }
 
-func (repo *CategoryRepository) FindAllCategories() []string {
+func (repo *categoryRepository) FindAllCategories() []string {
 	var categoryNames []string
 	result := repo.db.Model(&entities.Category{}).Pluck("name", &categoryNames)
 	if result.Error != nil {
@@ -28,7 +28,7 @@ func (repo *CategoryRepository) FindAllCategories() []string {
 	return categoryNames
 }
 
-func (repo *CategoryRepository) CreateOrGetCategoryByName(name string) entities.Category {
+func (repo *categoryRepository) CreateOrGetCategoryByName(name string) entities.Category {
 	var category entities.Category
 	if err := repo.db.FirstOrCreate(&category, entities.Category{Name: name}).Error; err != nil {
 		panic(err)

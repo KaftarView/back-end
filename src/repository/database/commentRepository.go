@@ -6,17 +6,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type CommentRepository struct {
+type commentRepository struct {
 	db *gorm.DB
 }
 
-func NewCommentRepository(db *gorm.DB) *CommentRepository {
-	return &CommentRepository{
+func NewCommentRepository(db *gorm.DB) *commentRepository {
+	return &commentRepository{
 		db: db,
 	}
 }
 
-func (repo *CommentRepository) GetCommentsByEventID(eventID uint) []*entities.Comment {
+func (repo *commentRepository) GetCommentsByEventID(eventID uint) []*entities.Comment {
 	var comments []*entities.Comment
 
 	result := repo.db.Where("commentable_id = ?", eventID).Preload("Author").Find(&comments)
@@ -29,7 +29,7 @@ func (repo *CommentRepository) GetCommentsByEventID(eventID uint) []*entities.Co
 	return comments
 }
 
-func (repo *CommentRepository) CreateNewCommentable() *entities.Commentable {
+func (repo *commentRepository) CreateNewCommentable() *entities.Commentable {
 	commentable := entities.Commentable{}
 	result := repo.db.Create(&commentable)
 	if result.Error != nil {
@@ -38,7 +38,7 @@ func (repo *CommentRepository) CreateNewCommentable() *entities.Commentable {
 	return &commentable
 }
 
-func (repo *CommentRepository) FindCommentableByID(commentableID uint) (*entities.Commentable, bool) {
+func (repo *commentRepository) FindCommentableByID(commentableID uint) (*entities.Commentable, bool) {
 	var commentable entities.Commentable
 	result := repo.db.First(&commentable, "c_id = ?", commentableID)
 	if result.Error != nil {
@@ -50,7 +50,7 @@ func (repo *CommentRepository) FindCommentableByID(commentableID uint) (*entitie
 	return &commentable, true
 }
 
-func (repo *CommentRepository) FindCommentByID(commentID uint) (*entities.Comment, bool) {
+func (repo *commentRepository) FindCommentByID(commentID uint) (*entities.Comment, bool) {
 	var comment entities.Comment
 	result := repo.db.First(&comment, "id = ?", commentID)
 	if result.Error != nil {
@@ -63,13 +63,13 @@ func (repo *CommentRepository) FindCommentByID(commentID uint) (*entities.Commen
 
 }
 
-func (repo *CommentRepository) UpdateCommentContent(comment *entities.Comment, newContent string) {
+func (repo *commentRepository) UpdateCommentContent(comment *entities.Comment, newContent string) {
 	comment.Content = newContent
 	comment.IsModerated = true
 	repo.db.Save(comment)
 }
 
-func (repo *CommentRepository) DeleteCommentContent(comment *entities.Comment) {
+func (repo *commentRepository) DeleteCommentContent(comment *entities.Comment) {
 	err := repo.db.Unscoped().Delete(comment).Error
 	if err != nil {
 		panic(err)
@@ -77,7 +77,7 @@ func (repo *CommentRepository) DeleteCommentContent(comment *entities.Comment) {
 
 }
 
-func (repo *CommentRepository) CreateNewComment(authorID, commentableID uint, content string) *entities.Comment {
+func (repo *commentRepository) CreateNewComment(authorID, commentableID uint, content string) *entities.Comment {
 	comment := &entities.Comment{
 		AuthorID:      authorID,
 		IsModerated:   false,

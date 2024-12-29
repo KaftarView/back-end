@@ -7,17 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type PodcastRepository struct {
+type podcastRepository struct {
 	db *gorm.DB
 }
 
-func NewPodcastRepository(db *gorm.DB) *PodcastRepository {
-	return &PodcastRepository{
+func NewPodcastRepository(db *gorm.DB) *podcastRepository {
+	return &podcastRepository{
 		db: db,
 	}
 }
 
-func (repo *PodcastRepository) BeginTransaction() *gorm.DB {
+func (repo *podcastRepository) BeginTransaction() *gorm.DB {
 	tx := repo.db.Begin()
 	if tx.Error != nil {
 		panic(tx.Error)
@@ -25,7 +25,7 @@ func (repo *PodcastRepository) BeginTransaction() *gorm.DB {
 	return tx
 }
 
-func (repo *PodcastRepository) CreatePodcast(tx *gorm.DB, podcast *entities.Podcast) *entities.Podcast {
+func (repo *podcastRepository) CreatePodcast(tx *gorm.DB, podcast *entities.Podcast) *entities.Podcast {
 	result := tx.Create(podcast)
 	if result.Error != nil {
 		panic(result.Error)
@@ -33,21 +33,21 @@ func (repo *PodcastRepository) CreatePodcast(tx *gorm.DB, podcast *entities.Podc
 	return podcast
 }
 
-func (repo *PodcastRepository) UpdatePodcastCategories(podcastID uint, categories []entities.Category) {
+func (repo *podcastRepository) UpdatePodcastCategories(podcastID uint, categories []entities.Category) {
 	err := repo.db.Model(&entities.Podcast{ID: podcastID}).Association("Categories").Replace(categories)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) UpdatePodcast(tx *gorm.DB, podcast *entities.Podcast) {
+func (repo *podcastRepository) UpdatePodcast(tx *gorm.DB, podcast *entities.Podcast) {
 	err := tx.Save(podcast).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) FindAllPodcasts(offset, pageSize int) ([]*entities.Podcast, bool) {
+func (repo *podcastRepository) FindAllPodcasts(offset, pageSize int) ([]*entities.Podcast, bool) {
 	var podcasts []*entities.Podcast
 	result := repo.db.
 		Preload("Subscribers").
@@ -64,7 +64,7 @@ func (repo *PodcastRepository) FindAllPodcasts(offset, pageSize int) ([]*entitie
 	return podcasts, true
 }
 
-func (repo *PodcastRepository) FindDetailedPodcastByID(podcastID uint) (*entities.Podcast, bool) {
+func (repo *podcastRepository) FindDetailedPodcastByID(podcastID uint) (*entities.Podcast, bool) {
 	var podcast entities.Podcast
 	result := repo.db.
 		Preload("Subscribers").
@@ -82,7 +82,7 @@ func (repo *PodcastRepository) FindDetailedPodcastByID(podcastID uint) (*entitie
 	return &podcast, true
 }
 
-func (repo *PodcastRepository) FindPodcastByName(name string) (*entities.Podcast, bool) {
+func (repo *podcastRepository) FindPodcastByName(name string) (*entities.Podcast, bool) {
 	var podcast entities.Podcast
 	result := repo.db.First(&podcast, "name = ?", name)
 
@@ -95,7 +95,7 @@ func (repo *PodcastRepository) FindPodcastByName(name string) (*entities.Podcast
 	return &podcast, true
 }
 
-func (repo *PodcastRepository) FindPodcastByID(podcastID uint) (*entities.Podcast, bool) {
+func (repo *podcastRepository) FindPodcastByID(podcastID uint) (*entities.Podcast, bool) {
 	var podcast entities.Podcast
 	result := repo.db.First(&podcast, "id = ?", podcastID)
 
@@ -108,7 +108,7 @@ func (repo *PodcastRepository) FindPodcastByID(podcastID uint) (*entities.Podcas
 	return &podcast, true
 }
 
-func (repo *PodcastRepository) ExistSubscriberByID(podcast *entities.Podcast, userID uint) bool {
+func (repo *podcastRepository) ExistSubscriberByID(podcast *entities.Podcast, userID uint) bool {
 	var count int64
 	result := repo.db.Model(podcast).
 		Joins("JOIN podcast_subscribers ON podcast_subscribers.user_id = ? AND podcast_subscribers.podcast_id = ?", userID, podcast.ID).
@@ -119,28 +119,28 @@ func (repo *PodcastRepository) ExistSubscriberByID(podcast *entities.Podcast, us
 	return count > 0
 }
 
-func (repo *PodcastRepository) DeletePodcast(podcastID uint) {
+func (repo *podcastRepository) DeletePodcast(podcastID uint) {
 	err := repo.db.Unscoped().Delete(&entities.Podcast{}, podcastID).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) SubscribePodcast(podcast *entities.Podcast, user *entities.User) {
+func (repo *podcastRepository) SubscribePodcast(podcast *entities.Podcast, user *entities.User) {
 	err := repo.db.Model(podcast).Association("Subscribers").Append(user)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) UnSubscribePodcast(podcast *entities.Podcast, user *entities.User) {
+func (repo *podcastRepository) UnSubscribePodcast(podcast *entities.Podcast, user *entities.User) {
 	err := repo.db.Model(&podcast).Association("Subscribers").Delete(user)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episode, bool) {
+func (repo *podcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episode, bool) {
 	var episode entities.Episode
 	result := repo.db.First(&episode, "id = ?", episodeID)
 
@@ -153,7 +153,7 @@ func (repo *PodcastRepository) FindEpisodeByID(episodeID uint) (*entities.Episod
 	return &episode, true
 }
 
-func (repo *PodcastRepository) FindPodcastEpisodeByName(name string, podcastID uint) (*entities.Episode, bool) {
+func (repo *podcastRepository) FindPodcastEpisodeByName(name string, podcastID uint) (*entities.Episode, bool) {
 	var episode entities.Episode
 	result := repo.db.First(&episode, "name = ? AND podcast_id = ?", name, podcastID)
 
@@ -166,7 +166,7 @@ func (repo *PodcastRepository) FindPodcastEpisodeByName(name string, podcastID u
 	return &episode, true
 }
 
-func (repo *PodcastRepository) FindAllEpisodes(offset, pageSize int) ([]*entities.Episode, bool) {
+func (repo *podcastRepository) FindAllEpisodes(offset, pageSize int) ([]*entities.Episode, bool) {
 	var podcasts []*entities.Episode
 	result := repo.db.Offset(offset).Limit(pageSize).Find(&podcasts)
 
@@ -179,7 +179,7 @@ func (repo *PodcastRepository) FindAllEpisodes(offset, pageSize int) ([]*entitie
 	return podcasts, true
 }
 
-func (repo *PodcastRepository) CreateEpisode(tx *gorm.DB, episode *entities.Episode) *entities.Episode {
+func (repo *podcastRepository) CreateEpisode(tx *gorm.DB, episode *entities.Episode) *entities.Episode {
 	result := tx.Create(episode)
 	if result.Error != nil {
 		panic(result.Error)
@@ -187,21 +187,21 @@ func (repo *PodcastRepository) CreateEpisode(tx *gorm.DB, episode *entities.Epis
 	return episode
 }
 
-func (repo *PodcastRepository) UpdateEpisode(tx *gorm.DB, episode *entities.Episode) {
+func (repo *podcastRepository) UpdateEpisode(tx *gorm.DB, episode *entities.Episode) {
 	err := tx.Save(episode).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) DeleteEpisodeByID(tx *gorm.DB, episodeID uint) {
+func (repo *podcastRepository) DeleteEpisodeByID(tx *gorm.DB, episodeID uint) {
 	err := tx.Unscoped().Delete(&entities.Episode{}, episodeID).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *PodcastRepository) FullTextSearch(query string, offset, pageSize int) []*entities.Podcast {
+func (repo *podcastRepository) FullTextSearch(query string, offset, pageSize int) []*entities.Podcast {
 	var podcasts []*entities.Podcast
 
 	repo.db.Exec(`ALTER TABLE podcasts ADD FULLTEXT INDEX idx_name_description (name, description)`)
@@ -222,7 +222,7 @@ func (repo *PodcastRepository) FullTextSearch(query string, offset, pageSize int
 	return podcasts
 }
 
-func (repo *PodcastRepository) FindPodcastsByCategoryName(categories []string, offset, pageSize int) []*entities.Podcast {
+func (repo *podcastRepository) FindPodcastsByCategoryName(categories []string, offset, pageSize int) []*entities.Podcast {
 	var podcasts []*entities.Podcast
 
 	result := repo.db.

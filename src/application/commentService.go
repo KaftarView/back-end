@@ -4,19 +4,19 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 )
 
 type commentService struct {
 	constants         *bootstrap.Constants
-	commentRepository *repository_database.CommentRepository
-	userRepository    *repository_database.UserRepository
+	commentRepository repository_database_interfaces.CommentRepository
+	userRepository    repository_database_interfaces.UserRepository
 }
 
 func NewCommentService(
 	constants *bootstrap.Constants,
-	commentRepository *repository_database.CommentRepository,
-	userRepository *repository_database.UserRepository,
+	commentRepository repository_database_interfaces.CommentRepository,
+	userRepository repository_database_interfaces.UserRepository,
 ) *commentService {
 	return &commentService{
 		constants:         constants,

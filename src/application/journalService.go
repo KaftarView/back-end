@@ -7,7 +7,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"fmt"
 	"mime/multipart"
 	"time"
@@ -16,15 +16,15 @@ import (
 type journalService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
-	userRepository    *repository_database.UserRepository
-	journalRepository *repository_database.JournalRepository
+	userRepository    repository_database_interfaces.UserRepository
+	journalRepository repository_database_interfaces.JournalRepository
 }
 
 func NewJournalService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
-	userRepository *repository_database.UserRepository,
-	journalRepository *repository_database.JournalRepository,
+	userRepository repository_database_interfaces.UserRepository,
+	journalRepository repository_database_interfaces.JournalRepository,
 ) *journalService {
 	return &journalService{
 		constants:         constants,

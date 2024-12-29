@@ -8,7 +8,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"fmt"
 	"mime/multipart"
 	"time"
@@ -18,16 +18,16 @@ type eventService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
 	categoryService   application_interfaces.CategoryService
-	eventRepository   *repository_database.EventRepository
-	commentRepository *repository_database.CommentRepository
+	eventRepository   repository_database_interfaces.EventRepository
+	commentRepository repository_database_interfaces.CommentRepository
 }
 
 func NewEventService(
 	constants *bootstrap.Constants,
 	awsService *application_aws.S3service,
 	categoryService application_interfaces.CategoryService,
-	eventRepository *repository_database.EventRepository,
-	commentRepository *repository_database.CommentRepository,
+	eventRepository repository_database_interfaces.EventRepository,
+	commentRepository repository_database_interfaces.CommentRepository,
 ) *eventService {
 	return &eventService{
 		constants:         constants,

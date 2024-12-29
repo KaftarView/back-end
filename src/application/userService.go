@@ -6,7 +6,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -14,12 +14,14 @@ import (
 
 type userService struct {
 	constants      *bootstrap.Constants
-	userRepository *repository_database.UserRepository
+	userRepository repository_database_interfaces.UserRepository
 	otpService     *OTPService
 }
 
 func NewUserService(
-	constants *bootstrap.Constants, userRepository *repository_database.UserRepository, otpService *OTPService,
+	constants *bootstrap.Constants,
+	userRepository repository_database_interfaces.UserRepository,
+	otpService *OTPService,
 ) *userService {
 	return &userService{
 		constants:      constants,

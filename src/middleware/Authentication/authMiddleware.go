@@ -7,7 +7,7 @@ import (
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	jwt_keys "first-project/src/jwtKeys"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -15,13 +15,13 @@ import (
 
 type AuthMiddleware struct {
 	constants      *bootstrap.Constants
-	userRepository *repository_database.UserRepository
+	userRepository repository_database_interfaces.UserRepository
 	jwtService     *application_jwt.JWTToken
 }
 
 func NewAuthMiddleware(
 	constants *bootstrap.Constants,
-	userRepository *repository_database.UserRepository,
+	userRepository repository_database_interfaces.UserRepository,
 	jwtService *application_jwt.JWTToken,
 ) *AuthMiddleware {
 	return &AuthMiddleware{

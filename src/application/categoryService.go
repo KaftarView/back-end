@@ -3,17 +3,17 @@ package application
 import (
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 )
 
 type categoryService struct {
 	constants          *bootstrap.Constants
-	categoryRepository *repository_database.CategoryRepository
+	categoryRepository repository_database_interfaces.CategoryRepository
 }
 
 func NewCategoryService(
 	constants *bootstrap.Constants,
-	categoryRepository *repository_database.CategoryRepository,
+	categoryRepository repository_database_interfaces.CategoryRepository,
 ) *categoryService {
 	return &categoryService{
 		constants:          constants,

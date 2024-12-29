@@ -8,7 +8,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"fmt"
 	"time"
 )
@@ -17,18 +17,18 @@ type newsService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
 	categoryService   application_interfaces.CategoryService
-	commentRepository *repository_database.CommentRepository
-	newsRepository    *repository_database.NewsRepository
-	userRepository    *repository_database.UserRepository
+	commentRepository repository_database_interfaces.CommentRepository
+	newsRepository    repository_database_interfaces.NewsRepository
+	userRepository    repository_database_interfaces.UserRepository
 }
 
 func NewNewsService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
 	categoryService application_interfaces.CategoryService,
-	commentRepository *repository_database.CommentRepository,
-	newsRepository *repository_database.NewsRepository,
-	userRepository *repository_database.UserRepository,
+	commentRepository repository_database_interfaces.CommentRepository,
+	newsRepository repository_database_interfaces.NewsRepository,
+	userRepository repository_database_interfaces.UserRepository,
 ) *newsService {
 	return &newsService{
 		constants:         constants,

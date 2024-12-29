@@ -8,7 +8,7 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"fmt"
 	"mime/multipart"
 	"time"
@@ -18,18 +18,18 @@ type podcastService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
 	categoryService   application_interfaces.CategoryService
-	podcastRepository *repository_database.PodcastRepository
-	commentRepository *repository_database.CommentRepository
-	userRepository    *repository_database.UserRepository
+	podcastRepository repository_database_interfaces.PodcastRepository
+	commentRepository repository_database_interfaces.CommentRepository
+	userRepository    repository_database_interfaces.UserRepository
 }
 
 func NewPodcastService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
 	categoryService application_interfaces.CategoryService,
-	podcastRepository *repository_database.PodcastRepository,
-	commentRepository *repository_database.CommentRepository,
-	userRepository *repository_database.UserRepository,
+	podcastRepository repository_database_interfaces.PodcastRepository,
+	commentRepository repository_database_interfaces.CommentRepository,
+	userRepository repository_database_interfaces.UserRepository,
 
 ) *podcastService {
 	return &podcastService{
