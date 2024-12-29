@@ -24,35 +24,18 @@ func NewGeneralPodcastController(
 }
 
 func (generalPodcastController *GeneralPodcastController) GetPodcastsList(c *gin.Context) {
-	type podcastListParams struct {
-		Page     int `form:"page"`
-		PageSize int `form:"pageSize"`
-	}
-	param := controller.Validated[podcastListParams](c, &generalPodcastController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
-	podcasts := generalPodcastController.podcastService.GetPodcastList(param.Page, param.PageSize)
+	pagination := controller.GetPagination(c, &generalPodcastController.constants.Context)
+	podcasts := generalPodcastController.podcastService.GetPodcastList(pagination.Page, pagination.PageSize)
 	controller.Response(c, 200, "", podcasts)
 }
 
 func (generalPodcastController *GeneralPodcastController) SearchPodcast(c *gin.Context) {
 	type searchPodcastsParams struct {
-		Query    string `form:"query"`
-		Page     int    `form:"page"`
-		PageSize int    `form:"pageSize"`
+		Query string `form:"query"`
 	}
 	param := controller.Validated[searchPodcastsParams](c, &generalPodcastController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
-	podcasts := generalPodcastController.podcastService.SearchEvents(param.Query, param.Page, param.PageSize)
+	pagination := controller.GetPagination(c, &generalPodcastController.constants.Context)
+	podcasts := generalPodcastController.podcastService.SearchEvents(param.Query, pagination.Page, pagination.PageSize)
 
 	controller.Response(c, 200, "", podcasts)
 }
@@ -60,35 +43,17 @@ func (generalPodcastController *GeneralPodcastController) SearchPodcast(c *gin.C
 func (generalPodcastController *GeneralPodcastController) FilterPodcastByCategory(c *gin.Context) {
 	type filterPodcastsParams struct {
 		Categories []string `form:"categories"`
-		Page       int      `form:"page"`
-		PageSize   int      `form:"pageSize"`
 	}
 	param := controller.Validated[filterPodcastsParams](c, &generalPodcastController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
-
-	podcasts := generalPodcastController.podcastService.FilterPodcastsByCategory(param.Categories, param.Page, param.PageSize)
+	pagination := controller.GetPagination(c, &generalPodcastController.constants.Context)
+	podcasts := generalPodcastController.podcastService.FilterPodcastsByCategory(param.Categories, pagination.Page, pagination.PageSize)
 
 	controller.Response(c, 200, "", podcasts)
 }
 
 func (generalPodcastController *GeneralPodcastController) GetEpisodesList(c *gin.Context) {
-	type episodeListParams struct {
-		Page     int `form:"page"`
-		PageSize int `form:"pageSize"`
-	}
-	param := controller.Validated[episodeListParams](c, &generalPodcastController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
-	episodes := generalPodcastController.podcastService.GetEpisodesList(param.Page, param.PageSize)
+	pagination := controller.GetPagination(c, &generalPodcastController.constants.Context)
+	episodes := generalPodcastController.podcastService.GetEpisodesList(pagination.Page, pagination.PageSize)
 	controller.Response(c, 200, "", episodes)
 }
 

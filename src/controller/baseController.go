@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"first-project/src/bootstrap"
+
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
 )
@@ -20,4 +22,21 @@ func GetTemplatePath(c *gin.Context, transKey string) string {
 		return "fa.html"
 	}
 	return "en.html"
+}
+
+type PaginationParams struct {
+	Page     int `form:"page"`
+	PageSize int `form:"pageSize"`
+}
+
+func GetPagination(c *gin.Context, constants *bootstrap.Context) PaginationParams {
+	param := Validated[PaginationParams](c, constants)
+
+	if param.Page == 0 {
+		param.Page = 1
+	}
+	if param.PageSize == 0 {
+		param.PageSize = 10
+	}
+	return param
 }

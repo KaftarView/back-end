@@ -29,38 +29,21 @@ func NewGeneralEventController(
 }
 
 func (generalEventController *GeneralEventController) ListEvents(c *gin.Context) {
-	type eventsListParams struct {
-		Page     int `form:"page"`
-		PageSize int `form:"pageSize"`
-	}
-	param := controller.Validated[eventsListParams](c, &generalEventController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
+	pagination := controller.GetPagination(c, &generalEventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published}
-	events := generalEventController.eventService.GetEventsList(allowedStatus, param.Page, param.PageSize)
+	events := generalEventController.eventService.GetEventsList(allowedStatus, pagination.Page, pagination.PageSize)
 
 	controller.Response(c, 200, "", events)
 }
 
 func (generalEventController *GeneralEventController) SearchEvents(c *gin.Context) {
 	type searchEventParams struct {
-		Query    string `form:"query"`
-		Page     int    `form:"page"`
-		PageSize int    `form:"pageSize"`
+		Query string `form:"query"`
 	}
 	param := controller.Validated[searchEventParams](c, &generalEventController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
+	pagination := controller.GetPagination(c, &generalEventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
-	events := generalEventController.eventService.SearchEvents(param.Query, param.Page, param.PageSize, allowedStatus)
+	events := generalEventController.eventService.SearchEvents(param.Query, pagination.Page, pagination.PageSize, allowedStatus)
 
 	controller.Response(c, 200, "", events)
 }
@@ -68,18 +51,11 @@ func (generalEventController *GeneralEventController) SearchEvents(c *gin.Contex
 func (generalEventController *GeneralEventController) FilterEvents(c *gin.Context) {
 	type filterEventParams struct {
 		Categories []string `form:"categories"`
-		Page       int      `form:"page"`
-		PageSize   int      `form:"pageSize"`
 	}
 	param := controller.Validated[filterEventParams](c, &generalEventController.constants.Context)
-	if param.Page == 0 {
-		param.Page = 1
-	}
-	if param.PageSize == 0 {
-		param.PageSize = 10
-	}
+	pagination := controller.GetPagination(c, &generalEventController.constants.Context)
 	allowedStatus := []enums.EventStatus{enums.Published, enums.Completed}
-	events := generalEventController.eventService.FilterEventsByCategories(param.Categories, param.Page, param.PageSize, allowedStatus)
+	events := generalEventController.eventService.FilterEventsByCategories(param.Categories, pagination.Page, pagination.PageSize, allowedStatus)
 
 	controller.Response(c, 200, "", events)
 }
