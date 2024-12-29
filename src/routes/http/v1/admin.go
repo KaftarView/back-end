@@ -62,12 +62,14 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 
 			readGroup.GET("ticket/:ticketID", adminEventController.GetTicketDetails)
 			readGroup.GET("discount/:discountID", adminEventController.GetDiscountDetails)
+			readGroup.GET("media/:mediaID", adminEventController.GetMediaDetails)
 
 			readSingleEventGroup := readGroup.Group("/:eventID")
 			{
 				readSingleEventGroup.GET("", adminEventController.GetEventDetails)
 				readSingleEventGroup.GET("/tickets", adminEventController.GetAllTicketDetails)
 				readSingleEventGroup.GET("/discounts", adminEventController.GetAllDiscountDetails)
+				readSingleEventGroup.GET("/media", adminEventController.GetEventMedia)
 			}
 		}
 
@@ -104,8 +106,13 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 				discountSubGroup.DELETE("", adminEventController.DeleteDiscount)
 			}
 
+			mediaSubGroup := manageEventsGroup.Group("/media/:mediaID")
+			{
+				mediaSubGroup.PUT("", adminEventController.UpdateEventMedia)
+				mediaSubGroup.DELETE("", adminEventController.DeleteEventMedia)
+			}
+
 			manageEventsGroup.DELETE("/organizer/:organizerID", adminEventController.DeleteOrganizer)
-			manageEventsGroup.DELETE("/media/:mediaId", adminEventController.DeleteEventMedia)
 		}
 	}
 

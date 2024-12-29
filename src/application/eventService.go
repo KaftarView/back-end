@@ -592,14 +592,74 @@ func (eventService *EventService) DeleteOrganizer(organizerID uint) {
 	eventService.eventRepository.DeleteOrganizer(organizerID)
 }
 
-func (eventService *EventService) GetEventMediaDetails(mediaID, eventID uint) *entities.Media {
+func (eventService *EventService) GetEventMediaDetails(mediaID uint) dto.MediaDetailsResponse {
 	var notFoundError exceptions.NotFoundError
-	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
+	media, mediaExist := eventService.eventRepository.FindMediaByID(mediaID)
 	if !mediaExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Media
 		panic(notFoundError)
 	}
-	return media
+	mediaPath := eventService.awsS3Service.GetPresignedURL(enums.SessionsBucket, media.Path, 8*time.Hour)
+	mediaDetails := dto.MediaDetailsResponse{
+		ID:        mediaID,
+		Name:      media.Name,
+		CreatedAt: media.CreatedAt,
+		Size:      media.Size,
+		MediaPath: mediaPath,
+	}
+
+	return mediaDetails
+}
+
+func (eventService *EventService) GetListEventMedia(eventID uint) []dto.MediaDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventID)
+	allMediaDetails := make([]dto.MediaDetailsResponse, len(allEventMedia))
+	for i, media := range allEventMedia {
+		mediaPath := eventService.awsS3Service.GetPresignedURL(enums.SessionsBucket, media.Path, 8*time.Hour)
+		allMediaDetails[i] = dto.MediaDetailsResponse{
+			ID:        media.ID,
+			Name:      media.Name,
+			CreatedAt: media.CreatedAt,
+			Size:      media.Size,
+			MediaPath: mediaPath,
+		}
+	}
+	return allMediaDetails
+}
+
+func (eventService *EventService) UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	media, mediaExist := eventService.eventRepository.FindMediaByID(mediaID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+
+	if name != nil {
+		_, mediaExist := eventService.eventRepository.FindEventMediaByName(*name, mediaID)
+		if mediaExist {
+			conflictError.AppendError(
+				eventService.constants.ErrorField.Media,
+				eventService.constants.ErrorTag.AlreadyExist)
+			panic(conflictError)
+		}
+		media.Name = *name
+	}
+	if file != nil {
+		eventService.awsS3Service.DeleteObject(enums.SessionsBucket, media.Path)
+		mediaPath := fmt.Sprintf("media/events/%d/resources/%s", media.EventID, file.Filename)
+		eventService.awsS3Service.UploadObject(enums.SessionsBucket, mediaPath, file)
+		media.Path = mediaPath
+	}
+
+	eventService.eventRepository.UpdateEventMedia(media)
 }
 
 func (eventService *EventService) DeleteEventMedia(mediaID uint) {

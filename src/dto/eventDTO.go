@@ -126,8 +126,10 @@ type DiscountDetailsResponse struct {
 	MinTickets     uint      `json:"minTickets"`
 }
 
-type EventMediaDetails struct {
+type MediaDetailsResponse struct {
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
-	Size      string    `json:"mediaSize"`
+	Size      int       `json:"mediaSize"`
 	MediaPath string    `json:"mediaPath"`
 }

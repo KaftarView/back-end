@@ -19,7 +19,6 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 	}
 }
 
-const queryByIDAndEventID = "id = ? AND event_id = ?"
 const queryByID = "id = ?"
 const queryByEventID = "event_id = ?"
 const queryByStatusIn = "status IN ?"
@@ -314,19 +313,6 @@ func (repo *EventRepository) CreateNewMedia(media *entities.Media) *entities.Med
 	return media
 }
 
-func (repo *EventRepository) FindMediaByIDAndEventID(mediaID, eventID uint) (*entities.Media, bool) {
-	var media entities.Media
-	result := repo.db.Where(queryByIDAndEventID, mediaID, eventID).First(&media)
-
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return nil, false
-		}
-		panic(result.Error)
-	}
-	return &media, true
-}
-
 func (repo *EventRepository) FindMediaByID(mediaID uint) (*entities.Media, bool) {
 	var media entities.Media
 	result := repo.db.Where(queryByID, mediaID).First(&media)
@@ -338,6 +324,12 @@ func (repo *EventRepository) FindMediaByID(mediaID uint) (*entities.Media, bool)
 		panic(result.Error)
 	}
 	return &media, true
+}
+
+func (repo *EventRepository) UpdateEventMedia(media *entities.Media) {
+	if err := repo.db.Save(media).Error; err != nil {
+		panic(err)
+	}
 }
 
 func (repo *EventRepository) DeleteMedia(mediaID uint) {

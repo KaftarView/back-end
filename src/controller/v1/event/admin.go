@@ -105,6 +105,15 @@ func (adminEventController *AdminEventController) GetDiscountDetails(c *gin.Cont
 	controller.Response(c, 200, "", discountDetails)
 }
 
+func (adminEventController *AdminEventController) GetMediaDetails(c *gin.Context) {
+	type getEventParams struct {
+		MediaID uint `uri:"mediaID" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &adminEventController.constants.Context)
+	mediaDetails := adminEventController.eventService.GetEventMediaDetails(param.MediaID)
+	controller.Response(c, 200, "", mediaDetails)
+}
+
 func (adminEventController *AdminEventController) GetEventDetails(c *gin.Context) {
 	type getEventParams struct {
 		EventID uint `uri:"eventID" validate:"required"`
@@ -131,6 +140,15 @@ func (adminEventController *AdminEventController) GetAllDiscountDetails(c *gin.C
 	param := controller.Validated[getEventParams](c, &adminEventController.constants.Context)
 	discountDetails := adminEventController.eventService.GetEventDiscounts(param.EventID)
 	controller.Response(c, 200, "", discountDetails)
+}
+
+func (adminEventController *AdminEventController) GetEventMedia(c *gin.Context) {
+	type getEventParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[getEventParams](c, &adminEventController.constants.Context)
+	mediaDetails := adminEventController.eventService.GetListEventMedia(param.EventID)
+	controller.Response(c, 200, "", mediaDetails)
 }
 
 func (adminEventController *AdminEventController) CreateEvent(c *gin.Context) {
@@ -458,6 +476,20 @@ func (adminEventController *AdminEventController) DeleteOrganizer(c *gin.Context
 
 	trans := controller.GetTranslator(c, adminEventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteOrganizer")
+	controller.Response(c, 200, message, nil)
+}
+
+func (adminEventController *AdminEventController) UpdateEventMedia(c *gin.Context) {
+	type eventMedia struct {
+		Name    *string               `form:"name" validate:"omitempty,max=50"`
+		Media   *multipart.FileHeader `form:"media"`
+		MediaID uint                  `uri:"mediaID" validate:"required"`
+	}
+	param := controller.Validated[eventMedia](c, &adminEventController.constants.Context)
+	adminEventController.eventService.UpdateEventMedia(param.MediaID, param.Name, param.Media)
+
+	trans := controller.GetTranslator(c, adminEventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.updateMedia")
 	controller.Response(c, 200, message, nil)
 }
 
