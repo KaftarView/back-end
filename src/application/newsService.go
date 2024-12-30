@@ -9,7 +9,6 @@ import (
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
-	"fmt"
 	"time"
 )
 
@@ -40,8 +39,6 @@ func NewNewsService(
 	}
 }
 
-const bannerPathFormat = "banners/podcasts/%d/images/%s"
-
 func (newsService *newsService) CreateNews(newsDetails dto.CreateNewsRequest) *entities.News {
 	var conflictError exceptions.ConflictError
 	_, newsExist := newsService.newsRepository.FindNewsByTitle(newsDetails.Title)
@@ -55,13 +52,13 @@ func (newsService *newsService) CreateNews(newsDetails dto.CreateNewsRequest) *e
 	categories := newsService.categoryService.GetCategoriesByName(newsDetails.Categories)
 	commentable := newsService.commentRepository.CreateNewCommentable()
 
-	bannerPath := fmt.Sprintf(bannerPathFormat, commentable.CID, newsDetails.Banner.Filename)
-	newsService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, newsDetails.Banner)
+	bannerPath := newsService.constants.S3Service.GetNewsBannerKey(commentable.CID, newsDetails.Banner.Filename)
+	newsService.awsS3Service.UploadObject(enums.NewsBucket, bannerPath, newsDetails.Banner)
 
 	banner2Path := ""
 	if newsDetails.Banner2 != nil {
-		banner2Path = fmt.Sprintf(bannerPathFormat, commentable.CID, newsDetails.Banner2.Filename)
-		newsService.awsS3Service.UploadObject(enums.BannersBucket, banner2Path, newsDetails.Banner2)
+		banner2Path := newsService.constants.S3Service.GetNewsBannerKey(commentable.CID, newsDetails.Banner2.Filename)
+		newsService.awsS3Service.UploadObject(enums.NewsBucket, banner2Path, newsDetails.Banner2)
 	}
 
 	newsModel := &entities.News{
@@ -111,18 +108,18 @@ func (newsService *newsService) UpdateNews(newsDetails dto.UpdateNewsRequest) {
 	}
 	if newsDetails.Banner != nil {
 		if news.BannerPath != "" {
-			newsService.awsS3Service.DeleteObject(enums.BannersBucket, news.BannerPath)
+			newsService.awsS3Service.DeleteObject(enums.NewsBucket, news.BannerPath)
 		}
-		banner1Path := fmt.Sprintf(bannerPathFormat, news.ID, newsDetails.Banner.Filename)
-		newsService.awsS3Service.UploadObject(enums.BannersBucket, banner1Path, newsDetails.Banner)
+		banner1Path := newsService.constants.S3Service.GetNewsBannerKey(news.ID, newsDetails.Banner.Filename)
+		newsService.awsS3Service.UploadObject(enums.NewsBucket, banner1Path, newsDetails.Banner)
 		news.BannerPath = banner1Path
 	}
 	if newsDetails.Banner2 != nil {
 		if news.Banner2Path != "" {
-			newsService.awsS3Service.DeleteObject(enums.BannersBucket, news.Banner2Path)
+			newsService.awsS3Service.DeleteObject(enums.NewsBucket, news.Banner2Path)
 		}
-		banner2Path := fmt.Sprintf(bannerPathFormat, news.ID, newsDetails.Banner2.Filename)
-		newsService.awsS3Service.UploadObject(enums.BannersBucket, banner2Path, newsDetails.Banner2)
+		banner2Path := newsService.constants.S3Service.GetNewsBannerKey(news.ID, newsDetails.Banner2.Filename)
+		newsService.awsS3Service.UploadObject(enums.NewsBucket, banner2Path, newsDetails.Banner2)
 		news.Banner2Path = banner2Path
 	}
 	if newsDetails.Categories != nil {
@@ -141,10 +138,10 @@ func (newsService *newsService) DeleteNews(newsID uint) {
 		panic(notFoundError)
 	}
 	if news.BannerPath != "" {
-		newsService.awsS3Service.DeleteObject(enums.BannersBucket, news.BannerPath)
+		newsService.awsS3Service.DeleteObject(enums.NewsBucket, news.BannerPath)
 	}
 	if news.Banner2Path != "" {
-		newsService.awsS3Service.DeleteObject(enums.BannersBucket, news.Banner2Path)
+		newsService.awsS3Service.DeleteObject(enums.NewsBucket, news.Banner2Path)
 	}
 	newsService.newsRepository.DeleteNews(newsID)
 }
@@ -160,10 +157,10 @@ func (newsService *newsService) GetNewsDetails(newsID uint) dto.NewsDetailsRespo
 	banner1URL := ""
 	banner2URL := ""
 	if news.BannerPath != "" {
-		banner1URL = newsService.awsS3Service.GetPresignedURL(enums.BannersBucket, news.BannerPath, 8*time.Hour)
+		banner1URL = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 	}
 	if news.Banner2Path != "" {
-		banner2URL = newsService.awsS3Service.GetPresignedURL(enums.BannersBucket, news.Banner2Path, 8*time.Hour)
+		banner2URL = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.Banner2Path, 8*time.Hour)
 	}
 
 	author, _ := newsService.userRepository.FindByUserID(news.AuthorID)
@@ -198,7 +195,7 @@ func (newsService *newsService) GetNewsList(page, pageSize int) []dto.NewsDetail
 	for i, news := range newsList {
 		banner := ""
 		if news.BannerPath != "" {
-			banner = newsService.awsS3Service.GetPresignedURL(enums.BannersBucket, news.BannerPath, 8*time.Hour)
+			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 		}
 
 		author, _ := newsService.userRepository.FindByUserID(news.AuthorID)
@@ -236,7 +233,7 @@ func (newsService *newsService) SearchNews(query string, page, pageSize int) []d
 	for i, news := range newsList {
 		banner := ""
 		if news.BannerPath != "" {
-			banner = newsService.awsS3Service.GetPresignedURL(enums.BannersBucket, news.BannerPath, 8*time.Hour)
+			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 		}
 
 		author, _ := newsService.userRepository.FindByUserID(news.AuthorID)
@@ -273,7 +270,7 @@ func (newsService *newsService) FilterNewsByCategory(categories []string, page, 
 	for i, news := range newsList {
 		banner := ""
 		if news.BannerPath != "" {
-			banner = newsService.awsS3Service.GetPresignedURL(enums.BannersBucket, news.BannerPath, 8*time.Hour)
+			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 		}
 		author, _ := newsService.userRepository.FindByUserID(news.AuthorID)
 		categories := make([]string, len(news.Categories))

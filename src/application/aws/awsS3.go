@@ -25,17 +25,18 @@ type S3service struct {
 
 func NewS3Service(
 	constants *bootstrap.Constants,
-	bannerBucket *bootstrap.Bucket,
-	sessionsBucket *bootstrap.Bucket,
+	eventsBucket *bootstrap.Bucket,
 	podcastsBucket *bootstrap.Bucket,
-	profileBucket *bootstrap.Bucket,
-
+	newsBucket *bootstrap.Bucket,
+	journalsBucket *bootstrap.Bucket,
+	profilesBucket *bootstrap.Bucket,
 ) *S3service {
 	buckets := make(map[enums.BucketType]*bootstrap.Bucket)
-	buckets[enums.BannersBucket] = bannerBucket
-	buckets[enums.SessionsBucket] = sessionsBucket
+	buckets[enums.EventsBucket] = eventsBucket
 	buckets[enums.PodcastsBucket] = podcastsBucket
-	buckets[enums.ProfileBucket] = profileBucket
+	buckets[enums.NewsBucket] = newsBucket
+	buckets[enums.JournalsBucket] = journalsBucket
+	buckets[enums.ProfilesBucket] = profilesBucket
 	return &S3service{
 		constants: constants,
 		buckets:   buckets,

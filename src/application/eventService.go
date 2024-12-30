@@ -9,7 +9,6 @@ import (
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
-	"fmt"
 	"mime/multipart"
 	"time"
 )
@@ -71,8 +70,8 @@ func (eventService *eventService) CreateEvent(eventDetails dto.CreateEventReques
 	categories := eventService.categoryService.GetCategoriesByName(eventDetails.Categories)
 	commentable := eventService.commentRepository.CreateNewCommentable()
 
-	bannerPath := fmt.Sprintf("banners/events/%d/images/%s", commentable.CID, eventDetails.Banner.Filename)
-	eventService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, eventDetails.Banner)
+	bannerPath := eventService.constants.S3Service.GetEventBannerKey(commentable.CID, eventDetails.Banner.Filename)
+	eventService.awsS3Service.UploadObject(enums.EventsBucket, bannerPath, eventDetails.Banner)
 
 	eventDetailsModel := &entities.Event{
 		ID:          commentable.CID,
@@ -285,9 +284,9 @@ func updateBasicDetails(event *entities.Event, updateDetails dto.UpdateEventRequ
 
 func (eventService *eventService) updateEventBanner(event *entities.Event, banner *multipart.FileHeader) {
 	if banner != nil {
-		eventService.awsS3Service.DeleteObject(enums.BannersBucket, event.BannerPath)
-		bannerPath := fmt.Sprintf("profiles/events/%d/images/%s", event.ID, banner.Filename)
-		eventService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, banner)
+		eventService.awsS3Service.DeleteObject(enums.EventsBucket, event.BannerPath)
+		bannerPath := eventService.constants.S3Service.GetEventBannerKey(event.ID, banner.Filename)
+		eventService.awsS3Service.UploadObject(enums.EventsBucket, bannerPath, banner)
 		event.BannerPath = bannerPath
 	}
 }
@@ -355,10 +354,12 @@ func (eventService *eventService) CreateEventOrganizer(eventID uint, name, email
 		panic(conflictError)
 	}
 
-	profilePath := fmt.Sprintf("profiles/organizers/%d/images/%s", eventID, profile.Filename)
-	eventService.awsS3Service.UploadObject(enums.ProfileBucket, profilePath, profile)
+	organizer := eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description)
 
-	eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, profilePath)
+	profilePath := eventService.constants.S3Service.GetOrganizerProfileKey(organizer.ID, profile.Filename)
+	eventService.awsS3Service.UploadObject(enums.ProfilesBucket, profilePath, profile)
+	organizer.ProfilePath = profilePath
+	eventService.eventRepository.UpdateEventOrganizer(organizer)
 }
 
 func (eventService *eventService) GetEventByID(eventID uint) *entities.Event {
@@ -376,7 +377,7 @@ func (eventService *eventService) GetEventsList(allowedStatus []enums.EventStatu
 		for i, category := range categories {
 			categoryNames[i] = category.Name
 		}
-		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+		banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
 			CreatedAt:   event.CreatedAt,
@@ -417,7 +418,7 @@ func (eventService *eventService) GetEventDetails(allowedStatus []enums.EventSta
 		categoryNames[i] = category.Name
 	}
 
-	banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+	banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 
 	eventDetails := dto.EventDetailsResponse{
 		ID:          event.ID,
@@ -552,12 +553,12 @@ func (eventService *eventService) DeleteEvent(eventID uint) {
 
 	eventService.eventRepository.DeleteEvent(eventID)
 
-	eventService.awsS3Service.DeleteObject(enums.BannersBucket, event.BannerPath)
+	eventService.awsS3Service.DeleteObject(enums.EventsBucket, event.BannerPath)
 	for _, organizer := range eventOrganizers {
-		eventService.awsS3Service.DeleteObject(enums.ProfileBucket, organizer.ProfilePath)
+		eventService.awsS3Service.DeleteObject(enums.ProfilesBucket, organizer.ProfilePath)
 	}
 	for _, media := range eventMedia {
-		eventService.awsS3Service.DeleteObject(enums.SessionsBucket, media.Path)
+		eventService.awsS3Service.DeleteObject(enums.EventsBucket, media.Path)
 	}
 }
 
@@ -589,7 +590,7 @@ func (eventService *eventService) DeleteOrganizer(organizerID uint) {
 		panic(notFoundError)
 	}
 
-	eventService.awsS3Service.DeleteObject(enums.ProfileBucket, organizer.ProfilePath)
+	eventService.awsS3Service.DeleteObject(enums.ProfilesBucket, organizer.ProfilePath)
 	eventService.eventRepository.DeleteOrganizer(organizerID)
 }
 
@@ -600,12 +601,13 @@ func (eventService *eventService) GetEventMediaDetails(mediaID uint) dto.MediaDe
 		notFoundError.ErrorField = eventService.constants.ErrorField.Media
 		panic(notFoundError)
 	}
-	mediaPath := eventService.awsS3Service.GetPresignedURL(enums.SessionsBucket, media.Path, 8*time.Hour)
+	mediaPath := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, media.Path, 8*time.Hour)
 	mediaDetails := dto.MediaDetailsResponse{
 		ID:        mediaID,
 		Name:      media.Name,
 		CreatedAt: media.CreatedAt,
 		Size:      media.Size,
+		Type:      media.Type,
 		MediaPath: mediaPath,
 	}
 
@@ -622,12 +624,13 @@ func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDet
 	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventID)
 	allMediaDetails := make([]dto.MediaDetailsResponse, len(allEventMedia))
 	for i, media := range allEventMedia {
-		mediaPath := eventService.awsS3Service.GetPresignedURL(enums.SessionsBucket, media.Path, 8*time.Hour)
+		mediaPath := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, media.Path, 8*time.Hour)
 		allMediaDetails[i] = dto.MediaDetailsResponse{
 			ID:        media.ID,
 			Name:      media.Name,
 			CreatedAt: media.CreatedAt,
 			Size:      media.Size,
+			Type:      media.Type,
 			MediaPath: mediaPath,
 		}
 	}
@@ -654,9 +657,9 @@ func (eventService *eventService) UpdateEventMedia(mediaID uint, name *string, f
 		media.Name = *name
 	}
 	if file != nil {
-		eventService.awsS3Service.DeleteObject(enums.SessionsBucket, media.Path)
-		mediaPath := fmt.Sprintf("media/events/%d/resources/%s", media.EventID, file.Filename)
-		eventService.awsS3Service.UploadObject(enums.SessionsBucket, mediaPath, file)
+		eventService.awsS3Service.DeleteObject(enums.EventsBucket, media.Path)
+		mediaPath := eventService.constants.S3Service.GetEventSessionKey(media.EventID, mediaID, file.Filename)
+		eventService.awsS3Service.UploadObject(enums.EventsBucket, mediaPath, file)
 		media.Path = mediaPath
 	}
 
@@ -670,7 +673,7 @@ func (eventService *eventService) DeleteEventMedia(mediaID uint) {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Media
 		panic(notFoundError)
 	}
-	eventService.awsS3Service.DeleteObject(enums.SessionsBucket, media.Path)
+	eventService.awsS3Service.DeleteObject(enums.EventsBucket, media.Path)
 	eventService.eventRepository.DeleteMedia(mediaID)
 }
 
@@ -709,19 +712,24 @@ func (eventService *eventService) CreateEventMedia(eventID uint, mediaName strin
 	_, mediaExist := eventService.eventRepository.FindEventMediaByName(mediaName, eventID)
 	if mediaExist {
 		conflictError.AppendError(
-			eventService.constants.ErrorField.Ticket,
+			eventService.constants.ErrorField.Media,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	mediaPath := fmt.Sprintf("media/events/%d/resources/%s", eventID, mediaFile.Filename)
-	eventService.awsS3Service.UploadObject(enums.SessionsBucket, mediaPath, mediaFile)
 
 	mediaModel := &entities.Media{
 		Name:    mediaName,
-		Path:    mediaPath,
+		Size:    mediaFile.Size,
+		Type:    mediaFile.Header.Get("Content-Type"),
 		EventID: eventID,
 	}
 	eventService.eventRepository.CreateNewMedia(mediaModel)
+
+	mediaPath := eventService.constants.S3Service.GetEventSessionKey(eventID, mediaModel.ID, mediaFile.Filename)
+	eventService.awsS3Service.UploadObject(enums.EventsBucket, mediaPath, mediaFile)
+
+	mediaModel.Path = mediaPath
+	eventService.eventRepository.UpdateEventMedia(mediaModel)
 }
 
 func (eventService *eventService) SearchEvents(query string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
@@ -739,7 +747,7 @@ func (eventService *eventService) SearchEvents(query string, page, pageSize int,
 		for i, category := range categories {
 			categoryNames[i] = category.Name
 		}
-		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+		banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
 			CreatedAt:   event.CreatedAt,
@@ -775,7 +783,7 @@ func (eventService *eventService) FilterEventsByCategories(categories []string, 
 		}
 		banner := ""
 		if event.BannerPath != "" {
-			banner = eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+			banner = eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 		}
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,

@@ -5,12 +5,12 @@ import (
 )
 
 type Constants struct {
-	Context       Context
-	ErrorField    ErrorField
-	ErrorTag      ErrorTag
-	Redis         Redis
-	ObjectStorage Object
-	JWTKeysPath   string
+	Context     Context
+	ErrorField  ErrorField
+	ErrorTag    ErrorTag
+	Redis       Redis
+	S3Service   S3Service
+	JWTKeysPath string
 }
 
 type Context struct {
@@ -69,7 +69,7 @@ type ErrorTag struct {
 type Redis struct {
 }
 
-type Object struct {
+type S3Service struct {
 }
 
 func NewConstants() *Constants {
@@ -133,6 +133,42 @@ func (r *Redis) GetUserID(userID int) string {
 	return fmt.Sprintf("user:%d", userID)
 }
 
-func (o *Object) GetObjectKey(objectID int, objectTittle, objectName string) string {
-	return fmt.Sprintf("%s/%d/%s", objectTittle, objectID, objectName)
+func (s *S3Service) GetEventBannerKey(eventID uint, bannerFilename string) string {
+	return fmt.Sprintf("events/%d/banner/%s", eventID, bannerFilename)
+}
+
+func (s *S3Service) GetEventSessionKey(eventID, sessionID uint, sessionFilename string) string {
+	return fmt.Sprintf("events/%d/sessions/%d/%s", eventID, sessionID, sessionFilename)
+}
+
+func (s *S3Service) GetPodcastBannerKey(podcastID uint, bannerFilename string) string {
+	return fmt.Sprintf("podcasts/%d/banner/%s", podcastID, bannerFilename)
+}
+
+func (s *S3Service) GetPodcastEpisodeBannerKey(podcastID, episodeID uint, bannerFileName string) string {
+	return fmt.Sprintf("podcasts/%d/episodes/%d/banner/%s", podcastID, episodeID, bannerFileName)
+}
+
+func (s *S3Service) GetPodcastEpisodeKey(podcastID, episodeID uint, filename string) string {
+	return fmt.Sprintf("podcasts/%d/episodes/%d/content/%s", podcastID, episodeID, filename)
+}
+
+func (s *S3Service) GetNewsBannerKey(newsID uint, bannerFilename string) string {
+	return fmt.Sprintf("news/%d/banners/%s", newsID, bannerFilename)
+}
+
+func (s *S3Service) GetJournalBannerKey(journalID uint, bannerFilename string) string {
+	return fmt.Sprintf("journals/%d/banner/%s", journalID, bannerFilename)
+}
+
+func (s *S3Service) GetJournalFileKey(journalID uint, pdfFilename string) string {
+	return fmt.Sprintf("journals/%d/content/%s", journalID, pdfFilename)
+}
+
+func (s *S3Service) GetOrganizerProfileKey(organizerID uint, profileName string) string {
+	return fmt.Sprintf("organizers/%d/profile/%s", organizerID, profileName)
+}
+
+func (s *S3Service) GetCouncilorProfileKey(councilorID uint, profileName string) string {
+	return fmt.Sprintf("councilors/%d/profile/%s", councilorID, profileName)
 }

@@ -12,7 +12,7 @@ type EventRepository interface {
 	CreateNewEvent(event *entities.Event) *entities.Event
 	CreateNewMedia(media *entities.Media) *entities.Media
 	CreateNewTicket(ticket *entities.Ticket) *entities.Ticket
-	CreateOrganizerForEventID(eventID uint, name string, email string, description string, profilePath string) *entities.Organizer
+	CreateOrganizerForEventID(eventID uint, name string, email string, description string) *entities.Organizer
 	DeleteDiscount(discountID uint)
 	DeleteEvent(eventID uint)
 	DeleteMedia(mediaID uint)
@@ -41,4 +41,5 @@ type EventRepository interface {
 	UpdateEventDiscount(discount *entities.Discount)
 	UpdateEventMedia(media *entities.Media)
 	UpdateEventTicket(ticket *entities.Ticket) *entities.Ticket
+	UpdateEventOrganizer(organizer *entities.Organizer)
 }

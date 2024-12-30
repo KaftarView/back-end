@@ -245,13 +245,12 @@ func (repo *eventRepository) FindOrganizerByEmail(eventID uint, email string) (*
 	return &organizer, true
 }
 
-func (repo *eventRepository) CreateOrganizerForEventID(eventID uint, name, email, description, profilePath string) *entities.Organizer {
+func (repo *eventRepository) CreateOrganizerForEventID(eventID uint, name, email, description string) *entities.Organizer {
 	organizer := &entities.Organizer{
 		Name:        name,
 		Email:       email,
 		Description: description,
 		EventID:     eventID,
-		ProfilePath: profilePath,
 	}
 	result := repo.db.Create(organizer)
 	if result.Error != nil {
@@ -349,6 +348,13 @@ func (repo *eventRepository) UpdateEventTicket(ticket *entities.Ticket) *entitie
 
 func (repo *eventRepository) UpdateEventDiscount(discount *entities.Discount) {
 	result := repo.db.Save(discount)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+}
+
+func (repo *eventRepository) UpdateEventOrganizer(organizer *entities.Organizer) {
+	result := repo.db.Save(organizer)
 	if result.Error != nil {
 		panic(result.Error)
 	}

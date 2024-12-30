@@ -130,6 +130,7 @@ type MediaDetailsResponse struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
-	Size      int       `json:"mediaSize"`
+	Size      int64     `json:"mediaSize"`
+	Type      string    `json:"mediaType"`
 	MediaPath string    `json:"mediaPath"`
 }

@@ -24,7 +24,11 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	podcastRepository := repository_database.NewPodcastRepository(db)
 
 	emailService := application_communication.NewEmailService(&di.Env.Email)
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.BannersBucket, &di.Env.SessionsBucket, &di.Env.PodcastsBucket, &di.Env.ProfileBucket)
+	awsService := application_aws.NewS3Service(
+		di.Constants, &di.Env.EventsBucket,
+		&di.Env.PodcastsBucket, &di.Env.NewsBucket,
+		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
+	)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository)
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)

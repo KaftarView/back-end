@@ -11,14 +11,12 @@ import (
 type RoleSeeder struct {
 	userRepository repository_database_interfaces.UserRepository
 	admin          *bootstrap.UserInfo
-	moderator      *bootstrap.UserInfo
 }
 
-func NewRoleSeeder(userRepository repository_database_interfaces.UserRepository, admin, moderator *bootstrap.UserInfo) *RoleSeeder {
+func NewRoleSeeder(userRepository repository_database_interfaces.UserRepository, admin *bootstrap.UserInfo) *RoleSeeder {
 	return &RoleSeeder{
 		userRepository: userRepository,
 		admin:          admin,
-		moderator:      moderator,
 	}
 }
 
