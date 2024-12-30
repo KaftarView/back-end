@@ -1,12 +1,14 @@
 package application
 
 import (
+	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
+	"mime/multipart"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -16,17 +18,20 @@ type userService struct {
 	constants      *bootstrap.Constants
 	userRepository repository_database_interfaces.UserRepository
 	otpService     *OTPService
+	awsS3Service   *application_aws.S3service
 }
 
 func NewUserService(
 	constants *bootstrap.Constants,
 	userRepository repository_database_interfaces.UserRepository,
 	otpService *OTPService,
+	awsS3Service *application_aws.S3service,
 ) *userService {
 	return &userService{
 		constants:      constants,
 		userRepository: userRepository,
 		otpService:     otpService,
+		awsS3Service:   awsS3Service,
 	}
 }
 
@@ -362,4 +367,27 @@ func (userService *userService) DeleteUserRole(email string, roleID uint) {
 		panic(notFoundError)
 	}
 	userService.userRepository.DeleteUserRole(user, role)
+}
+
+func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedYear, semester int, profile *multipart.FileHeader) {
+	var notFoundError exceptions.NotFoundError
+	user, userExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	if !userExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+
+	profilePath := userService.constants.S3Service.GetCouncilorProfileKey(user.ID, profile.Filename)
+	userService.awsS3Service.UploadObject(enums.ProfilesBucket, profilePath, profile)
+
+	councilor := &entities.Councilor{
+		UserID:       user.ID,
+		FirstName:    firstName,
+		LastName:     lastName,
+		Description:  description,
+		PromotedYear: promotedYear,
+		Semester:     semester,
+		ProfilePath:  profilePath,
+	}
+	userService.userRepository.CreateNewCounselor(councilor)
 }

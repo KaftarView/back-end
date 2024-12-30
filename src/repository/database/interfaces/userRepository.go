@@ -10,6 +10,7 @@ type UserRepository interface {
 	ActivateUserAccount(user *entities.User)
 	AssignPermissionToRole(role *entities.Role, permission *entities.Permission)
 	AssignRoleToUser(user *entities.User, role *entities.Role)
+	CreateNewCounselor(councilor *entities.Councilor)
 	CreateNewPermission(permissionType enums.PermissionType) *entities.Permission
 	CreateNewRole(roleType string) *entities.Role
 	CreateNewUser(username string, email string, password string, token string, verified bool) *entities.User

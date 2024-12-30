@@ -6,6 +6,7 @@ type Councilor struct {
 	LastName     string `gorm:"type:varchar(50);not null"`
 	Description  string `gorm:"text"`
 	PromotedYear int    `gorm:"not null"`
+	Semester     int    `gorm:"-"`
 	ProfilePath  string `gorm:"text"`
 	User         User   `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

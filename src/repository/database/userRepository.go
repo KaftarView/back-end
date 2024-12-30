@@ -299,3 +299,10 @@ func (repo *userRepository) FindAllPermissions() []*entities.Permission {
 	}
 	return permissions
 }
+
+func (repo *userRepository) CreateNewCounselor(councilor *entities.Councilor) {
+	result := repo.db.Create(&councilor)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+}

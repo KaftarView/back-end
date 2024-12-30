@@ -3,12 +3,14 @@ package application_interfaces
 import (
 	"first-project/src/dto"
 	"first-project/src/entities"
+	"mime/multipart"
 )
 
 type UserService interface {
 	ActivateUser(email string, otp string)
 	AssignPermissionsToRole(roleID uint, permissions []string)
 	AuthenticateUser(username string, password string) (user *entities.User)
+	CreateCouncilor(email, firstName, lastName, description string, promotedYear, semester int, profile *multipart.FileHeader)
 	CreateNewRole(name string) *entities.Role
 	DeleteRole(roleID uint)
 	DeleteRolePermission(roleID uint, permissionID uint)

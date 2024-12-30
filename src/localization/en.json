@@ -74,6 +74,7 @@
         "deletePodcast": "Podcast deleted successfully.",
         "createJournal": "Journal created successfully.",
         "updateJournal": "Journal created successfully.",
-        "deleteJournal" :"Journal deleted successfully."
+        "deleteJournal" :"Journal deleted successfully.",
+        "createCouncilor": "Councilor created successfully."
     }
 }

@@ -4,6 +4,7 @@ import (
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
+	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
 )
@@ -121,7 +122,21 @@ func (adminUserController *AdminUserController) DeleteUserRole(c *gin.Context) {
 }
 
 func (adminUserController *AdminUserController) CreateCouncilor(c *gin.Context) {
-	// some code here
+	type createCouncilorParams struct {
+		Email        string                `form:"email" validate:"required,email"`
+		FirstName    string                `form:"firstName" validate:"required,gt=2,lt=20"`
+		LastName     string                `form:"lastName" validate:"required,gt=2,lt=20"`
+		Description  string                `form:"description"`
+		PromotedYear int                   `form:"promotedYear" validate:"required"`
+		Semester     int                   `form:"semester" validate:"required"`
+		Profile      *multipart.FileHeader `form:"profile"`
+	}
+	param := controller.Validated[createCouncilorParams](c, &adminUserController.constants.Context)
+	adminUserController.userService.CreateCouncilor(param.Email, param.FirstName, param.LastName, param.Description, param.PromotedYear, param.Semester, param.Profile)
+
+	trans := controller.GetTranslator(c, adminUserController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.createCouncilor")
+	controller.Response(c, 200, message, nil)
 }
 
 func (adminUserController *AdminUserController) DeleteCouncilor(c *gin.Context) {

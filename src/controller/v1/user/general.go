@@ -71,7 +71,7 @@ func (generalUserController *GeneralUserController) Register(c *gin.Context) {
 func (generalUserController *GeneralUserController) VerifyEmail(c *gin.Context) {
 	type verifyEmailParams struct {
 		OTP   string `json:"otp" validate:"required"`
-		Email string `json:"email" validate:"required"`
+		Email string `json:"email" validate:"required,email"`
 	}
 	param := controller.Validated[verifyEmailParams](c, &generalUserController.constants.Context)
 	generalUserController.userService.ActivateUser(param.Email, param.OTP)
@@ -135,7 +135,7 @@ func (generalUserController *GeneralUserController) ForgotPassword(c *gin.Contex
 
 func (generalUserController *GeneralUserController) ConfirmOTP(c *gin.Context) {
 	type confirmOTPParams struct {
-		Email string `json:"email" validate:"required"`
+		Email string `json:"email" validate:"required,email"`
 		OTP   string `json:"otp" validate:"required"`
 	}
 	param := controller.Validated[confirmOTPParams](c, &generalUserController.constants.Context)
@@ -153,7 +153,7 @@ func (generalUserController *GeneralUserController) ConfirmOTP(c *gin.Context) {
 
 func (generalUserController *GeneralUserController) ResetPassword(c *gin.Context) {
 	type resetPasswordParams struct {
-		Email           string `json:"email" validate:"required"`
+		Email           string `json:"email" validate:"required,email"`
 		Password        string `json:"password" validate:"required"`
 		ConfirmPassword string `json:"confirmPassword" validate:"required"`
 	}
