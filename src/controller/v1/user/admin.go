@@ -119,3 +119,11 @@ func (adminUserController *AdminUserController) DeleteUserRole(c *gin.Context) {
 	message, _ := trans.T("successMessage.deleteUserRole")
 	controller.Response(c, 200, message, nil)
 }
+
+func (adminUserController *AdminUserController) CreateCouncilor(c *gin.Context) {
+	// some code here
+}
+
+func (adminUserController *AdminUserController) DeleteCouncilor(c *gin.Context) {
+	// some code here
+}

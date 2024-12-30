@@ -57,6 +57,7 @@ func main() {
 		&entities.Event{},
 		&entities.Media{},
 		&entities.Commentable{},
+		&entities.Councilor{},
 		&entities.Journal{},
 		&entities.Organizer{},
 		&entities.Permission{},

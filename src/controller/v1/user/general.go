@@ -165,6 +165,10 @@ func (generalUserController *GeneralUserController) ResetPassword(c *gin.Context
 	controller.Response(c, 200, message, nil)
 }
 
+func (generalUserController *GeneralUserController) GetCouncilors(c *gin.Context) {
+	// some codes here ...
+}
+
 func (generalUserController *GeneralUserController) RefreshToken(c *gin.Context) {
 	type refreshTokenParams struct {
 		RefreshToken string `json:"refreshToken" validate:"required"`

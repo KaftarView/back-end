@@ -108,6 +108,11 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			journals.GET("", generalJournalController.GetJournalsList)
 			journals.GET(searchEndpoint, generalJournalController.SearchJournals)
 		}
+
+		councilor := public.Group("")
+		{
+			councilor.GET("/roles", generalUserController.GetCouncilors)
+		}
 	}
 
 	auth := routerGroup.Group("/auth")

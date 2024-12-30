@@ -177,6 +177,12 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 			userRoles.PUT("", adminUserController.UpdateUserRoles)
 			userRoles.DELETE("/:roleID", adminUserController.DeleteUserRole)
 		}
+
+		councilors := accessManagement.Group("/councilors")
+		{
+			councilors.POST("", adminUserController.CreateCouncilor)
+			councilors.DELETE("/:councilorID", adminUserController.DeleteCouncilor)
+		}
 	}
 
 	news := routerGroup.Group("/news")
