@@ -27,19 +27,30 @@ func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client
 	v1 := ginEngine.Group("/v1")
 
 	registerGeneralRoutes(v1, di, db, rdb)
-	registerProtectedRoutes(v1, di, db, rdb)
+	registerCustomerRoutes(v1, di, db, rdb)
+	registerAdminRoutes(v1, di, db, rdb)
 }
 
 func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
 }
 
-func registerProtectedRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
+func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
 	jwtService := application_jwt.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
 
-	protected := v1.Group("")
-	protected.Use(authMiddleware.AuthRequired)
-	routes_http_v1.SetupPrivateRoutes(protected, di, db, rdb)
+	customerGroup := v1.Group("")
+	customerGroup.Use(authMiddleware.AuthRequired)
+	routes_http_v1.SetupCustomerRoutes(customerGroup, di, db, rdb)
+}
+
+func registerAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
+	userRepository := repository_database.NewUserRepository(db)
+	jwtService := application_jwt.NewJWTToken()
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+
+	adminGroup := v1.Group("/admin")
+	adminGroup.Use(authMiddleware.AuthRequired)
+	routes_http_v1.SetupAdminRoutes(adminGroup, di, db, rdb)
 }

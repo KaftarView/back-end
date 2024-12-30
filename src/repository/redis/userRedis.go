@@ -6,7 +6,7 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -20,13 +20,13 @@ type UserCacheData struct {
 type UserCache struct {
 	constants      *bootstrap.Constants
 	rdb            *redis.Client
-	userRepository *repository_database.UserRepository
+	userRepository repository_database_interfaces.UserRepository
 }
 
 func NewUserCache(
 	constants *bootstrap.Constants,
 	rdb *redis.Client,
-	userRepository *repository_database.UserRepository,
+	userRepository repository_database_interfaces.UserRepository,
 ) *UserCache {
 	return &UserCache{
 		constants:      constants,
@@ -51,7 +51,6 @@ func (userCache *UserCache) SetUser(userID uint, username, email string) {
 		panic(err)
 	}
 
-	// TODO set label for 3600 ttl of redis
 	err = userCache.rdb.Set(ctx, key, userDataJSON, 3600).Err()
 	if err != nil {
 		panic(err)

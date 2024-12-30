@@ -3,32 +3,35 @@ package enums
 type BucketType uint
 
 const (
-	BannersBucket BucketType = iota + 1
-	SessionsBucket
+	EventsBucket BucketType = iota + 1
 	PodcastsBucket
-	ProfileBucket
+	NewsBucket
+	JournalsBucket
+	ProfilesBucket
 )
 
-// possibly do not need to this at all maybe
 func (bt BucketType) String() string {
 	switch bt {
-	case BannersBucket:
-		return "BannersBucket"
-	case SessionsBucket:
-		return "SessionsBucket"
+	case EventsBucket:
+		return "EventsBucket"
 	case PodcastsBucket:
 		return "PodcastsBucket"
-	case ProfileBucket:
-		return "ProfileBucket"
+	case NewsBucket:
+		return "NewsBucket"
+	case JournalsBucket:
+		return "JournalsBucket"
+	case ProfilesBucket:
+		return "ProfilesBucket"
 	}
 	return ""
 }
 
 func GetAllBucketTypes() []BucketType {
 	return []BucketType{
-		BannersBucket,
-		SessionsBucket,
+		EventsBucket,
 		PodcastsBucket,
-		ProfileBucket,
+		NewsBucket,
+		JournalsBucket,
+		ProfilesBucket,
 	}
 }
