@@ -4,14 +4,16 @@ import (
 	"first-project/src/dto"
 	"first-project/src/entities"
 	"mime/multipart"
+	"time"
 )
 
 type UserService interface {
 	ActivateUser(email string, otp string)
 	AssignPermissionsToRole(roleID uint, permissions []string)
 	AuthenticateUser(username string, password string) (user *entities.User)
-	CreateCouncilor(email, firstName, lastName, description string, promotedYear, semester int, profile *multipart.FileHeader)
+	CreateCouncilor(email, firstName, lastName, description string, promotedDate time.Time, semester int, profile *multipart.FileHeader)
 	CreateNewRole(name string) *entities.Role
+	DeleteCouncilor(councilorID uint)
 	DeleteRole(roleID uint)
 	DeleteRolePermission(roleID uint, permissionID uint)
 	DeleteUserRole(email string, roleID uint)

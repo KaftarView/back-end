@@ -300,9 +300,46 @@ func (repo *userRepository) FindAllPermissions() []*entities.Permission {
 	return permissions
 }
 
-func (repo *userRepository) CreateNewCounselor(councilor *entities.Councilor) {
+func (repo *userRepository) FindCouncilorByID(councilorID uint) (*entities.Councilor, bool) {
+	var councilor entities.Councilor
+	result := repo.db.First(&councilor, councilorID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &councilor, true
+}
+
+func (repo *userRepository) FindCouncilorByUserIDAndPromoteDate(userID uint, promotedDate time.Time) (*entities.Councilor, bool) {
+	var councilor entities.Councilor
+	result := repo.db.Where("user_id = ? AND promoted_date = ?", userID, promotedDate).First(&councilor)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &councilor, true
+}
+
+func (repo *userRepository) CreateNewCouncilor(councilor *entities.Councilor) {
 	result := repo.db.Create(&councilor)
 	if result.Error != nil {
 		panic(result.Error)
+	}
+}
+
+func (repo *userRepository) UpdateCouncilor(councilor *entities.Councilor) {
+	if err := repo.db.Save(councilor).Error; err != nil {
+		panic(err)
+	}
+}
+
+func (repo *userRepository) DeleteCouncilor(councilorID uint) {
+	err := repo.db.Unscoped().Delete(&entities.Councilor{}, councilorID).Error
+	if err != nil {
+		panic(err)
 	}
 }

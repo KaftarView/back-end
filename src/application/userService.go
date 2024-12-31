@@ -10,6 +10,7 @@ import (
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"mime/multipart"
 	"regexp"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -369,25 +370,47 @@ func (userService *userService) DeleteUserRole(email string, roleID uint) {
 	userService.userRepository.DeleteUserRole(user, role)
 }
 
-func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedYear, semester int, profile *multipart.FileHeader) {
+func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedDate time.Time, semester int, profile *multipart.FileHeader) {
 	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
 	user, userExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !userExist {
 		notFoundError.ErrorField = userService.constants.ErrorField.User
 		panic(notFoundError)
 	}
-
-	profilePath := userService.constants.S3Service.GetCouncilorProfileKey(user.ID, profile.Filename)
-	userService.awsS3Service.UploadObject(enums.ProfilesBucket, profilePath, profile)
+	_, councilorExist := userService.userRepository.FindCouncilorByUserIDAndPromoteDate(user.ID, promotedDate)
+	if councilorExist {
+		conflictError.AppendError(
+			userService.constants.ErrorField.Username,
+			userService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
 
 	councilor := &entities.Councilor{
-		UserID:       user.ID,
 		FirstName:    firstName,
 		LastName:     lastName,
-		Description:  description,
-		PromotedYear: promotedYear,
 		Semester:     semester,
-		ProfilePath:  profilePath,
+		Description:  description,
+		PromotedDate: promotedDate,
+		UserID:       user.ID,
 	}
-	userService.userRepository.CreateNewCounselor(councilor)
+	userService.userRepository.CreateNewCouncilor(councilor)
+
+	profilePath := userService.constants.S3Service.GetCouncilorProfileKey(councilor.ID, profile.Filename)
+	userService.awsS3Service.UploadObject(enums.ProfilesBucket, profilePath, profile)
+	councilor.ProfilePath = profilePath
+	userService.userRepository.UpdateCouncilor(councilor)
+}
+
+func (userService *userService) DeleteCouncilor(councilorID uint) {
+	var notFoundError exceptions.NotFoundError
+	councilor, councilorExist := userService.userRepository.FindCouncilorByID(councilorID)
+	if !councilorExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+	userService.userRepository.DeleteCouncilor(councilorID)
+	if councilor.ProfilePath != "" {
+		userService.awsS3Service.DeleteObject(enums.ProfilesBucket, councilor.ProfilePath)
+	}
 }

@@ -1,12 +1,19 @@
 package entities
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 type Councilor struct {
-	UserID       uint   `gorm:"primaryKey"`
-	FirstName    string `gorm:"type:varchar(50);not null"`
-	LastName     string `gorm:"type:varchar(50);not null"`
-	Description  string `gorm:"text"`
-	PromotedYear int    `gorm:"not null"`
-	Semester     int    `gorm:"-"`
-	ProfilePath  string `gorm:"text"`
-	User         User   `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	gorm.Model
+	FirstName    string    `gorm:"type:varchar(50);not null"`
+	LastName     string    `gorm:"type:varchar(50);not null"`
+	ProfilePath  string    `gorm:"text"`
+	Semester     int       `gorm:"-"`
+	Description  string    `gorm:"text"`
+	PromotedDate time.Time `gorm:"not null"`
+	UserID       uint      `gorm:"not null"`
+	User         User      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
