@@ -4,6 +4,8 @@ import (
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
+	"mime/multipart"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -117,5 +119,35 @@ func (adminUserController *AdminUserController) DeleteUserRole(c *gin.Context) {
 
 	trans := controller.GetTranslator(c, adminUserController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.deleteUserRole")
+	controller.Response(c, 200, message, nil)
+}
+
+func (adminUserController *AdminUserController) CreateCouncilor(c *gin.Context) {
+	type createCouncilorParams struct {
+		Email        string                `form:"email" validate:"required,email"`
+		FirstName    string                `form:"firstName" validate:"required,gt=2,lt=20"`
+		LastName     string                `form:"lastName" validate:"required,gt=2,lt=20"`
+		Description  string                `form:"description"`
+		PromotedDate time.Time             `form:"promotedDate" validate:"required" time_format:"2006-01-02"`
+		Semester     int                   `form:"semester" validate:"required"`
+		Profile      *multipart.FileHeader `form:"profile"`
+	}
+	param := controller.Validated[createCouncilorParams](c, &adminUserController.constants.Context)
+	adminUserController.userService.CreateCouncilor(param.Email, param.FirstName, param.LastName, param.Description, param.PromotedDate, param.Semester, param.Profile)
+
+	trans := controller.GetTranslator(c, adminUserController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.createCouncilor")
+	controller.Response(c, 200, message, nil)
+}
+
+func (adminUserController *AdminUserController) DeleteCouncilor(c *gin.Context) {
+	type deleteCouncilorParams struct {
+		CouncilorID uint `uri:"councilorID" validate:"required"`
+	}
+	param := controller.Validated[deleteCouncilorParams](c, &adminUserController.constants.Context)
+	adminUserController.userService.DeleteCouncilor(param.CouncilorID)
+
+	trans := controller.GetTranslator(c, adminUserController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.createCouncilor")
 	controller.Response(c, 200, message, nil)
 }

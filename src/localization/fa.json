@@ -76,6 +76,7 @@
         "deletePodcast": "پادکست با موفقیت حذف شد.",
         "createJournal": "نشریه با موفقیت ساخته شد.",
         "updateJournal": "نشریه با موفقیت به روزرسانی شد.",
-        "deleteJournal": "نشریه با موفقیت حذف شد."
+        "deleteJournal": "نشریه با موفقیت حذف شد.",
+        "createCouncilor": "عضو انجمن با موفقیت ساخته شد."
     }
 }

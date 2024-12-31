@@ -1,10 +1,20 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type UserDetailsResponse struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type CouncilorsDetailsResponse struct {
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	Profile     string `json:"profile"`
+	Semester    int    `json:"semester"`
+	Description string `json:"description"`
 }
 
 type RoleDetailsResponse struct {

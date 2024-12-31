@@ -44,7 +44,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
-	userService := application.NewUserService(di.Constants, userRepository, otpService)
+	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService)
 	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository)
 	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
@@ -107,6 +107,11 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		{
 			journals.GET("", generalJournalController.GetJournalsList)
 			journals.GET(searchEndpoint, generalJournalController.SearchJournals)
+		}
+
+		councilors := public.Group("/councilors")
+		{
+			councilors.GET("", generalUserController.GetCouncilors)
 		}
 	}
 

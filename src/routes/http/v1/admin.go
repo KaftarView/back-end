@@ -42,7 +42,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
-	userService := application.NewUserService(di.Constants, userRepository, otpService)
+	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService)
 	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository)
 	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
 
@@ -176,6 +176,12 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		{
 			userRoles.PUT("", adminUserController.UpdateUserRoles)
 			userRoles.DELETE("/:roleID", adminUserController.DeleteUserRole)
+		}
+
+		councilors := accessManagement.Group("/councilors")
+		{
+			councilors.POST("", adminUserController.CreateCouncilor)
+			councilors.DELETE("/:councilorID", adminUserController.DeleteCouncilor)
 		}
 	}
 

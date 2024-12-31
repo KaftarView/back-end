@@ -9,6 +9,7 @@ import (
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
 	repository_cache "first-project/src/repository/redis"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -71,7 +72,7 @@ func (generalUserController *GeneralUserController) Register(c *gin.Context) {
 func (generalUserController *GeneralUserController) VerifyEmail(c *gin.Context) {
 	type verifyEmailParams struct {
 		OTP   string `json:"otp" validate:"required"`
-		Email string `json:"email" validate:"required"`
+		Email string `json:"email" validate:"required,email"`
 	}
 	param := controller.Validated[verifyEmailParams](c, &generalUserController.constants.Context)
 	generalUserController.userService.ActivateUser(param.Email, param.OTP)
@@ -135,7 +136,7 @@ func (generalUserController *GeneralUserController) ForgotPassword(c *gin.Contex
 
 func (generalUserController *GeneralUserController) ConfirmOTP(c *gin.Context) {
 	type confirmOTPParams struct {
-		Email string `json:"email" validate:"required"`
+		Email string `json:"email" validate:"required,email"`
 		OTP   string `json:"otp" validate:"required"`
 	}
 	param := controller.Validated[confirmOTPParams](c, &generalUserController.constants.Context)
@@ -153,7 +154,7 @@ func (generalUserController *GeneralUserController) ConfirmOTP(c *gin.Context) {
 
 func (generalUserController *GeneralUserController) ResetPassword(c *gin.Context) {
 	type resetPasswordParams struct {
-		Email           string `json:"email" validate:"required"`
+		Email           string `json:"email" validate:"required,email"`
 		Password        string `json:"password" validate:"required"`
 		ConfirmPassword string `json:"confirmPassword" validate:"required"`
 	}
@@ -163,6 +164,16 @@ func (generalUserController *GeneralUserController) ResetPassword(c *gin.Context
 	trans := controller.GetTranslator(c, generalUserController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.resetPassword")
 	controller.Response(c, 200, message, nil)
+}
+
+func (generalUserController *GeneralUserController) GetCouncilors(c *gin.Context) {
+	type getCouncilorsParams struct {
+		PromotedDate time.Time `form:"promotedDate" validate:"required" time_format:"2006-01-02"`
+	}
+	param := controller.Validated[getCouncilorsParams](c, &generalUserController.constants.Context)
+	councilors := generalUserController.userService.GetCouncilorsList(param.PromotedDate)
+
+	controller.Response(c, 200, "", councilors)
 }
 
 func (generalUserController *GeneralUserController) RefreshToken(c *gin.Context) {
