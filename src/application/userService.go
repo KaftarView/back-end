@@ -370,6 +370,25 @@ func (userService *userService) DeleteUserRole(email string, roleID uint) {
 	userService.userRepository.DeleteUserRole(user, role)
 }
 
+func (userService *userService) GetCouncilorsList(promotedDate time.Time) []dto.CouncilorsDetailsResponse {
+	councilors := userService.userRepository.FindAllCouncilorsByPromotedDate(promotedDate)
+	councilorsDetails := make([]dto.CouncilorsDetailsResponse, len(councilors))
+	for i, councilor := range councilors {
+		profile := ""
+		if councilor.ProfilePath != "" {
+			profile = userService.awsS3Service.GetPresignedURL(enums.ProfilesBucket, councilor.ProfilePath, 8*time.Hour)
+		}
+		councilorsDetails[i] = dto.CouncilorsDetailsResponse{
+			FirstName:   councilor.FirstName,
+			LastName:    councilor.LastName,
+			Semester:    councilor.Semester,
+			Description: councilor.Description,
+			Profile:     profile,
+		}
+	}
+	return councilorsDetails
+}
+
 func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedDate time.Time, semester int, profile *multipart.FileHeader) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError

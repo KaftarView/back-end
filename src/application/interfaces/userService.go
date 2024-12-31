@@ -18,6 +18,7 @@ type UserService interface {
 	DeleteRolePermission(roleID uint, permissionID uint)
 	DeleteUserRole(email string, roleID uint)
 	FindUserRolesAndPermissions(userID uint) ([]string, []string)
+	GetCouncilorsList(promotedDate time.Time) []dto.CouncilorsDetailsResponse
 	GetPermissionsList() []dto.PermissionDetailsResponse
 	GetRoleOwners(roleID uint) []dto.UserDetailsResponse
 	GetRolesList() []dto.RoleDetailsResponse

@@ -20,6 +20,7 @@ type UserRepository interface {
 	DeleteUserRole(user *entities.User, role *entities.Role)
 	FindActiveOrVerifiedUserByEmail(email string) (*entities.User, bool)
 	FindActiveOrVerifiedUserByUsername(username string) (*entities.User, bool)
+	FindAllCouncilorsByPromotedDate(promotedDate time.Time) []*entities.Councilor
 	FindAllPermissions() []*entities.Permission
 	FindAllRolesWithPermissions() []*entities.Role
 	FindByEmailAndVerified(email string, verified bool) (*entities.User, bool)

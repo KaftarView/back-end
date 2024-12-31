@@ -324,6 +324,18 @@ func (repo *userRepository) FindCouncilorByUserIDAndPromoteDate(userID uint, pro
 	return &councilor, true
 }
 
+func (repo *userRepository) FindAllCouncilorsByPromotedDate(promotedDate time.Time) []*entities.Councilor {
+	var councilors []*entities.Councilor
+	result := repo.db.Where("promoted_date  = ?", promotedDate).Find(&councilors)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return councilors
+}
+
 func (repo *userRepository) CreateNewCouncilor(councilor *entities.Councilor) {
 	result := repo.db.Create(&councilor)
 	if result.Error != nil {

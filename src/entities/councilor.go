@@ -11,7 +11,7 @@ type Councilor struct {
 	FirstName    string    `gorm:"type:varchar(50);not null"`
 	LastName     string    `gorm:"type:varchar(50);not null"`
 	ProfilePath  string    `gorm:"text"`
-	Semester     int       `gorm:"-"`
+	Semester     int       `gorm:"not null"`
 	Description  string    `gorm:"text"`
 	PromotedDate time.Time `gorm:"not null"`
 	UserID       uint      `gorm:"not null"`
