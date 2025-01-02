@@ -84,7 +84,7 @@ func NewEnvironments() *Env {
 			Endpoint:  os.Getenv("EVENTS_BUCKET_ENDPOINT"),
 		},
 		PodcastsBucket: Bucket{
-			Name:      os.Getenv("PODCASTS_BUCKET_NAME`"),
+			Name:      os.Getenv("PODCASTS_BUCKET_NAME"),
 			Region:    os.Getenv("PODCASTS_BUCKET_REGION"),
 			AccessKey: os.Getenv("PODCASTS_BUCKET_ACCESS_key"),
 			SecretKey: os.Getenv("PODCASTS_BUCKET_SECRET_key"),
