@@ -7,26 +7,25 @@ import (
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
-	"fmt"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"mime/multipart"
 	"time"
 )
 
-type JournalService struct {
+type journalService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
-	userRepository    *repository_database.UserRepository
-	journalRepository *repository_database.JournalRepository
+	userRepository    repository_database_interfaces.UserRepository
+	journalRepository repository_database_interfaces.JournalRepository
 }
 
 func NewJournalService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
-	userRepository *repository_database.UserRepository,
-	journalRepository *repository_database.JournalRepository,
-) *JournalService {
-	return &JournalService{
+	userRepository repository_database_interfaces.UserRepository,
+	journalRepository repository_database_interfaces.JournalRepository,
+) *journalService {
+	return &journalService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		userRepository:    userRepository,
@@ -34,22 +33,22 @@ func NewJournalService(
 	}
 }
 
-func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.JournalsListResponse {
+func (journalService *journalService) GetJournalsList(page, pageSize int) []dto.JournalDetailsResponse {
 	offset := (page - 1) * pageSize
 	journalsList, _ := journalService.journalRepository.FindAllJournals(offset, pageSize)
 
-	journalsDetails := make([]dto.JournalsListResponse, len(journalsList))
+	journalsDetails := make([]dto.JournalDetailsResponse, len(journalsList))
 	for i, journal := range journalsList {
 		banner := ""
 		if journal.BannerPath != "" {
-			banner = journalService.awsS3Service.GetPresignedURL(enums.BannersBucket, journal.BannerPath, 8*time.Hour)
+			banner = journalService.awsS3Service.GetPresignedURL(enums.JournalsBucket, journal.BannerPath, 8*time.Hour)
 		}
 		file := ""
 		if journal.JournalFilePath != "" {
-			file = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
+			file = journalService.awsS3Service.GetPresignedURL(enums.JournalsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
 		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
-		journalsDetails[i] = dto.JournalsListResponse{
+		journalsDetails[i] = dto.JournalDetailsResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
 			CreatedAt:   journal.CreatedAt,
@@ -63,7 +62,7 @@ func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.
 	return journalsDetails
 }
 
-func (journalService *JournalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
+func (journalService *journalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
 	var conflictError exceptions.ConflictError
 	_, journalExist := journalService.journalRepository.FindJournalByName(name)
 	if journalExist {
@@ -80,10 +79,10 @@ func (journalService *JournalService) CreateJournal(name, description string, ba
 	}
 	journalService.journalRepository.CreateJournal(journalModel)
 
-	bannerPath := fmt.Sprintf("banners/podcasts/%d/images/%s", journalModel.ID, banner.Filename)
-	journalService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, banner)
-	filePath := fmt.Sprintf("media/journals/%d/resources/%s", journalModel.ID, journalFile.Filename)
-	journalService.awsS3Service.UploadObject(enums.SessionsBucket, filePath, journalFile)
+	bannerPath := journalService.constants.S3Service.GetJournalBannerKey(journalModel.ID, banner.Filename)
+	journalService.awsS3Service.UploadObject(enums.JournalsBucket, bannerPath, banner)
+	filePath := journalService.constants.S3Service.GetJournalFileKey(journalModel.ID, journalFile.Filename)
+	journalService.awsS3Service.UploadObject(enums.JournalsBucket, filePath, journalFile)
 
 	journalModel.BannerPath = bannerPath
 	journalModel.JournalFilePath = filePath
@@ -92,7 +91,7 @@ func (journalService *JournalService) CreateJournal(name, description string, ba
 	return journalModel
 }
 
-func (journalService *JournalService) UpdateJournal(journalID uint, name, description *string, banner, journalFile *multipart.FileHeader) {
+func (journalService *journalService) UpdateJournal(journalID uint, name, description *string, banner, journalFile *multipart.FileHeader) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	journal, journalExist := journalService.journalRepository.FindJournalByID(journalID)
@@ -116,25 +115,25 @@ func (journalService *JournalService) UpdateJournal(journalID uint, name, descri
 	}
 	if banner != nil {
 		if journal.BannerPath != "" {
-			journalService.awsS3Service.DeleteObject(enums.BannersBucket, journal.BannerPath)
+			journalService.awsS3Service.DeleteObject(enums.JournalsBucket, journal.BannerPath)
 		}
-		bannerPath := fmt.Sprintf("banners/podcasts/%d/images/%s", journal.ID, banner.Filename)
-		journalService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, banner)
+		bannerPath := journalService.constants.S3Service.GetJournalBannerKey(journalID, banner.Filename)
+		journalService.awsS3Service.UploadObject(enums.JournalsBucket, bannerPath, banner)
 		journal.BannerPath = bannerPath
 	}
 	if journalFile != nil {
 		if journal.JournalFilePath != "" {
-			journalService.awsS3Service.DeleteObject(enums.SessionsBucket, journal.JournalFilePath)
+			journalService.awsS3Service.DeleteObject(enums.JournalsBucket, journal.JournalFilePath)
 		}
-		filePath := fmt.Sprintf("media/journals/%d/resources/%s", journal.ID, journalFile.Filename)
-		journalService.awsS3Service.UploadObject(enums.SessionsBucket, filePath, journalFile)
+		filePath := journalService.constants.S3Service.GetJournalFileKey(journalID, journalFile.Filename)
+		journalService.awsS3Service.UploadObject(enums.JournalsBucket, filePath, journalFile)
 		journal.JournalFilePath = filePath
 	}
 
 	journalService.journalRepository.UpdateJournal(journal)
 }
 
-func (journalService *JournalService) DeleteJournal(journalID uint) {
+func (journalService *journalService) DeleteJournal(journalID uint) {
 	var notFoundError exceptions.NotFoundError
 	journal, journalExist := journalService.journalRepository.FindJournalByID(journalID)
 	if !journalExist {
@@ -143,16 +142,16 @@ func (journalService *JournalService) DeleteJournal(journalID uint) {
 	}
 
 	if journal.BannerPath != "" {
-		journalService.awsS3Service.DeleteObject(enums.BannersBucket, journal.BannerPath)
+		journalService.awsS3Service.DeleteObject(enums.JournalsBucket, journal.BannerPath)
 	}
 	if journal.JournalFilePath != "" {
-		journalService.awsS3Service.DeleteObject(enums.SessionsBucket, journal.JournalFilePath)
+		journalService.awsS3Service.DeleteObject(enums.JournalsBucket, journal.JournalFilePath)
 	}
 
 	journalService.journalRepository.DeleteJournal(journalID)
 }
 
-func (journalService *JournalService) SearchJournals(query string, page, pageSize int) []dto.JournalsListResponse {
+func (journalService *journalService) SearchJournals(query string, page, pageSize int) []dto.JournalDetailsResponse {
 	var journalsList []*entities.Journal
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -161,18 +160,18 @@ func (journalService *JournalService) SearchJournals(query string, page, pageSiz
 		journalsList, _ = journalService.journalRepository.FindAllJournals(offset, pageSize)
 	}
 
-	journalsDetails := make([]dto.JournalsListResponse, len(journalsList))
+	journalsDetails := make([]dto.JournalDetailsResponse, len(journalsList))
 	for i, journal := range journalsList {
 		banner := ""
 		if journal.BannerPath != "" {
-			banner = journalService.awsS3Service.GetPresignedURL(enums.BannersBucket, journal.BannerPath, 8*time.Hour)
+			banner = journalService.awsS3Service.GetPresignedURL(enums.JournalsBucket, journal.BannerPath, 8*time.Hour)
 		}
 		file := ""
 		if journal.JournalFilePath != "" {
-			banner = journalService.awsS3Service.GetPresignedURL(enums.SessionsBucket, journal.JournalFilePath, 8*time.Hour)
+			banner = journalService.awsS3Service.GetPresignedURL(enums.JournalsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
 		author, _ := journalService.userRepository.FindByUserID(journal.AuthorID)
-		journalsDetails[i] = dto.JournalsListResponse{
+		journalsDetails[i] = dto.JournalDetailsResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
 			CreatedAt:   journal.CreatedAt,

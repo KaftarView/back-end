@@ -9,14 +9,14 @@ import (
 type Env struct {
 	PRIMARY_DB     Database
 	PrimaryRedis   RedisDB
-	BannersBucket  Bucket
-	SessionsBucket Bucket
+	EventsBucket   Bucket
 	PodcastsBucket Bucket
-	ProfileBucket  Bucket
+	NewsBucket     Bucket
+	JournalsBucket Bucket
+	ProfilesBucket Bucket
 	Applications   AppInfo
 	Email          EmailInfo
 	Admin          UserInfo
-	Moderator      UserInfo
 }
 
 type Database struct {
@@ -76,33 +76,40 @@ func NewEnvironments() *Env {
 			Password: os.Getenv("REDIS_PASSWORD"),
 			DB:       os.Getenv("REDIS_DB"),
 		},
-		BannersBucket: Bucket{
-			Name:      os.Getenv("BANNERS_BUCKET_NAME"),
-			Region:    os.Getenv("BANNERS_BUCKET_REGION"),
-			AccessKey: os.Getenv("BANNERS_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("BANNERS_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("BANNERS_BUCKET_ENDPOINT"),
-		},
-		SessionsBucket: Bucket{
-			Name:      os.Getenv("SESSIONS_BUCKET_NAME"),
-			Region:    os.Getenv("SESSIONS_BUCKET_REGION"),
-			AccessKey: os.Getenv("SESSIONS_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("SESSIONS_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("SESSIONS_BUCKET_ENDPOINT"),
+		EventsBucket: Bucket{
+			Name:      os.Getenv("EVENTS_BUCKET_NAME"),
+			Region:    os.Getenv("EVENTS_BUCKET_REGION"),
+			AccessKey: os.Getenv("EVENTS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("EVENTS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("EVENTS_BUCKET_ENDPOINT"),
 		},
 		PodcastsBucket: Bucket{
-			Name:      os.Getenv("PODCAST_BUCKET_NAME"),
-			Region:    os.Getenv("PODCAST_BUCKET_REGION"),
-			AccessKey: os.Getenv("PODCAST_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("PODCAST_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("PODCAST_BUCKET_ENDPOINT"),
+			Name:      os.Getenv("PODCASTS_BUCKET_NAME`"),
+			Region:    os.Getenv("PODCASTS_BUCKET_REGION"),
+			AccessKey: os.Getenv("PODCASTS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("PODCASTS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("PODCASTS_BUCKET_ENDPOINT"),
 		},
-		ProfileBucket: Bucket{
-			Name:      os.Getenv("PROFILE_BUCKET_NAME"),
-			Region:    os.Getenv("PROFILE_BUCKET_REGION"),
-			AccessKey: os.Getenv("PROFILE_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("PROFILE_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("PROFILE_BUCKET_ENDPOINT"),
+		NewsBucket: Bucket{
+			Name:      os.Getenv("NEWS_BUCKET_NAME"),
+			Region:    os.Getenv("NEWS_BUCKET_REGION"),
+			AccessKey: os.Getenv("NEWS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("NEWS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("NEWS_BUCKET_ENDPOINT"),
+		},
+		JournalsBucket: Bucket{
+			Name:      os.Getenv("JOURNALS_BUCKET_NAME"),
+			Region:    os.Getenv("JOURNALS_BUCKET_REGION"),
+			AccessKey: os.Getenv("JOURNALS_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("JOURNALS_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("JOURNALS_BUCKET_ENDPOINT"),
+		},
+		ProfilesBucket: Bucket{
+			Name:      os.Getenv("PROFILES_BUCKET_NAME"),
+			Region:    os.Getenv("PROFILES_BUCKET_REGION"),
+			AccessKey: os.Getenv("PROFILES_BUCKET_ACCESS_key"),
+			SecretKey: os.Getenv("PROFILES_BUCKET_SECRET_key"),
+			Endpoint:  os.Getenv("PROFILES_BUCKET_ENDPOINT"),
 		},
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),
@@ -117,10 +124,6 @@ func NewEnvironments() *Env {
 		Admin: UserInfo{
 			EmailAddress: os.Getenv("ADMIN_EMAIL"),
 			Password:     os.Getenv("ADMIN_PASSWORD"),
-		},
-		Moderator: UserInfo{
-			EmailAddress: os.Getenv("MODERATOR_EMAIL"),
-			Password:     os.Getenv("MODERATOR_PASSWORD"),
 		},
 	}
 }

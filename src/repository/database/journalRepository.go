@@ -7,17 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type JournalRepository struct {
+type journalRepository struct {
 	db *gorm.DB
 }
 
-func NewJournalRepository(db *gorm.DB) *JournalRepository {
-	return &JournalRepository{
+func NewJournalRepository(db *gorm.DB) *journalRepository {
+	return &journalRepository{
 		db: db,
 	}
 }
 
-func (repo *JournalRepository) FindJournalByID(journalID uint) (*entities.Journal, bool) {
+func (repo *journalRepository) FindJournalByID(journalID uint) (*entities.Journal, bool) {
 	var journal entities.Journal
 	result := repo.db.First(&journal, "id = ?", journalID)
 	if result.Error != nil {
@@ -29,7 +29,7 @@ func (repo *JournalRepository) FindJournalByID(journalID uint) (*entities.Journa
 	return &journal, true
 }
 
-func (repo *JournalRepository) FindJournalByName(name string) (*entities.Journal, bool) {
+func (repo *journalRepository) FindJournalByName(name string) (*entities.Journal, bool) {
 	var journal entities.Journal
 	result := repo.db.First(&journal, "name = ?", name)
 	if result.Error != nil {
@@ -41,7 +41,7 @@ func (repo *JournalRepository) FindJournalByName(name string) (*entities.Journal
 	return &journal, true
 }
 
-func (repo *JournalRepository) FindAllJournals(offset, pageSize int) ([]*entities.Journal, bool) {
+func (repo *journalRepository) FindAllJournals(offset, pageSize int) ([]*entities.Journal, bool) {
 	var journals []*entities.Journal
 	result := repo.db.Offset(offset).Limit(pageSize).Find(&journals)
 
@@ -54,7 +54,7 @@ func (repo *JournalRepository) FindAllJournals(offset, pageSize int) ([]*entitie
 	return journals, true
 }
 
-func (repo *JournalRepository) CreateJournal(journal *entities.Journal) *entities.Journal {
+func (repo *journalRepository) CreateJournal(journal *entities.Journal) *entities.Journal {
 	err := repo.db.Create(journal).Error
 	if err != nil {
 		panic(err)
@@ -62,21 +62,21 @@ func (repo *JournalRepository) CreateJournal(journal *entities.Journal) *entitie
 	return journal
 }
 
-func (repo *JournalRepository) UpdateJournal(journal *entities.Journal) {
+func (repo *journalRepository) UpdateJournal(journal *entities.Journal) {
 	err := repo.db.Save(journal).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *JournalRepository) DeleteJournal(journalID uint) {
+func (repo *journalRepository) DeleteJournal(journalID uint) {
 	err := repo.db.Unscoped().Delete(&entities.Journal{}, journalID).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *JournalRepository) FullTextSearch(query string, offset, pageSize int) []*entities.Journal {
+func (repo *journalRepository) FullTextSearch(query string, offset, pageSize int) []*entities.Journal {
 	var journals []*entities.Journal
 
 	repo.db.Exec(`ALTER TABLE journals ADD FULLTEXT INDEX idx_name_description (name, description)`)

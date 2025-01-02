@@ -1,30 +1,38 @@
 package application
 
 import (
+	application_aws "first-project/src/application/aws"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
+	"mime/multipart"
 	"regexp"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
+type userService struct {
 	constants      *bootstrap.Constants
-	userRepository *repository_database.UserRepository
+	userRepository repository_database_interfaces.UserRepository
 	otpService     *OTPService
+	awsS3Service   *application_aws.S3service
 }
 
 func NewUserService(
-	constants *bootstrap.Constants, userRepository *repository_database.UserRepository, otpService *OTPService,
-) *UserService {
-	return &UserService{
+	constants *bootstrap.Constants,
+	userRepository repository_database_interfaces.UserRepository,
+	otpService *OTPService,
+	awsS3Service *application_aws.S3service,
+) *userService {
+	return &userService{
 		constants:      constants,
 		userRepository: userRepository,
 		otpService:     otpService,
+		awsS3Service:   awsS3Service,
 	}
 }
 
@@ -45,7 +53,7 @@ func validatePasswordTests(errors *[]string, test string, password string, tag s
 	}
 }
 
-func (userService *UserService) passwordValidation(password string) []string {
+func (userService *userService) passwordValidation(password string) []string {
 	var errors []string
 
 	validatePasswordTests(&errors, ".{8,}", password, userService.constants.ErrorTag.MinimumLength)
@@ -57,7 +65,7 @@ func (userService *UserService) passwordValidation(password string) []string {
 	return errors
 }
 
-func (userService *UserService) ValidateUserRegistrationDetails(
+func (userService *userService) ValidateUserRegistrationDetails(
 	username string, email string, password string, confirmPassword string) {
 	var registrationError exceptions.UserRegistrationError
 	var conflictError exceptions.ConflictError
@@ -97,7 +105,7 @@ func (userService *UserService) ValidateUserRegistrationDetails(
 	}
 }
 
-func (userService *UserService) UpdateOrCreateUser(username string, email string, password string, otp string) {
+func (userService *userService) UpdateOrCreateUser(username string, email string, password string, otp string) {
 	user, notVerifiedUserExist := userService.userRepository.FindByUsernameAndVerified(username, false)
 	if notVerifiedUserExist {
 		userService.userRepository.UpdateUserToken(user, otp)
@@ -112,7 +120,7 @@ func (userService *UserService) UpdateOrCreateUser(username string, email string
 	}
 }
 
-func (userService *UserService) ActivateUser(email, otp string) {
+func (userService *userService) ActivateUser(email, otp string) {
 	var registrationError exceptions.UserRegistrationError
 	_, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if verifiedUserExist {
@@ -130,7 +138,7 @@ func (userService *UserService) ActivateUser(email, otp string) {
 	userService.userRepository.ActivateUserAccount(user)
 }
 
-func (userService *UserService) AuthenticateUser(username string, password string) (user *entities.User) {
+func (userService *userService) AuthenticateUser(username string, password string) (user *entities.User) {
 	user, verifiedUserExist := userService.userRepository.FindByUsernameAndVerified(username, true)
 	if !verifiedUserExist {
 		loginError := exceptions.NewLoginError()
@@ -144,7 +152,7 @@ func (userService *UserService) AuthenticateUser(username string, password strin
 	return user
 }
 
-func (userService *UserService) UpdateUserOTPIfExists(email, otp string) {
+func (userService *userService) UpdateUserOTPIfExists(email, otp string) {
 	var registrationError exceptions.UserRegistrationError
 	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !verifiedUserExist {
@@ -156,7 +164,7 @@ func (userService *UserService) UpdateUserOTPIfExists(email, otp string) {
 	userService.userRepository.UpdateUserToken(user, otp)
 }
 
-func (userService *UserService) ValidateUserOTP(email, otp string) uint {
+func (userService *userService) ValidateUserOTP(email, otp string) uint {
 	var registrationError exceptions.UserRegistrationError
 	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !verifiedUserExist {
@@ -172,7 +180,7 @@ func (userService *UserService) ValidateUserOTP(email, otp string) uint {
 	return user.ID
 }
 
-func (userService *UserService) ResetPasswordService(email, password, confirmPassword string) {
+func (userService *userService) ResetPasswordService(email, password, confirmPassword string) {
 	var registrationError exceptions.UserRegistrationError
 	passwordErrorTags := userService.passwordValidation(password)
 	if len(passwordErrorTags) > 0 {
@@ -197,7 +205,7 @@ func (userService *UserService) ResetPasswordService(email, password, confirmPas
 	userService.userRepository.UpdateUserPassword(user, hashedPassword)
 }
 
-func (userService *UserService) CreateNewRole(name string) *entities.Role {
+func (userService *userService) CreateNewRole(name string) *entities.Role {
 	var registrationError exceptions.UserRegistrationError
 	_, roleExist := userService.userRepository.FindRoleByType(name)
 	if roleExist {
@@ -210,7 +218,7 @@ func (userService *UserService) CreateNewRole(name string) *entities.Role {
 	return role
 }
 
-func (userService *UserService) AssignPermissionsToRole(roleID uint, permissions []string) {
+func (userService *userService) AssignPermissionsToRole(roleID uint, permissions []string) {
 	var notFoundError exceptions.NotFoundError
 	role, roleExist := userService.userRepository.FindRoleByID(roleID)
 	if !roleExist {
@@ -234,7 +242,7 @@ func (userService *UserService) AssignPermissionsToRole(roleID uint, permissions
 	}
 }
 
-func (userService *UserService) UpdateUserRoles(email string, roles []string) {
+func (userService *userService) UpdateUserRoles(email string, roles []string) {
 	var notFoundError exceptions.NotFoundError
 	user, verifiedUserExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !verifiedUserExist {
@@ -258,7 +266,7 @@ func (userService *UserService) UpdateUserRoles(email string, roles []string) {
 	}
 }
 
-func (userService *UserService) FindUserRolesAndPermissions(userID uint) ([]string, []string) {
+func (userService *userService) FindUserRolesAndPermissions(userID uint) ([]string, []string) {
 	var roleTypes []string
 	var permissionTypes []string
 	roles := userService.userRepository.FindUserRoleTypesByUserID(userID)
@@ -272,7 +280,7 @@ func (userService *UserService) FindUserRolesAndPermissions(userID uint) ([]stri
 	return roleTypes, permissionTypes
 }
 
-func (userService *UserService) GetRolesList() []dto.RoleDetailsResponse {
+func (userService *userService) GetRolesList() []dto.RoleDetailsResponse {
 	roles := userService.userRepository.FindAllRolesWithPermissions()
 	rolesDetails := make([]dto.RoleDetailsResponse, len(roles))
 
@@ -291,7 +299,7 @@ func (userService *UserService) GetRolesList() []dto.RoleDetailsResponse {
 	return rolesDetails
 }
 
-func (userService *UserService) GetRoleOwners(roleID uint) map[string]string {
+func (userService *userService) GetRoleOwners(roleID uint) []dto.UserDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, roleExist := userService.userRepository.FindRoleByID(roleID)
 	if !roleExist {
@@ -299,14 +307,17 @@ func (userService *UserService) GetRoleOwners(roleID uint) map[string]string {
 		panic(notFoundError)
 	}
 	users := userService.userRepository.FindUsersByRoleID(roleID)
-	userDetails := make(map[string]string)
-	for _, user := range users {
-		userDetails[user.Email] = user.Name
+	userDetails := make([]dto.UserDetailsResponse, len(users))
+	for i, user := range users {
+		userDetails[i] = dto.UserDetailsResponse{
+			Name:  user.Name,
+			Email: user.Email,
+		}
 	}
 	return userDetails
 }
 
-func (userService *UserService) DeleteRole(roleID uint) {
+func (userService *userService) DeleteRole(roleID uint) {
 	var notFoundError exceptions.NotFoundError
 	_, roleExist := userService.userRepository.FindRoleByID(roleID)
 	if !roleExist {
@@ -316,7 +327,7 @@ func (userService *UserService) DeleteRole(roleID uint) {
 	userService.userRepository.DeleteRoleByRoleID(roleID)
 }
 
-func (userService *UserService) DeleteRolePermission(roleID, permissionID uint) {
+func (userService *userService) DeleteRolePermission(roleID, permissionID uint) {
 	var notFoundError exceptions.NotFoundError
 	role, roleExist := userService.userRepository.FindRoleByID(roleID)
 	if !roleExist {
@@ -331,7 +342,7 @@ func (userService *UserService) DeleteRolePermission(roleID, permissionID uint) 
 	userService.userRepository.DeleteRolePermission(role, permission)
 }
 
-func (userService *UserService) GetPermissionsList() []dto.PermissionDetailsResponse {
+func (userService *userService) GetPermissionsList() []dto.PermissionDetailsResponse {
 	permissions := userService.userRepository.FindAllPermissions()
 	permissionsDetails := make([]dto.PermissionDetailsResponse, len(permissions))
 	for i, permission := range permissions {
@@ -344,7 +355,7 @@ func (userService *UserService) GetPermissionsList() []dto.PermissionDetailsResp
 	return permissionsDetails
 }
 
-func (userService *UserService) DeleteUserRole(email string, roleID uint) {
+func (userService *userService) DeleteUserRole(email string, roleID uint) {
 	var notFoundError exceptions.NotFoundError
 	user, userExist := userService.userRepository.FindByEmailAndVerified(email, true)
 	if !userExist {
@@ -357,4 +368,71 @@ func (userService *UserService) DeleteUserRole(email string, roleID uint) {
 		panic(notFoundError)
 	}
 	userService.userRepository.DeleteUserRole(user, role)
+}
+
+func (userService *userService) GetCouncilorsList(promotedYear int) []dto.CouncilorsDetailsResponse {
+	councilors := userService.userRepository.FindAllCouncilorsByPromotedYear(promotedYear)
+	councilorsDetails := make([]dto.CouncilorsDetailsResponse, len(councilors))
+	for i, councilor := range councilors {
+		profile := ""
+		if councilor.ProfilePath != "" {
+			profile = userService.awsS3Service.GetPresignedURL(enums.ProfilesBucket, councilor.ProfilePath, 8*time.Hour)
+		}
+		user, _ := userService.userRepository.FindByUserID(councilor.UserID)
+		councilorsDetails[i] = dto.CouncilorsDetailsResponse{
+			ID:           councilor.ID,
+			FirstName:    councilor.FirstName,
+			LastName:     councilor.LastName,
+			Email:        user.Email,
+			EnteringYear: councilor.EnteringYear,
+			Description:  councilor.Description,
+			Profile:      profile,
+		}
+	}
+	return councilorsDetails
+}
+
+func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedYear int, enteringYear int, profile *multipart.FileHeader) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	user, userExist := userService.userRepository.FindByEmailAndVerified(email, true)
+	if !userExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+	_, councilorExist := userService.userRepository.FindCouncilorByUserIDAndPromotedYear(user.ID, promotedYear)
+	if councilorExist {
+		conflictError.AppendError(
+			userService.constants.ErrorField.Username,
+			userService.constants.ErrorTag.AlreadyExist)
+		panic(conflictError)
+	}
+
+	councilor := &entities.Councilor{
+		FirstName:    firstName,
+		LastName:     lastName,
+		EnteringYear: enteringYear,
+		Description:  description,
+		PromotedYear: promotedYear,
+		UserID:       user.ID,
+	}
+	userService.userRepository.CreateNewCouncilor(councilor)
+
+	profilePath := userService.constants.S3Service.GetCouncilorProfileKey(councilor.ID, profile.Filename)
+	userService.awsS3Service.UploadObject(enums.ProfilesBucket, profilePath, profile)
+	councilor.ProfilePath = profilePath
+	userService.userRepository.UpdateCouncilor(councilor)
+}
+
+func (userService *userService) DeleteCouncilor(councilorID uint) {
+	var notFoundError exceptions.NotFoundError
+	councilor, councilorExist := userService.userRepository.FindCouncilorByID(councilorID)
+	if !councilorExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+	userService.userRepository.DeleteCouncilor(councilorID)
+	if councilor.ProfilePath != "" {
+		userService.awsS3Service.DeleteObject(enums.ProfilesBucket, councilor.ProfilePath)
+	}
 }

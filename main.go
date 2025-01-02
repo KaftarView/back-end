@@ -57,6 +57,7 @@ func main() {
 		&entities.Event{},
 		&entities.Media{},
 		&entities.Commentable{},
+		&entities.Councilor{},
 		&entities.Journal{},
 		&entities.Organizer{},
 		&entities.Permission{},
@@ -83,7 +84,7 @@ func main() {
 	}
 
 	userRepository := repository.NewUserRepository(db)
-	roleSeeder := seed.NewRoleSeeder(userRepository, &di.Env.Admin, &di.Env.Moderator)
+	roleSeeder := seed.NewRoleSeeder(userRepository, &di.Env.Admin)
 	roleSeeder.SeedRoles()
 
 	backgroundEnabled, err := strconv.ParseBool(di.Env.Applications.BACKGROUND_SERVICE_ENABLED)

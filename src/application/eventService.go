@@ -2,39 +2,42 @@ package application
 
 import (
 	application_aws "first-project/src/application/aws"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
 	"first-project/src/enums"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
-	"fmt"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"mime/multipart"
 	"time"
 )
 
-type EventService struct {
+type eventService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
-	eventRepository   *repository_database.EventRepository
-	commentRepository *repository_database.CommentRepository
+	categoryService   application_interfaces.CategoryService
+	eventRepository   repository_database_interfaces.EventRepository
+	commentRepository repository_database_interfaces.CommentRepository
 }
 
 func NewEventService(
 	constants *bootstrap.Constants,
 	awsService *application_aws.S3service,
-	eventRepository *repository_database.EventRepository,
-	commentRepository *repository_database.CommentRepository,
-) *EventService {
-	return &EventService{
+	categoryService application_interfaces.CategoryService,
+	eventRepository repository_database_interfaces.EventRepository,
+	commentRepository repository_database_interfaces.CommentRepository,
+) *eventService {
+	return &eventService{
 		constants:         constants,
 		awsS3Service:      awsService,
+		categoryService:   categoryService,
 		eventRepository:   eventRepository,
 		commentRepository: commentRepository,
 	}
 }
 
-func (eventService *EventService) ValidateEventCreationDetails(
+func (eventService *eventService) ValidateEventCreationDetails(
 	name, venueType, location string, fromDate, toDate time.Time,
 ) {
 	var conflictError exceptions.ConflictError
@@ -47,7 +50,7 @@ func (eventService *EventService) ValidateEventCreationDetails(
 	}
 }
 
-func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetails) *entities.Event {
+func (eventService *eventService) CreateEvent(eventDetails dto.CreateEventRequest) *entities.Event {
 	enumStatus := enums.Draft
 	eventStatuses := enums.GetAllEventStatus()
 	for _, eventStatus := range eventStatuses {
@@ -64,11 +67,11 @@ func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetai
 		}
 	}
 
-	categories := eventService.eventRepository.FindCategoriesByNames(eventDetails.Categories)
+	categories := eventService.categoryService.GetCategoriesByName(eventDetails.Categories)
 	commentable := eventService.commentRepository.CreateNewCommentable()
 
-	bannerPath := fmt.Sprintf("banners/events/%d/images/%s", commentable.CID, eventDetails.Banner.Filename)
-	eventService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, eventDetails.Banner)
+	bannerPath := eventService.constants.S3Service.GetEventBannerKey(commentable.CID, eventDetails.Banner.Filename)
+	eventService.awsS3Service.UploadObject(enums.EventsBucket, bannerPath, eventDetails.Banner)
 
 	eventDetailsModel := &entities.Event{
 		ID:          commentable.CID,
@@ -89,7 +92,7 @@ func (eventService *EventService) CreateEvent(eventDetails dto.RequestEventDetai
 	return event
 }
 
-func (eventService *EventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) {
+func (eventService *eventService) ValidateNewEventTicketDetails(ticketName string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -106,7 +109,7 @@ func (eventService *EventService) ValidateNewEventTicketDetails(ticketName strin
 	}
 }
 
-func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketDetails) *entities.Ticket {
+func (eventService *eventService) CreateEventTicket(ticketDetails dto.CreateTicketRequest) *entities.Ticket {
 	ticketDetailsModel := &entities.Ticket{
 		Name:           ticketDetails.Name,
 		Description:    ticketDetails.Description,
@@ -122,7 +125,7 @@ func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTick
 	return ticket
 }
 
-func (eventService *EventService) UpdateEventTicket(ticketDetails dto.EditTicketDetails) {
+func (eventService *eventService) UpdateEventTicket(ticketDetails dto.UpdateTicketRequest) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByID(ticketDetails.TicketID)
@@ -166,7 +169,7 @@ func (eventService *EventService) UpdateEventTicket(ticketDetails dto.EditTicket
 	eventService.eventRepository.UpdateEventTicket(ticket)
 }
 
-func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode string, eventID uint) {
+func (eventService *eventService) ValidateNewEventDiscountDetails(discountCode string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -183,7 +186,7 @@ func (eventService *EventService) ValidateNewEventDiscountDetails(discountCode s
 	}
 }
 
-func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountDetails) *entities.Discount {
+func (eventService *eventService) CreateEventDiscount(discountDetails dto.CreateDiscountRequest) *entities.Discount {
 	var enumDiscountType enums.DiscountType
 	discountTypes := enums.GetAllDiscountTypes()
 	for _, discountType := range discountTypes {
@@ -207,7 +210,7 @@ func (eventService *EventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-func (eventService *EventService) UpdateEventDiscount(discountDetails dto.EditDiscountDetails) {
+func (eventService *eventService) UpdateEventDiscount(discountDetails dto.UpdateDiscountRequest) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 
@@ -258,7 +261,7 @@ func (eventService *EventService) UpdateEventDiscount(discountDetails dto.EditDi
 	eventService.eventRepository.UpdateEventDiscount(discount)
 }
 
-func updateBasicDetails(event *entities.Event, updateDetails dto.UpdateEventDetails) {
+func updateBasicDetails(event *entities.Event, updateDetails dto.UpdateEventRequest) {
 	if updateDetails.Description != nil {
 		event.Description = *updateDetails.Description
 	}
@@ -279,16 +282,16 @@ func updateBasicDetails(event *entities.Event, updateDetails dto.UpdateEventDeta
 	}
 }
 
-func (eventService *EventService) updateEventBanner(event *entities.Event, banner *multipart.FileHeader) {
+func (eventService *eventService) updateEventBanner(event *entities.Event, banner *multipart.FileHeader) {
 	if banner != nil {
-		eventService.awsS3Service.DeleteObject(enums.BannersBucket, event.BannerPath)
-		bannerPath := fmt.Sprintf("profiles/events/%d/images/%s", event.ID, banner.Filename)
-		eventService.awsS3Service.UploadObject(enums.BannersBucket, bannerPath, banner)
+		eventService.awsS3Service.DeleteObject(enums.EventsBucket, event.BannerPath)
+		bannerPath := eventService.constants.S3Service.GetEventBannerKey(event.ID, banner.Filename)
+		eventService.awsS3Service.UploadObject(enums.EventsBucket, bannerPath, banner)
 		event.BannerPath = bannerPath
 	}
 }
 
-func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetails) {
+func (eventService *eventService) UpdateEvent(updateDetails dto.UpdateEventRequest) {
 	event, eventExist := eventService.eventRepository.FindEventByID(updateDetails.ID)
 	if !eventExist {
 		var notFoundError exceptions.NotFoundError
@@ -322,8 +325,8 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 	}
 
 	if updateDetails.Categories != nil {
-		categories := eventService.eventRepository.FindCategoriesByNames(*updateDetails.Categories)
-		event.Categories = categories
+		categories := eventService.categoryService.GetCategoriesByName(*updateDetails.Categories)
+		eventService.eventRepository.UpdateEventCategories(updateDetails.ID, categories)
 	}
 
 	if updateDetails.Name != nil {
@@ -334,7 +337,7 @@ func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventDetai
 	eventService.eventRepository.UpdateEvent(event)
 }
 
-func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email, description string, profile *multipart.FileHeader) {
+func (eventService *eventService) CreateEventOrganizer(eventID uint, name, email, description string, profile *multipart.FileHeader) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -351,23 +354,30 @@ func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email
 		panic(conflictError)
 	}
 
-	profilePath := fmt.Sprintf("profiles/organizers/%d/images/%s", eventID, profile.Filename)
-	eventService.awsS3Service.UploadObject(enums.ProfileBucket, profilePath, profile)
+	organizer := eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description)
 
-	eventService.eventRepository.CreateOrganizerForEventID(eventID, name, email, description, profilePath)
+	profilePath := eventService.constants.S3Service.GetOrganizerProfileKey(organizer.ID, profile.Filename)
+	eventService.awsS3Service.UploadObject(enums.ProfilesBucket, profilePath, profile)
+	organizer.ProfilePath = profilePath
+	eventService.eventRepository.UpdateEventOrganizer(organizer)
 }
 
-func (eventService *EventService) GetEventByID(eventID uint) *entities.Event {
+func (eventService *eventService) GetEventByID(eventID uint) *entities.Event {
 	event, _ := eventService.eventRepository.FindEventByID(eventID)
 	return event
 }
 
-func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus, page, pageSize int) []dto.EventDetailsResponse {
+func (eventService *eventService) GetEventsList(allowedStatus []enums.EventStatus, page, pageSize int) []dto.EventDetailsResponse {
 	offset := (page - 1) * pageSize
 	events, _ := eventService.eventRepository.FindEventsByStatus(allowedStatus, offset, pageSize)
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
 	for i, event := range events {
-		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
+		banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
 			CreatedAt:   event.CreatedAt,
@@ -378,12 +388,14 @@ func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatu
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
 			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
 		}
 	}
 	return eventsDetails
 }
 
-func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse {
+func (eventService *eventService) GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
@@ -400,13 +412,13 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 		notFoundError.ErrorField = eventService.constants.ErrorField.Event
 		panic(notFoundError)
 	}
-	event = eventService.eventRepository.FindEventCategoriesByEvent(event)
-	categoryNames := make([]string, len(event.Categories))
+	categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+	categoryNames := make([]string, len(categories))
 	for i, category := range event.Categories {
 		categoryNames[i] = category.Name
 	}
 
-	banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+	banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 
 	eventDetails := dto.EventDetailsResponse{
 		ID:          event.ID,
@@ -427,7 +439,7 @@ func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventSta
 	return eventDetails
 }
 
-func (eventService *EventService) GetEventTickets(eventID uint, availability []bool) []dto.TicketDetailsResponse {
+func (eventService *eventService) GetEventTickets(eventID uint, availability []bool) []dto.TicketDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
@@ -456,7 +468,7 @@ func (eventService *EventService) GetEventTickets(eventID uint, availability []b
 	return ticketsDetails
 }
 
-func (eventService *EventService) GetTicketDetails(ticketID uint) dto.TicketDetailsResponse {
+func (eventService *eventService) GetTicketDetails(ticketID uint) dto.TicketDetailsResponse {
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByID(ticketID)
 	if !ticketExist {
 		return dto.TicketDetailsResponse{}
@@ -476,7 +488,7 @@ func (eventService *EventService) GetTicketDetails(ticketID uint) dto.TicketDeta
 	return ticketDetails
 }
 
-func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
+func (eventService *eventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
@@ -506,7 +518,7 @@ func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.Discount
 	return discountsDetails
 }
 
-func (eventService *EventService) GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse {
+func (eventService *eventService) GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	discount, discountExist := eventService.eventRepository.FindDiscountByDiscountID(discountID)
 	if !discountExist {
@@ -529,12 +541,7 @@ func (eventService *EventService) GetDiscountDetails(discountID uint) dto.Discou
 	return discountDetails
 }
 
-func (eventService *EventService) GetListOfCategories() []string {
-	categoryNames := eventService.eventRepository.FindAllCategories()
-	return categoryNames
-}
-
-func (eventService *EventService) DeleteEvent(eventID uint) {
+func (eventService *eventService) DeleteEvent(eventID uint) {
 	var notFoundError exceptions.NotFoundError
 	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
 	if !eventExist {
@@ -546,16 +553,16 @@ func (eventService *EventService) DeleteEvent(eventID uint) {
 
 	eventService.eventRepository.DeleteEvent(eventID)
 
-	eventService.awsS3Service.DeleteObject(enums.BannersBucket, event.BannerPath)
+	eventService.awsS3Service.DeleteObject(enums.EventsBucket, event.BannerPath)
 	for _, organizer := range eventOrganizers {
-		eventService.awsS3Service.DeleteObject(enums.ProfileBucket, organizer.ProfilePath)
+		eventService.awsS3Service.DeleteObject(enums.ProfilesBucket, organizer.ProfilePath)
 	}
 	for _, media := range eventMedia {
-		eventService.awsS3Service.DeleteObject(enums.SessionsBucket, media.Path)
+		eventService.awsS3Service.DeleteObject(enums.EventsBucket, media.Path)
 	}
 }
 
-func (eventService *EventService) DeleteTicket(ticketID uint) {
+func (eventService *eventService) DeleteTicket(ticketID uint) {
 	var notFoundError exceptions.NotFoundError
 	_, ticketExist := eventService.eventRepository.FindEventTicketByID(ticketID)
 	if !ticketExist {
@@ -565,7 +572,7 @@ func (eventService *EventService) DeleteTicket(ticketID uint) {
 	eventService.eventRepository.DeleteTicket(ticketID)
 }
 
-func (eventService *EventService) DeleteDiscount(discountID uint) {
+func (eventService *eventService) DeleteDiscount(discountID uint) {
 	var notFoundError exceptions.NotFoundError
 	_, discountExist := eventService.eventRepository.FindDiscountByDiscountID(discountID)
 	if !discountExist {
@@ -575,7 +582,7 @@ func (eventService *EventService) DeleteDiscount(discountID uint) {
 	eventService.eventRepository.DeleteDiscount(discountID)
 }
 
-func (eventService *EventService) DeleteOrganizer(organizerID uint) {
+func (eventService *eventService) DeleteOrganizer(organizerID uint) {
 	var notFoundError exceptions.NotFoundError
 	organizer, organizerExist := eventService.eventRepository.FindOrganizerByID(organizerID)
 	if !organizerExist {
@@ -583,32 +590,94 @@ func (eventService *EventService) DeleteOrganizer(organizerID uint) {
 		panic(notFoundError)
 	}
 
-	eventService.awsS3Service.DeleteObject(enums.ProfileBucket, organizer.ProfilePath)
+	eventService.awsS3Service.DeleteObject(enums.ProfilesBucket, organizer.ProfilePath)
 	eventService.eventRepository.DeleteOrganizer(organizerID)
 }
 
-func (eventService *EventService) GetEventMediaDetails(mediaID, eventID uint) *entities.Media {
-	var notFoundError exceptions.NotFoundError
-	media, mediaExist := eventService.eventRepository.FindMediaByIDAndEventID(mediaID, eventID)
-	if !mediaExist {
-		notFoundError.ErrorField = eventService.constants.ErrorField.Media
-		panic(notFoundError)
-	}
-	return media
-}
-
-func (eventService *EventService) DeleteEventMedia(mediaID uint) {
+func (eventService *eventService) GetEventMediaDetails(mediaID uint) dto.MediaDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	media, mediaExist := eventService.eventRepository.FindMediaByID(mediaID)
 	if !mediaExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Media
 		panic(notFoundError)
 	}
-	eventService.awsS3Service.DeleteObject(enums.SessionsBucket, media.Path)
+	mediaPath := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, media.Path, 8*time.Hour)
+	mediaDetails := dto.MediaDetailsResponse{
+		ID:        mediaID,
+		Name:      media.Name,
+		CreatedAt: media.CreatedAt,
+		Size:      media.Size,
+		Type:      media.Type,
+		MediaPath: mediaPath,
+	}
+
+	return mediaDetails
+}
+
+func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDetailsResponse {
+	var notFoundError exceptions.NotFoundError
+	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
+	if !eventExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Event
+		panic(notFoundError)
+	}
+	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventID)
+	allMediaDetails := make([]dto.MediaDetailsResponse, len(allEventMedia))
+	for i, media := range allEventMedia {
+		mediaPath := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, media.Path, 8*time.Hour)
+		allMediaDetails[i] = dto.MediaDetailsResponse{
+			ID:        media.ID,
+			Name:      media.Name,
+			CreatedAt: media.CreatedAt,
+			Size:      media.Size,
+			Type:      media.Type,
+			MediaPath: mediaPath,
+		}
+	}
+	return allMediaDetails
+}
+
+func (eventService *eventService) UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader) {
+	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
+	media, mediaExist := eventService.eventRepository.FindMediaByID(mediaID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+
+	if name != nil {
+		_, mediaExist := eventService.eventRepository.FindEventMediaByName(*name, mediaID)
+		if mediaExist {
+			conflictError.AppendError(
+				eventService.constants.ErrorField.Media,
+				eventService.constants.ErrorTag.AlreadyExist)
+			panic(conflictError)
+		}
+		media.Name = *name
+	}
+	if file != nil {
+		eventService.awsS3Service.DeleteObject(enums.EventsBucket, media.Path)
+		mediaPath := eventService.constants.S3Service.GetEventSessionKey(media.EventID, mediaID, file.Filename)
+		eventService.awsS3Service.UploadObject(enums.EventsBucket, mediaPath, file)
+		media.Path = mediaPath
+	}
+
+	eventService.eventRepository.UpdateEventMedia(media)
+}
+
+func (eventService *eventService) DeleteEventMedia(mediaID uint) {
+	var notFoundError exceptions.NotFoundError
+	media, mediaExist := eventService.eventRepository.FindMediaByID(mediaID)
+	if !mediaExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Media
+		panic(notFoundError)
+	}
+	eventService.awsS3Service.DeleteObject(enums.EventsBucket, media.Path)
 	eventService.eventRepository.DeleteMedia(mediaID)
 }
 
-func (eventService *EventService) ChangeEventStatus(eventID uint, newStatus string) {
+func (eventService *eventService) ChangeEventStatus(eventID uint, newStatus string) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	event, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -632,7 +701,7 @@ func (eventService *EventService) ChangeEventStatus(eventID uint, newStatus stri
 	eventService.eventRepository.ChangeStatusByEvent(event, enumNewStatus)
 }
 
-func (eventService *EventService) CreateEventMedia(eventID uint, mediaName string, mediaFile *multipart.FileHeader) {
+func (eventService *eventService) CreateEventMedia(eventID uint, mediaName string, mediaFile *multipart.FileHeader) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	_, eventExist := eventService.eventRepository.FindEventByID(eventID)
@@ -643,22 +712,27 @@ func (eventService *EventService) CreateEventMedia(eventID uint, mediaName strin
 	_, mediaExist := eventService.eventRepository.FindEventMediaByName(mediaName, eventID)
 	if mediaExist {
 		conflictError.AppendError(
-			eventService.constants.ErrorField.Ticket,
+			eventService.constants.ErrorField.Media,
 			eventService.constants.ErrorTag.AlreadyExist)
 		panic(conflictError)
 	}
-	mediaPath := fmt.Sprintf("media/events/%d/resources/%s", eventID, mediaFile.Filename)
-	eventService.awsS3Service.UploadObject(enums.SessionsBucket, mediaPath, mediaFile)
 
 	mediaModel := &entities.Media{
 		Name:    mediaName,
-		Path:    mediaPath,
+		Size:    mediaFile.Size,
+		Type:    mediaFile.Header.Get("Content-Type"),
 		EventID: eventID,
 	}
 	eventService.eventRepository.CreateNewMedia(mediaModel)
+
+	mediaPath := eventService.constants.S3Service.GetEventSessionKey(eventID, mediaModel.ID, mediaFile.Filename)
+	eventService.awsS3Service.UploadObject(enums.EventsBucket, mediaPath, mediaFile)
+
+	mediaModel.Path = mediaPath
+	eventService.eventRepository.UpdateEventMedia(mediaModel)
 }
 
-func (eventService *EventService) SearchEvents(query string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+func (eventService *eventService) SearchEvents(query string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	var events []*entities.Event
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -668,7 +742,12 @@ func (eventService *EventService) SearchEvents(query string, page, pageSize int,
 	}
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
 	for i, event := range events {
-		banner := eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
+		banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
 			CreatedAt:   event.CreatedAt,
@@ -679,12 +758,14 @@ func (eventService *EventService) SearchEvents(query string, page, pageSize int,
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
 			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
 		}
 	}
 	return eventsDetails
 }
 
-func (eventService *EventService) FilterEventsByCategories(categories []string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+func (eventService *eventService) FilterEventsByCategories(categories []string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	var eventsList []*entities.Event
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {
@@ -695,11 +776,15 @@ func (eventService *EventService) FilterEventsByCategories(categories []string, 
 
 	eventsDetails := make([]dto.EventDetailsResponse, len(eventsList))
 	for i, event := range eventsList {
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
 		banner := ""
 		if event.BannerPath != "" {
-			banner = eventService.awsS3Service.GetPresignedURL(enums.BannersBucket, event.BannerPath, 8*time.Hour)
+			banner = eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
 		}
-
 		eventsDetails[i] = dto.EventDetailsResponse{
 			ID:          event.ID,
 			CreatedAt:   event.CreatedAt,
@@ -710,6 +795,8 @@ func (eventService *EventService) FilterEventsByCategories(categories []string, 
 			ToDate:      event.ToDate,
 			VenueType:   event.VenueType.String(),
 			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
 		}
 	}
 

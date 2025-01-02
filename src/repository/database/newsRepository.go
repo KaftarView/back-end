@@ -7,17 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type NewsRepository struct {
+type newsRepository struct {
 	db *gorm.DB
 }
 
-func NewNewsRepository(db *gorm.DB) *NewsRepository {
-	return &NewsRepository{
+func NewNewsRepository(db *gorm.DB) *newsRepository {
+	return &newsRepository{
 		db: db,
 	}
 }
 
-func (repo *NewsRepository) FindNewsByTitle(name string) (*entities.News, bool) {
+func (repo *newsRepository) FindNewsByTitle(name string) (*entities.News, bool) {
 	var news entities.News
 	result := repo.db.First(&news, "title = ?", name)
 
@@ -30,7 +30,7 @@ func (repo *NewsRepository) FindNewsByTitle(name string) (*entities.News, bool) 
 	return &news, true
 }
 
-func (repo *NewsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
+func (repo *newsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
 	var news entities.News
 	result := repo.db.First(&news, queryByID, newsID)
 
@@ -43,7 +43,7 @@ func (repo *NewsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
 	return &news, true
 }
 
-func (repo *NewsRepository) CreateNews(news *entities.News) *entities.News {
+func (repo *newsRepository) CreateNews(news *entities.News) *entities.News {
 	err := repo.db.Create(news).Error
 	if err != nil {
 		panic(err)
@@ -51,7 +51,7 @@ func (repo *NewsRepository) CreateNews(news *entities.News) *entities.News {
 	return news
 }
 
-func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
+func (repo *newsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	var news entities.News
 	query := repo.db.Where(queryByID, id)
 	err := query.First(&news).Error
@@ -64,21 +64,28 @@ func (repo *NewsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	return &news, true
 }
 
-func (repo *NewsRepository) UpdateNews(news *entities.News) {
+func (repo *newsRepository) UpdateNewsCategories(newsID uint, categories []entities.Category) {
+	err := repo.db.Model(&entities.News{ID: newsID}).Association("Categories").Replace(categories)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (repo *newsRepository) UpdateNews(news *entities.News) {
 	err := repo.db.Save(news).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *NewsRepository) DeleteNews(newsID uint) {
+func (repo *newsRepository) DeleteNews(newsID uint) {
 	err := repo.db.Unscoped().Delete(&entities.News{}, newsID).Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (repo *NewsRepository) FindAllNews(offset, pageSize int) ([]*entities.News, bool) {
+func (repo *newsRepository) FindAllNews(offset, pageSize int) ([]*entities.News, bool) {
 	var news []*entities.News
 	result := repo.db.Offset(offset).Limit(pageSize).Find(&news)
 
@@ -91,7 +98,7 @@ func (repo *NewsRepository) FindAllNews(offset, pageSize int) ([]*entities.News,
 	return news, true
 }
 
-func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, pageSize int) []*entities.News {
+func (repo *newsRepository) FindNewsByCategoryName(categories []string, offset, pageSize int) []*entities.News {
 	var news []*entities.News
 
 	result := repo.db.
@@ -113,26 +120,14 @@ func (repo *NewsRepository) FindNewsByCategoryName(categories []string, offset, 
 	return news
 }
 
-func (repo *NewsRepository) FindCategoriesByNames(categoryNames []string) []entities.Category {
-	var categories []entities.Category
-	for _, categoryName := range categoryNames {
-		var category entities.Category
-		if err := repo.db.FirstOrCreate(&category, entities.Category{Name: categoryName}).Error; err != nil {
-			panic(err)
-		}
-		categories = append(categories, category)
-	}
-	return categories
-}
-
-func (repo *NewsRepository) FindNewsCategoriesByNews(news *entities.News) []entities.Category {
+func (repo *newsRepository) FindNewsCategoriesByNews(news *entities.News) []entities.Category {
 	if err := repo.db.Model(news).Association("Categories").Find(&news.Categories); err != nil {
 		panic(err)
 	}
 	return news.Categories
 }
 
-func (repo *NewsRepository) FullTextSearch(query string, offset, pageSize int) []*entities.News {
+func (repo *newsRepository) FullTextSearch(query string, offset, pageSize int) []*entities.News {
 	var news []*entities.News
 
 	repo.db.Exec(`ALTER TABLE news ADD FULLTEXT INDEX idx_title_description_content_content2 (title, description, content, content2)`)

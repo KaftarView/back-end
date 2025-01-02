@@ -50,10 +50,10 @@
         "updateDiscount" : "Discount Updated successfully",
         "getEvent": "Event Found successfully",
         "updateEvent" : "Event Updated successfully",
-
         "deleteEvent": "Event removed successfully.",
         "uploadMedia": "Media added successfully.",
         "deleteMedia": "Media deleted successfully.",
+        "updateMedia": "Media updated successfully.",
         "publishEvent": "Event published successfully.",
         "unpublishEvent": "Event set to unpublished.",
         "deleteTicket": "Ticket deleted successfully.",
@@ -74,6 +74,7 @@
         "deletePodcast": "Podcast deleted successfully.",
         "createJournal": "Journal created successfully.",
         "updateJournal": "Journal created successfully.",
-        "deleteJournal" :"Journal deleted successfully."
+        "deleteJournal" :"Journal deleted successfully.",
+        "createCouncilor": "Councilor created successfully."
     }
 }

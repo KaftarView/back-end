@@ -4,32 +4,33 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/exceptions"
-	repository_database "first-project/src/repository/database"
+	repository_database_interfaces "first-project/src/repository/database/interfaces"
 )
 
-type CommentService struct {
+type commentService struct {
 	constants         *bootstrap.Constants
-	commentRepository *repository_database.CommentRepository
-	userRepository    *repository_database.UserRepository
+	commentRepository repository_database_interfaces.CommentRepository
+	userRepository    repository_database_interfaces.UserRepository
 }
 
 func NewCommentService(
 	constants *bootstrap.Constants,
-	commentRepository *repository_database.CommentRepository,
-	userRepository *repository_database.UserRepository,
-) *CommentService {
-	return &CommentService{
+	commentRepository repository_database_interfaces.CommentRepository,
+	userRepository repository_database_interfaces.UserRepository,
+) *commentService {
+	return &commentService{
 		constants:         constants,
 		commentRepository: commentRepository,
 		userRepository:    userRepository,
 	}
 }
 
-func (commentService *CommentService) GetPostComments(commentableID uint) []dto.CommentDetails {
+func (commentService *commentService) GetPostComments(commentableID uint) []dto.CommentDetailsResponse {
 	comments := commentService.commentRepository.GetCommentsByEventID(commentableID)
-	var commentsDetails []dto.CommentDetails
+	var commentsDetails []dto.CommentDetailsResponse
 	for _, comment := range comments {
-		commentsDetails = append(commentsDetails, dto.CommentDetails{
+		commentsDetails = append(commentsDetails, dto.CommentDetailsResponse{
+			ID:          comment.ID,
 			Content:     comment.Content,
 			IsModerated: comment.IsModerated,
 			AuthorName:  comment.Author.Name,
@@ -38,7 +39,7 @@ func (commentService *CommentService) GetPostComments(commentableID uint) []dto.
 	return commentsDetails
 }
 
-func (commentService *CommentService) CreateComment(authorID, commentableID uint, content string) {
+func (commentService *commentService) CreateComment(authorID, commentableID uint, content string) {
 	var notFoundError exceptions.NotFoundError
 	_, authorExist := commentService.userRepository.FindByUserID(authorID)
 	if !authorExist {
@@ -53,7 +54,7 @@ func (commentService *CommentService) CreateComment(authorID, commentableID uint
 	commentService.commentRepository.CreateNewComment(authorID, commentableID, content)
 }
 
-func (commentService *CommentService) EditComment(authorID, commentID uint, newContent string) {
+func (commentService *commentService) EditComment(authorID, commentID uint, newContent string) {
 	var notFoundError exceptions.NotFoundError
 	_, authorExist := commentService.userRepository.FindByUserID(authorID)
 	if !authorExist {
@@ -72,7 +73,7 @@ func (commentService *CommentService) EditComment(authorID, commentID uint, newC
 	commentService.commentRepository.UpdateCommentContent(comment, newContent)
 }
 
-func (commentService *CommentService) DeleteComment(authorID, commentID uint, canModerateComment bool) {
+func (commentService *commentService) DeleteComment(authorID, commentID uint, canModerateComment bool) {
 	var notFoundError exceptions.NotFoundError
 	_, authorExist := commentService.userRepository.FindByUserID(authorID)
 	if !authorExist {
