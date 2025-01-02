@@ -5,7 +5,6 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"mime/multipart"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -128,12 +127,12 @@ func (adminUserController *AdminUserController) CreateCouncilor(c *gin.Context) 
 		FirstName    string                `form:"firstName" validate:"required,gt=2,lt=20"`
 		LastName     string                `form:"lastName" validate:"required,gt=2,lt=20"`
 		Description  string                `form:"description"`
-		PromotedDate time.Time             `form:"promotedDate" validate:"required" time_format:"2006-01-02"`
-		Semester     int                   `form:"semester" validate:"required"`
+		PromotedYear int                   `form:"promotedYear" validate:"required"`
+		EnteringYear int                   `form:"enteringYear" validate:"required"`
 		Profile      *multipart.FileHeader `form:"profile"`
 	}
 	param := controller.Validated[createCouncilorParams](c, &adminUserController.constants.Context)
-	adminUserController.userService.CreateCouncilor(param.Email, param.FirstName, param.LastName, param.Description, param.PromotedDate, param.Semester, param.Profile)
+	adminUserController.userService.CreateCouncilor(param.Email, param.FirstName, param.LastName, param.Description, param.PromotedYear, param.EnteringYear, param.Profile)
 
 	trans := controller.GetTranslator(c, adminUserController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.createCouncilor")

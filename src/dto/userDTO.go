@@ -10,11 +10,13 @@ type UserDetailsResponse struct {
 }
 
 type CouncilorsDetailsResponse struct {
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	Profile     string `json:"profile"`
-	Semester    int    `json:"semester"`
-	Description string `json:"description"`
+	ID           uint   `json:"id"`
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	Email        string `json:"email"`
+	Profile      string `json:"profile"`
+	EnteringYear int    `json:"enteringYear"`
+	Description  string `json:"description"`
 }
 
 type RoleDetailsResponse struct {
