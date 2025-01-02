@@ -312,9 +312,9 @@ func (repo *userRepository) FindCouncilorByID(councilorID uint) (*entities.Counc
 	return &councilor, true
 }
 
-func (repo *userRepository) FindCouncilorByUserIDAndPromoteDate(userID uint, promotedDate time.Time) (*entities.Councilor, bool) {
+func (repo *userRepository) FindCouncilorByUserIDAndPromotedYear(userID uint, promotedYear int) (*entities.Councilor, bool) {
 	var councilor entities.Councilor
-	result := repo.db.Where("user_id = ? AND promoted_date = ?", userID, promotedDate).First(&councilor)
+	result := repo.db.Where("user_id = ? AND promoted_year = ?", userID, promotedYear).First(&councilor)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false
@@ -324,9 +324,9 @@ func (repo *userRepository) FindCouncilorByUserIDAndPromoteDate(userID uint, pro
 	return &councilor, true
 }
 
-func (repo *userRepository) FindAllCouncilorsByPromotedDate(promotedDate time.Time) []*entities.Councilor {
+func (repo *userRepository) FindAllCouncilorsByPromotedYear(promotedYear int) []*entities.Councilor {
 	var councilors []*entities.Councilor
-	result := repo.db.Where("promoted_date  = ?", promotedDate).Find(&councilors)
+	result := repo.db.Where("promoted_year  = ?", promotedYear).Find(&councilors)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil

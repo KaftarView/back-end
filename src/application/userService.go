@@ -370,26 +370,29 @@ func (userService *userService) DeleteUserRole(email string, roleID uint) {
 	userService.userRepository.DeleteUserRole(user, role)
 }
 
-func (userService *userService) GetCouncilorsList(promotedDate time.Time) []dto.CouncilorsDetailsResponse {
-	councilors := userService.userRepository.FindAllCouncilorsByPromotedDate(promotedDate)
+func (userService *userService) GetCouncilorsList(promotedYear int) []dto.CouncilorsDetailsResponse {
+	councilors := userService.userRepository.FindAllCouncilorsByPromotedYear(promotedYear)
 	councilorsDetails := make([]dto.CouncilorsDetailsResponse, len(councilors))
 	for i, councilor := range councilors {
 		profile := ""
 		if councilor.ProfilePath != "" {
 			profile = userService.awsS3Service.GetPresignedURL(enums.ProfilesBucket, councilor.ProfilePath, 8*time.Hour)
 		}
+		user, _ := userService.userRepository.FindByUserID(councilor.UserID)
 		councilorsDetails[i] = dto.CouncilorsDetailsResponse{
-			FirstName:   councilor.FirstName,
-			LastName:    councilor.LastName,
-			Semester:    councilor.Semester,
-			Description: councilor.Description,
-			Profile:     profile,
+			ID:           councilor.ID,
+			FirstName:    councilor.FirstName,
+			LastName:     councilor.LastName,
+			Email:        user.Email,
+			EnteringYear: councilor.EnteringYear,
+			Description:  councilor.Description,
+			Profile:      profile,
 		}
 	}
 	return councilorsDetails
 }
 
-func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedDate time.Time, semester int, profile *multipart.FileHeader) {
+func (userService *userService) CreateCouncilor(email, firstName, lastName, description string, promotedYear int, enteringYear int, profile *multipart.FileHeader) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	user, userExist := userService.userRepository.FindByEmailAndVerified(email, true)
@@ -397,7 +400,7 @@ func (userService *userService) CreateCouncilor(email, firstName, lastName, desc
 		notFoundError.ErrorField = userService.constants.ErrorField.User
 		panic(notFoundError)
 	}
-	_, councilorExist := userService.userRepository.FindCouncilorByUserIDAndPromoteDate(user.ID, promotedDate)
+	_, councilorExist := userService.userRepository.FindCouncilorByUserIDAndPromotedYear(user.ID, promotedYear)
 	if councilorExist {
 		conflictError.AppendError(
 			userService.constants.ErrorField.Username,
@@ -408,9 +411,9 @@ func (userService *userService) CreateCouncilor(email, firstName, lastName, desc
 	councilor := &entities.Councilor{
 		FirstName:    firstName,
 		LastName:     lastName,
-		Semester:     semester,
+		EnteringYear: enteringYear,
 		Description:  description,
-		PromotedDate: promotedDate,
+		PromotedYear: promotedYear,
 		UserID:       user.ID,
 	}
 	userService.userRepository.CreateNewCouncilor(councilor)

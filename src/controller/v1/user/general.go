@@ -9,7 +9,6 @@ import (
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
 	repository_cache "first-project/src/repository/redis"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -168,10 +167,10 @@ func (generalUserController *GeneralUserController) ResetPassword(c *gin.Context
 
 func (generalUserController *GeneralUserController) GetCouncilors(c *gin.Context) {
 	type getCouncilorsParams struct {
-		PromotedDate time.Time `form:"promotedDate" validate:"required" time_format:"2006-01-02"`
+		PromotedYear int `form:"promotedYear" validate:"required"`
 	}
 	param := controller.Validated[getCouncilorsParams](c, &generalUserController.constants.Context)
-	councilors := generalUserController.userService.GetCouncilorsList(param.PromotedDate)
+	councilors := generalUserController.userService.GetCouncilorsList(param.PromotedYear)
 
 	controller.Response(c, 200, "", councilors)
 }

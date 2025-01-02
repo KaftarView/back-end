@@ -20,14 +20,14 @@ type UserRepository interface {
 	DeleteUserRole(user *entities.User, role *entities.Role)
 	FindActiveOrVerifiedUserByEmail(email string) (*entities.User, bool)
 	FindActiveOrVerifiedUserByUsername(username string) (*entities.User, bool)
-	FindAllCouncilorsByPromotedDate(promotedDate time.Time) []*entities.Councilor
+	FindAllCouncilorsByPromotedYear(promotedYear int) []*entities.Councilor
 	FindAllPermissions() []*entities.Permission
 	FindAllRolesWithPermissions() []*entities.Role
 	FindByEmailAndVerified(email string, verified bool) (*entities.User, bool)
 	FindByUserID(userID uint) (*entities.User, bool)
 	FindByUsernameAndVerified(username string, verified bool) (*entities.User, bool)
 	FindCouncilorByID(councilorID uint) (*entities.Councilor, bool)
-	FindCouncilorByUserIDAndPromoteDate(userID uint, promotedDate time.Time) (*entities.Councilor, bool)
+	FindCouncilorByUserIDAndPromotedYear(userID uint, promotedYear int) (*entities.Councilor, bool)
 	FindPermissionByID(permissionID uint) (*entities.Permission, bool)
 	FindPermissionByType(permissionType enums.PermissionType) (*entities.Permission, bool)
 	FindPermissionsByRole(roleID uint) []enums.PermissionType
