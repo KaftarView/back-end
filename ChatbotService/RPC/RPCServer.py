@@ -1,3 +1,8 @@
+
+import sys
+sys.path.append('../ProtoBuffers')
+sys.path.append('../chat_pb2_grpc.py')
+sys.path.append('../chat_pb2.py')
 import grpc
 from concurrent import futures
 import chat_pb2
@@ -6,10 +11,8 @@ import openai
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Configure OpenAI API
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_base = "https://api.avalai.ir/v1"
 

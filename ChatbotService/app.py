@@ -1,7 +1,11 @@
 from flask import Flask, request, render_template
 import grpc
-import chat_pb2
+import sys
+sys.path.append('ProtoBuffers')
+sys.path.append('ProtoBuffers/chat_pb2_grpc.py')
+sys.path.append('ProtoBuffers/chat_pb2.py')
 import chat_pb2_grpc
+import chat_pb2
 
 app = Flask(__name__)
 
