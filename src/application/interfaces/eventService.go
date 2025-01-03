@@ -20,9 +20,9 @@ type EventService interface {
 	DeleteEventMedia(mediaID uint)
 	DeleteOrganizer(organizerID uint)
 	DeleteTicket(ticketID uint)
+	FetchEventByID(eventID uint) *entities.Event
 	FilterEventsByCategories(categories []string, page int, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse
 	GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse
-	GetEventByID(eventID uint) *entities.Event
 	GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse
 	GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse
 	GetEventMediaDetails(mediaID uint) dto.MediaDetailsResponse
@@ -36,6 +36,4 @@ type EventService interface {
 	UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader)
 	UpdateEventTicket(ticketDetails dto.UpdateTicketRequest)
 	ValidateEventCreationDetails(name string, venueType string, location string, fromDate time.Time, toDate time.Time)
-	ValidateNewEventDiscountDetails(discountCode string, eventID uint)
-	ValidateNewEventTicketDetails(ticketName string, eventID uint)
 }

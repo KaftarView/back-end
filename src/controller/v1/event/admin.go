@@ -182,7 +182,6 @@ func (adminEventController *AdminEventController) AddEventTicket(c *gin.Context)
 		EventID        uint      `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[addEventTicketParams](c, &adminEventController.constants.Context)
-	adminEventController.eventService.ValidateNewEventTicketDetails(param.Name, param.EventID)
 
 	ticketDetails := dto.CreateTicketRequest{
 		Name:           param.Name,
@@ -216,7 +215,6 @@ func (adminEventController *AdminEventController) AddEventDiscount(c *gin.Contex
 	}
 
 	param := controller.Validated[addEventDiscountParams](c, &adminEventController.constants.Context)
-	adminEventController.eventService.ValidateNewEventDiscountDetails(param.Code, param.EventID)
 
 	discountDetails := dto.CreateDiscountRequest{
 		Code:       param.Code,
@@ -247,7 +245,7 @@ func (adminEventController *AdminEventController) AddEventOrganizer(c *gin.Conte
 	param := controller.Validated[addEventOrganizerParams](c, &adminEventController.constants.Context)
 	adminEventController.eventService.CreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, param.Profile)
 
-	eventName := adminEventController.eventService.GetEventByID(param.EventID).Name
+	eventName := adminEventController.eventService.FetchEventByID(param.EventID).Name
 	emailTemplateData := struct {
 		Name      string
 		EventName string

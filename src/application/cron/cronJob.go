@@ -3,9 +3,6 @@ package application_cron
 import (
 	application_communication "first-project/src/application/communication/emailService"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
-	"time"
-
-	"github.com/go-co-op/gocron"
 )
 
 type CronJob struct {
@@ -24,7 +21,5 @@ func NewCronJob(
 }
 
 func (cronJob *CronJob) RunCronJob() {
-	jobScheduler := gocron.NewScheduler(time.UTC)
-	jobScheduler.Every(1).Day().At("15:00").Do(cronJob.reminderEmailToUnverifiedUsers)
-	jobScheduler.StartAsync()
+	// some cron joc here
 }

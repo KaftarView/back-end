@@ -30,7 +30,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	podcastRepository := repository_database.NewPodcastRepository(db)
 	newsRepository := repository_database.NewNewsRepository(db)
 	journalRepository := repository_database.NewJournalRepository(db)
-	userCache := repository_cache.NewUserCache(di.Constants, rdb, userRepository)
+	userCache := repository_cache.NewUserCache(db, di.Constants, rdb, userRepository)
 
 	jwtService := application_jwt.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
@@ -40,13 +40,13 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		&di.Env.PodcastsBucket, &di.Env.NewsBucket,
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
-	categoryService := application.NewCategoryService(di.Constants, categoryRepository)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
-	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService)
-	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository)
-	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
+	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, db)
+	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
+	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
+	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository, db)
+	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository, db)
 
 	generalCategoryController := controller_v1_category.NewGeneralCategoryController(categoryService)
 	generalEventController := controller_v1_event.NewGeneralEventController(di.Constants, eventService, emailService)

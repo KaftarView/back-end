@@ -7,19 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type newsRepository struct {
-	db *gorm.DB
-}
+type newsRepository struct{}
 
 func NewNewsRepository(db *gorm.DB) *newsRepository {
-	return &newsRepository{
-		db: db,
-	}
+	return &newsRepository{}
 }
 
-func (repo *newsRepository) FindNewsByTitle(name string) (*entities.News, bool) {
+func (repo *newsRepository) FindNewsByTitle(db *gorm.DB, name string) (*entities.News, bool) {
 	var news entities.News
-	result := repo.db.First(&news, "title = ?", name)
+	result := db.First(&news, "title = ?", name)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -30,9 +26,9 @@ func (repo *newsRepository) FindNewsByTitle(name string) (*entities.News, bool) 
 	return &news, true
 }
 
-func (repo *newsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
+func (repo *newsRepository) FindNewsByID(db *gorm.DB, newsID uint) (*entities.News, bool) {
 	var news entities.News
-	result := repo.db.First(&news, queryByID, newsID)
+	result := db.First(&news, queryByID, newsID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -43,17 +39,13 @@ func (repo *newsRepository) FindNewsByID(newsID uint) (*entities.News, bool) {
 	return &news, true
 }
 
-func (repo *newsRepository) CreateNews(news *entities.News) *entities.News {
-	err := repo.db.Create(news).Error
-	if err != nil {
-		panic(err)
-	}
-	return news
+func (repo *newsRepository) CreateNews(db *gorm.DB, news *entities.News) error {
+	return db.Create(news).Error
 }
 
-func (repo *newsRepository) GetNewsByID(id uint) (*entities.News, bool) {
+func (repo *newsRepository) GetNewsByID(db *gorm.DB, id uint) (*entities.News, bool) {
 	var news entities.News
-	query := repo.db.Where(queryByID, id)
+	query := db.Where(queryByID, id)
 	err := query.First(&news).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -64,30 +56,21 @@ func (repo *newsRepository) GetNewsByID(id uint) (*entities.News, bool) {
 	return &news, true
 }
 
-func (repo *newsRepository) UpdateNewsCategories(newsID uint, categories []entities.Category) {
-	err := repo.db.Model(&entities.News{ID: newsID}).Association("Categories").Replace(categories)
-	if err != nil {
-		panic(err)
-	}
+func (repo *newsRepository) UpdateNewsCategories(db *gorm.DB, newsID uint, categories []entities.Category) error {
+	return db.Model(&entities.News{ID: newsID}).Association("Categories").Replace(categories)
 }
 
-func (repo *newsRepository) UpdateNews(news *entities.News) {
-	err := repo.db.Save(news).Error
-	if err != nil {
-		panic(err)
-	}
+func (repo *newsRepository) UpdateNews(db *gorm.DB, news *entities.News) error {
+	return db.Save(news).Error
 }
 
-func (repo *newsRepository) DeleteNews(newsID uint) {
-	err := repo.db.Unscoped().Delete(&entities.News{}, newsID).Error
-	if err != nil {
-		panic(err)
-	}
+func (repo *newsRepository) DeleteNews(db *gorm.DB, newsID uint) error {
+	return db.Unscoped().Delete(&entities.News{}, newsID).Error
 }
 
-func (repo *newsRepository) FindAllNews(offset, pageSize int) ([]*entities.News, bool) {
+func (repo *newsRepository) FindAllNews(db *gorm.DB, offset, pageSize int) ([]*entities.News, bool) {
 	var news []*entities.News
-	result := repo.db.Offset(offset).Limit(pageSize).Find(&news)
+	result := db.Offset(offset).Limit(pageSize).Find(&news)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -98,10 +81,10 @@ func (repo *newsRepository) FindAllNews(offset, pageSize int) ([]*entities.News,
 	return news, true
 }
 
-func (repo *newsRepository) FindNewsByCategoryName(categories []string, offset, pageSize int) []*entities.News {
+func (repo *newsRepository) FindNewsByCategoryName(db *gorm.DB, categories []string, offset, pageSize int) []*entities.News {
 	var news []*entities.News
 
-	result := repo.db.
+	result := db.
 		Distinct("news.*").
 		Joins("JOIN news_categories ON news.id = news_categories.news_id").
 		Joins("JOIN categories ON categories.id = news_categories.category_id").
@@ -120,20 +103,20 @@ func (repo *newsRepository) FindNewsByCategoryName(categories []string, offset, 
 	return news
 }
 
-func (repo *newsRepository) FindNewsCategoriesByNews(news *entities.News) []entities.Category {
-	if err := repo.db.Model(news).Association("Categories").Find(&news.Categories); err != nil {
+func (repo *newsRepository) FindNewsCategoriesByNews(db *gorm.DB, news *entities.News) []entities.Category {
+	if err := db.Model(news).Association("Categories").Find(&news.Categories); err != nil {
 		panic(err)
 	}
 	return news.Categories
 }
 
-func (repo *newsRepository) FullTextSearch(query string, offset, pageSize int) []*entities.News {
+func (repo *newsRepository) FullTextSearch(db *gorm.DB, query string, offset, pageSize int) []*entities.News {
 	var news []*entities.News
 
-	repo.db.Exec(`ALTER TABLE news ADD FULLTEXT INDEX idx_title_description_content_content2 (title, description, content, content2)`)
+	db.Exec(`ALTER TABLE news ADD FULLTEXT INDEX idx_title_description_content_content2 (title, description, content, content2)`)
 	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
 
-	result := repo.db.Model(&entities.News{}).
+	result := db.Model(&entities.News{}).
 		Where("MATCH(title, description, content, content2) AGAINST(? IN BOOLEAN MODE)", searchQuery).
 		Offset(offset).
 		Limit(pageSize).

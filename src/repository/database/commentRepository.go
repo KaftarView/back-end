@@ -29,9 +29,9 @@ func (repo *commentRepository) GetCommentsByEventID(eventID uint) []*entities.Co
 	return comments
 }
 
-func (repo *commentRepository) CreateNewCommentable() *entities.Commentable {
+func (repo *commentRepository) CreateNewCommentable(db *gorm.DB) *entities.Commentable {
 	commentable := entities.Commentable{}
-	result := repo.db.Create(&commentable)
+	result := db.Create(&commentable)
 	if result.Error != nil {
 		panic(result.Error)
 	}

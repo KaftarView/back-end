@@ -38,7 +38,7 @@ func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, r
 func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
 	jwtService := application_jwt.NewJWTToken()
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
 
 	customerGroup := v1.Group("")
 	customerGroup.Use(authMiddleware.AuthRequired)
@@ -48,7 +48,7 @@ func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, 
 func registerAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository(db)
 	jwtService := application_jwt.NewJWTToken()
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
 
 	adminGroup := v1.Group("/admin")
 	adminGroup.Use(authMiddleware.AuthRequired)

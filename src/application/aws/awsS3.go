@@ -60,7 +60,7 @@ func (s3Service *S3service) setS3Client(bucketType enums.BucketType) {
 	})
 
 	if err != nil {
-		panic(fmt.Errorf("unable to create AWS session, %v", err))
+		panic(fmt.Errorf("unable to create AWS session, %w", err))
 	}
 
 	s3Service.uploader[bucketType] = s3manager.NewUploader(sess)
@@ -73,7 +73,7 @@ func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string
 
 	fileReader, err := file.Open()
 	if err != nil {
-		panic(fmt.Errorf("unable to open file %q, %v", file.Filename, err))
+		panic(fmt.Errorf("unable to open file %q, %w", file.Filename, err))
 	}
 	defer fileReader.Close()
 
@@ -87,17 +87,17 @@ func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string
 				Bucket: aws.String(bucket.Name),
 			})
 			if err != nil {
-				panic(fmt.Errorf("unable to create bucket %q, %v", bucket.Name, err))
+				panic(fmt.Errorf("unable to create bucket %q, %w", bucket.Name, err))
 			}
 
 			err = s3Service.clients[bucketType].WaitUntilBucketExists(&s3.HeadBucketInput{
 				Bucket: aws.String(bucket.Name),
 			})
 			if err != nil {
-				panic(fmt.Errorf("unable to confirm bucket %q exists, %v", bucket.Name, err))
+				panic(fmt.Errorf("unable to confirm bucket %q exists, %w", bucket.Name, err))
 			}
 		} else {
-			panic(fmt.Errorf("unable to check bucket %q, %v", bucket.Name, err))
+			panic(fmt.Errorf("unable to check bucket %q, %w", bucket.Name, err))
 		}
 	}
 
@@ -107,11 +107,11 @@ func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string
 		Body:   fileReader,
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", file.Filename, bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %w", file.Filename, bucket.Name, err))
 	}
 }
 
-func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string) {
+func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string) error {
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 
@@ -120,7 +120,7 @@ func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %v", key, bucket.Name, err))
+		return fmt.Errorf("unable to upload %q to %q, %w", key, bucket.Name, err)
 	}
 
 	err = s3Service.clients[bucketType].WaitUntilObjectNotExists(&s3.HeadObjectInput{
@@ -128,8 +128,9 @@ func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to open file %q, %v", key, err))
+		return fmt.Errorf("unable to open file %q, %w", key, err)
 	}
+	return nil
 }
 
 func (s3Service *S3service) GetPresignedURL(bucketType enums.BucketType, objectKey string, expiration time.Duration) string {

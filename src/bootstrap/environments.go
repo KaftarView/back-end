@@ -16,7 +16,7 @@ type Env struct {
 	ProfilesBucket Bucket
 	Applications   AppInfo
 	Email          EmailInfo
-	Admin          UserInfo
+	SuperAdmin     AdminCredentials
 }
 
 type Database struct {
@@ -54,7 +54,8 @@ type EmailInfo struct {
 	SMTPPort      string
 }
 
-type UserInfo struct {
+type AdminCredentials struct {
+	Name         string
 	EmailAddress string
 	Password     string
 }
@@ -84,7 +85,7 @@ func NewEnvironments() *Env {
 			Endpoint:  os.Getenv("EVENTS_BUCKET_ENDPOINT"),
 		},
 		PodcastsBucket: Bucket{
-			Name:      os.Getenv("PODCASTS_BUCKET_NAME`"),
+			Name:      os.Getenv("PODCASTS_BUCKET_NAME"),
 			Region:    os.Getenv("PODCASTS_BUCKET_REGION"),
 			AccessKey: os.Getenv("PODCASTS_BUCKET_ACCESS_key"),
 			SecretKey: os.Getenv("PODCASTS_BUCKET_SECRET_key"),
@@ -121,7 +122,8 @@ func NewEnvironments() *Env {
 			SMTPHost:      os.Getenv("SMTP_HOST"),
 			SMTPPort:      os.Getenv("SMTP_PORT"),
 		},
-		Admin: UserInfo{
+		SuperAdmin: AdminCredentials{
+			Name:         "Admin",
 			EmailAddress: os.Getenv("ADMIN_EMAIL"),
 			Password:     os.Getenv("ADMIN_PASSWORD"),
 		},

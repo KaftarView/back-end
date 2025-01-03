@@ -9,6 +9,7 @@ import (
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
 
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 type UserCacheData struct {
@@ -21,9 +22,11 @@ type UserCache struct {
 	constants      *bootstrap.Constants
 	rdb            *redis.Client
 	userRepository repository_database_interfaces.UserRepository
+	db             *gorm.DB
 }
 
 func NewUserCache(
+	db *gorm.DB,
 	constants *bootstrap.Constants,
 	rdb *redis.Client,
 	userRepository repository_database_interfaces.UserRepository,
@@ -32,6 +35,7 @@ func NewUserCache(
 		constants:      constants,
 		rdb:            rdb,
 		userRepository: userRepository,
+		db:             db,
 	}
 }
 
@@ -39,7 +43,7 @@ var ctx = context.Background()
 
 func (userCache *UserCache) SetUser(userID uint, username, email string) {
 	key := userCache.constants.Redis.GetUserID(int(userID))
-	roles := userCache.userRepository.FindUserRoleTypesByUserID(userID)
+	roles := userCache.userRepository.FindUserRoleTypesByUserID(userCache.db, userID)
 	userData := UserCacheData{
 		Name:  username,
 		Email: email,
@@ -61,7 +65,7 @@ func (userCache *UserCache) GetUser(userID uint) UserCacheData {
 	key := userCache.constants.Redis.GetUserID(int(userID))
 	val, err := userCache.rdb.Get(ctx, key).Result()
 	if err == redis.Nil {
-		user, userExist := userCache.userRepository.FindByUserID(userID)
+		user, userExist := userCache.userRepository.FindByUserID(userCache.db, userID)
 		if !userExist {
 			unauthorizedError := exceptions.NewUnauthorizedError()
 			panic(unauthorizedError)
