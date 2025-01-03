@@ -38,15 +38,15 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		&di.Env.PodcastsBucket, &di.Env.NewsBucket,
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
-	categoryService := application.NewCategoryService(di.Constants, categoryRepository)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository)
-	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService)
-	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository)
-	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository)
+	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, db)
+	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
+	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
+	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository, db)
+	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository, db)
 
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService)
+	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
 
 	adminEventController := controller_v1_event.NewAdminEventController(di.Constants, eventService, emailService)
 	adminCommentController := controller_v1_comment.NewAdminCommentController(di.Constants, commentService)

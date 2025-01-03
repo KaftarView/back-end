@@ -11,23 +11,27 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type AuthMiddleware struct {
 	constants      *bootstrap.Constants
 	userRepository repository_database_interfaces.UserRepository
 	jwtService     *application_jwt.JWTToken
+	db             *gorm.DB
 }
 
 func NewAuthMiddleware(
 	constants *bootstrap.Constants,
 	userRepository repository_database_interfaces.UserRepository,
 	jwtService *application_jwt.JWTToken,
+	db *gorm.DB,
 ) *AuthMiddleware {
 	return &AuthMiddleware{
 		constants:      constants,
 		userRepository: userRepository,
 		jwtService:     jwtService,
+		db:             db,
 	}
 }
 
@@ -65,7 +69,7 @@ func (am *AuthMiddleware) RequirePermission(allowedPermissions []enums.Permissio
 			panic(unauthorizedError)
 		}
 
-		roles := am.userRepository.FindUserRoleTypesByUserID(userID.(uint))
+		roles := am.userRepository.FindUserRoleTypesByUserID(am.db, userID.(uint))
 		allowedPermissions = append(allowedPermissions, enums.All)
 		if !am.isAllowRole(allowedPermissions, roles) {
 			authError := exceptions.NewForbiddenError()
@@ -83,7 +87,7 @@ func (am *AuthMiddleware) isAllowRole(allowedPermissions []enums.PermissionType,
 	}
 
 	for _, userRole := range userRoles {
-		permissions := am.userRepository.FindPermissionsByRole(userRole.ID)
+		permissions := am.userRepository.FindPermissionsByRole(am.db, userRole.ID)
 		for _, permission := range permissions {
 			if allowedPermissionMap[permission] {
 				return true

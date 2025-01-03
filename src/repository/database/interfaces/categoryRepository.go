@@ -1,8 +1,12 @@
 package repository_database_interfaces
 
-import "first-project/src/entities"
+import (
+	"first-project/src/entities"
+
+	"gorm.io/gorm"
+)
 
 type CategoryRepository interface {
-	CreateOrGetCategoryByName(name string) entities.Category
-	FindAllCategories() []string
+	CreateOrGetCategoryByName(db *gorm.DB, name string) entities.Category
+	FindAllCategories(db *gorm.DB) []string
 }
