@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type eventRepository struct{}
@@ -133,6 +134,19 @@ func (repo *eventRepository) FindEventTicketByID(db *gorm.DB, ticketID uint) (*e
 	return &ticket, true
 }
 
+func (repo *eventRepository) FindEventTicketByIDForUpdate(db *gorm.DB, ticketID uint) (*entities.Ticket, bool) {
+	var ticket entities.Ticket
+	result := db.Clauses(clause.Locking{Strength: "UPDATE"}).First(&ticket, queryByID, ticketID)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &ticket, true
+}
+
 func (repo *eventRepository) FindEventMediaByName(db *gorm.DB, mediaName string, eventID uint) (*entities.Media, bool) {
 	var media entities.Media
 	result := db.First(&media, "name = ? AND event_id = ?", mediaName, eventID)
@@ -178,6 +192,19 @@ func (repo *eventRepository) CreateNewTicket(db *gorm.DB, ticket *entities.Ticke
 func (repo *eventRepository) FindEventDiscountByCode(db *gorm.DB, discountCode string, eventID uint) (*entities.Discount, bool) {
 	var discount entities.Discount
 	result := db.First(&discount, "code = ? AND event_id = ?", discountCode, eventID)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return &discount, true
+}
+
+func (repo *eventRepository) FindEventDiscountByCodeForUpdate(db *gorm.DB, discountCode string, eventID uint) (*entities.Discount, bool) {
+	var discount entities.Discount
+	result := db.Clauses(clause.Locking{Strength: "UPDATE"}).
+		First(&discount, "code = ? AND event_id = ?", discountCode, eventID)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false
@@ -263,6 +290,10 @@ func (repo *eventRepository) ChangeStatusByEvent(db *gorm.DB, event *entities.Ev
 
 func (repo *eventRepository) CreateNewMedia(db *gorm.DB, media *entities.Media) error {
 	return db.Create(media).Error
+}
+
+func (repo *eventRepository) CreateReservation(db *gorm.DB, reservation *entities.Reservation) error {
+	return db.Create(reservation).Error
 }
 
 func (repo *eventRepository) FindMediaByID(db *gorm.DB, mediaID uint) (*entities.Media, bool) {

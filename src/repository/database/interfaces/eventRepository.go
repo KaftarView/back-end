@@ -15,6 +15,7 @@ type EventRepository interface {
 	CreateNewMedia(db *gorm.DB, media *entities.Media) error
 	CreateNewTicket(db *gorm.DB, ticket *entities.Ticket) error
 	CreateOrganizerForEventID(db *gorm.DB, organizer *entities.Organizer) error
+	CreateReservation(db *gorm.DB, reservation *entities.Reservation) error
 	DeleteDiscount(db *gorm.DB, discountID uint) error
 	DeleteEvent(db *gorm.DB, eventID uint) error
 	DeleteMedia(db *gorm.DB, mediaID uint) error
@@ -28,8 +29,10 @@ type EventRepository interface {
 	FindEventByID(db *gorm.DB, eventID uint) (*entities.Event, bool)
 	FindEventCategoriesByEvent(db *gorm.DB, event *entities.Event) []entities.Category
 	FindEventDiscountByCode(db *gorm.DB, discountCode string, eventID uint) (*entities.Discount, bool)
+	FindEventDiscountByCodeForUpdate(db *gorm.DB, discountCode string, eventID uint) (*entities.Discount, bool)
 	FindEventMediaByName(db *gorm.DB, mediaName string, eventID uint) (*entities.Media, bool)
 	FindEventTicketByID(db *gorm.DB, ticketID uint) (*entities.Ticket, bool)
+	FindEventTicketByIDForUpdate(db *gorm.DB, ticketID uint) (*entities.Ticket, bool)
 	FindEventTicketByName(db *gorm.DB, ticketName string, eventID uint) (*entities.Ticket, bool)
 	FindEventsByCategoryName(db *gorm.DB, categories []string, offset int, pageSize int, allowedStatus []enums.EventStatus) []*entities.Event
 	FindEventsByStatus(db *gorm.DB, allowedStatus []enums.EventStatus, offset int, pageSize int) ([]*entities.Event, bool)

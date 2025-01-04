@@ -41,6 +41,7 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	event := routerGroup.Group("/events/:eventID")
 	{
 		event.GET("/tickets", customerEventController.GetAvailableEventTicketsList)
+		event.POST("/buy", customerEventController.BuyTickets)
 	}
 
 	comments := routerGroup.Group("/comments")

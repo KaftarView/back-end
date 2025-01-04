@@ -810,3 +810,117 @@ func (eventService *eventService) FilterEventsByCategories(categories []string, 
 
 	return eventsDetails
 }
+
+func (eventService *eventService) validateTicketAvailability(
+	ticket *entities.Ticket, ticketExist bool, inputTicket dto.BuyTicketRequest) error {
+	var notFoundError exceptions.NotFoundError
+	if !ticketExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Ticket
+		return notFoundError
+	}
+	if !ticket.IsAvailable ||
+		ticket.SoldCount+inputTicket.Quantity > ticket.Quantity ||
+		time.Now().Before(ticket.AvailableFrom) ||
+		time.Now().After(ticket.AvailableUntil) {
+		appError := exceptions.NewAppError(
+			eventService.constants.ErrorField.Ticket,
+			eventService.constants.ErrorTag.NotAvailable)
+		return appError
+	}
+	return nil
+}
+
+func (eventService *eventService) validateDiscountAvailability(
+	discount *entities.Discount, discountExist bool, totalRequestedTickets uint) error {
+	var notFoundError exceptions.NotFoundError
+	if !discountExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Discount
+		return notFoundError
+	}
+	if discount.UsedCount >= discount.Quantity ||
+		time.Now().Before(discount.ValidFrom) ||
+		time.Now().After(discount.ValidUntil) ||
+		discount.MinTickets > totalRequestedTickets {
+		appError := exceptions.NewAppError(
+			eventService.constants.ErrorField.Discount,
+			eventService.constants.ErrorTag.NotAvailable)
+		return appError
+	}
+	return nil
+}
+
+func applyDiscount(totalPrice float64, discount *entities.Discount) float64 {
+	if discount == nil {
+		return totalPrice
+	}
+
+	switch discount.Type {
+	case enums.Percentage:
+		return totalPrice * (100 - discount.Value)
+	case enums.Fixed:
+		return totalPrice - discount.Value
+	default:
+		return totalPrice
+	}
+}
+
+func (eventService *eventService) BuyEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64 {
+	var totalRequestedTickets uint = 0
+	var totalPrice float64 = 0
+	var discountID *uint
+	var discountType *enums.DiscountType
+	var discountValue *float64
+
+	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
+		reservationItems := make([]*entities.ReservationItem, len(tickets))
+		for i, inputTicket := range tickets {
+			ticket, ticketExist := eventService.eventRepository.FindEventTicketByIDForUpdate(tx, inputTicket.ID)
+			if err := eventService.validateTicketAvailability(ticket, ticketExist, inputTicket); err != nil {
+				panic(err)
+			}
+			reservationItems[i] = &entities.ReservationItem{
+				TicketID:       ticket.ID,
+				TicketName:     ticket.Name,
+				TicketPrice:    ticket.Price,
+				TicketQuantity: inputTicket.Quantity,
+			}
+			totalPrice += (float64(inputTicket.Quantity) * ticket.Price)
+			totalRequestedTickets += inputTicket.Quantity
+			ticket.SoldCount += inputTicket.Quantity
+			eventService.eventRepository.UpdateEventTicket(tx, ticket)
+		}
+
+		if discountCode != nil {
+			discount, discountExist := eventService.eventRepository.FindEventDiscountByCodeForUpdate(tx, *discountCode, eventID)
+			if err := eventService.validateDiscountAvailability(discount, discountExist, totalRequestedTickets); err != nil {
+				panic(err)
+			}
+			discount.UsedCount++
+			discountID = &discount.ID
+			discountType = &discount.Type
+			discountValue = &discount.Value
+			totalPrice = applyDiscount(totalPrice, discount)
+			eventService.eventRepository.UpdateEventDiscount(tx, discount)
+		}
+
+		reservation := &entities.Reservation{
+			UserID:        userID,
+			Expiration:    time.Now().Add(15 * time.Minute),
+			Status:        enums.Pending,
+			TotalPrice:    totalPrice,
+			DiscountID:    discountID,
+			DiscountType:  discountType,
+			DiscountValue: discountValue,
+			Items:         reservationItems,
+		}
+		if err := eventService.eventRepository.CreateReservation(tx, reservation); err != nil {
+			panic(err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		panic(err)
+	}
+	return totalPrice
+}

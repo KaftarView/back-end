@@ -22,7 +22,8 @@
         "locationAlreadyTaken": "This location is already taken.",
         "notFoundError": "`{0}` not found.",
         "alreadySubscribed" : "You have already subscribed to `{0}`.",
-        "notSubscribed": "You have not subscribed to `{0}`."
+        "notSubscribed": "You have not subscribed to `{0}`.",
+        "notAvailable": "`{0}` not available."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
@@ -75,6 +76,7 @@
         "createJournal": "Journal created successfully.",
         "updateJournal": "Journal created successfully.",
         "deleteJournal" :"Journal deleted successfully.",
-        "createCouncilor": "Councilor created successfully."
+        "createCouncilor": "Councilor created successfully.",
+        "buyTicket": "Tickets registered successfully."
     }
 }

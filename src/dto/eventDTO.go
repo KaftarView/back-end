@@ -134,3 +134,8 @@ type MediaDetailsResponse struct {
 	Type      string    `json:"mediaType"`
 	MediaPath string    `json:"mediaPath"`
 }
+
+type BuyTicketRequest struct {
+	ID       uint
+	Quantity uint
+}

@@ -5,6 +5,7 @@ import (
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
+	"first-project/src/dto"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,4 +35,31 @@ func (customerEventController *CustomerEventController) GetAvailableEventTickets
 	param := controller.Validated[getEventParams](c, &customerEventController.constants.Context)
 	ticketDetails := customerEventController.eventService.GetEventTickets(param.EventID, []bool{true})
 	controller.Response(c, 200, "", ticketDetails)
+}
+
+func (customerEventController *CustomerEventController) BuyTickets(c *gin.Context) {
+	type ticketParams struct {
+		TicketID uint `json:"ticketID" validate:"required"`
+		Quantity uint `json:"quantity" validate:"required"`
+	}
+	type buyTicketsParams struct {
+		Tickets      []ticketParams `json:"tickets" validate:"required"`
+		DiscountCode *string        `json:"discountCode"`
+		EventID      uint           `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[buyTicketsParams](c, &customerEventController.constants.Context)
+
+	userID, _ := c.Get(customerEventController.constants.Context.UserID)
+	tickets := make([]dto.BuyTicketRequest, len(param.Tickets))
+	for i, ticket := range param.Tickets {
+		tickets[i] = dto.BuyTicketRequest{
+			ID:       ticket.TicketID,
+			Quantity: ticket.Quantity,
+		}
+	}
+	totalPrice := customerEventController.eventService.BuyEventTicket(userID.(uint), param.EventID, param.DiscountCode, tickets)
+
+	trans := controller.GetTranslator(c, customerEventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.buyTicket")
+	controller.Response(c, 200, message, totalPrice)
 }

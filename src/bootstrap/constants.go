@@ -64,6 +64,7 @@ type ErrorTag struct {
 	LocationAlreadyTaken    string
 	AlreadySubscribed       string
 	NotSubscribe            string
+	NotAvailable            string
 }
 
 type Redis struct {
@@ -123,6 +124,7 @@ func NewConstants() *Constants {
 			LocationAlreadyTaken:    "locationAlreadyTaken",
 			AlreadySubscribed:       "alreadySubscribed",
 			NotSubscribe:            "notSubscribed",
+			NotAvailable:            "notAvailable",
 		},
 		Redis:       Redis{},
 		JWTKeysPath: "./src/jwtKeys",
