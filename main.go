@@ -64,6 +64,8 @@ func main() {
 		&entities.Podcast{},
 		&entities.News{},
 		&entities.Purchasable{},
+		&entities.Reservation{},
+		&entities.ReservationItem{},
 		&entities.Role{},
 		&entities.Ticket{},
 		&entities.Transaction{},

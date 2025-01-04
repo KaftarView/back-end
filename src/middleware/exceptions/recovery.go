@@ -13,6 +13,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+const errorFormatKey = "errors.%s"
+
 type RecoveryMiddleware struct {
 	constants *bootstrap.Context
 }
@@ -41,6 +43,8 @@ func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err erro
 		handleValidationError(c, validationErrors, recovery.constants.Translator)
 	} else if bindingError, ok := err.(exceptions.BindingError); ok {
 		handleBindingError(c, bindingError, recovery.constants.Translator)
+	} else if appErrors, ok := err.(*exceptions.AppError); ok {
+		handleAppError(c, appErrors, recovery.constants.Translator)
 	} else if registrationErrors, ok := err.(exceptions.UserRegistrationError); ok {
 		handleRegistrationError(c, registrationErrors, recovery.constants.Translator)
 	} else if conflictErrors, ok := err.(exceptions.ConflictError); ok {
@@ -94,11 +98,22 @@ func handleConflictError(c *gin.Context, conflictErrors exceptions.ConflictError
 		if _, ok := errorMessages[conflictError.Field]; !ok {
 			errorMessages[conflictError.Field] = make(map[string]string)
 		}
-		message, _ := trans.T(fmt.Sprintf("errors.%s", conflictError.Tag), conflictError.Field)
+		message, _ := trans.T(fmt.Sprintf(errorFormatKey, conflictError.Tag), conflictError.Field)
 		errorMessages[conflictError.Field][conflictError.Tag] = message
 	}
 
 	controller.Response(c, 409, errorMessages, nil)
+}
+
+func handleAppError(c *gin.Context, appErrors *exceptions.AppError, transKey string) {
+	trans := controller.GetTranslator(c, transKey)
+
+	errorMessages := make(map[string]map[string]string)
+	errorMessages[appErrors.Field] = make(map[string]string)
+	message, _ := trans.T(fmt.Sprintf(errorFormatKey, appErrors.Tag), appErrors.Field)
+	errorMessages[appErrors.Field][appErrors.Tag] = message
+
+	controller.Response(c, 400, errorMessages, nil)
 }
 
 func handleRegistrationError(c *gin.Context, registrationErrors exceptions.UserRegistrationError, transKey string) {
@@ -108,7 +123,7 @@ func handleRegistrationError(c *gin.Context, registrationErrors exceptions.UserR
 		if _, ok := errorMessages[registrationError.Field]; !ok {
 			errorMessages[registrationError.Field] = make(map[string]string)
 		}
-		message, _ := trans.T(fmt.Sprintf("errors.%s", registrationError.Tag), registrationError.Field)
+		message, _ := trans.T(fmt.Sprintf(errorFormatKey, registrationError.Tag), registrationError.Field)
 		errorMessages[registrationError.Field][registrationError.Tag] = message
 	}
 

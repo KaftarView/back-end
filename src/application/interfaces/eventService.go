@@ -9,6 +9,7 @@ import (
 )
 
 type EventService interface {
+	BuyEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64
 	ChangeEventStatus(eventID uint, newStatus string)
 	CreateEvent(eventDetails dto.CreateEventRequest) *entities.Event
 	CreateEventDiscount(discountDetails dto.CreateDiscountRequest) *entities.Discount
