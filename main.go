@@ -95,7 +95,9 @@ func main() {
 	}
 	if backgroundEnabled {
 		emailService := application_communication.NewEmailService(&di.Env.Email)
-		cronJob := application_cron.NewCronJob(userRepository, emailService)
+		reservationRepository := repository.NewReservationRepository(db)
+		eventRepository := repository.NewEventRepository(db)
+		cronJob := application_cron.NewCronJob(di.Constants, userRepository, reservationRepository, eventRepository, emailService, db)
 		cronJob.RunCronJob()
 	}
 
