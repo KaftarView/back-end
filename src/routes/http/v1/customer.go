@@ -8,6 +8,7 @@ import (
 	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_podcast "first-project/src/controller/v1/podcast"
+	controller_v1_user "first-project/src/controller/v1/user"
 
 	repository_database "first-project/src/repository/database"
 
@@ -34,10 +35,13 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
+	otpService := application.NewOTPService()
+	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
 
 	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
 	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
 	customerPodcastController := controller_v1_podcast.NewCustomerPodcastController(di.Constants, podcastService)
+	customerUserController := controller_v1_user.NewCustomerUserController(di.Constants, userService)
 
 	event := routerGroup.Group("/events/:eventID")
 	{
@@ -66,6 +70,7 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 
 	profile := routerGroup.Group("/profile")
 	{
-		profile.GET("") // some sample api here ...
+		profile.PUT("/reset-password", customerUserController.ResetPassword)
+		profile.GET("/events", customerEventController.GetAllUserJoinedEvents)
 	}
 }

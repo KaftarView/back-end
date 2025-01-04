@@ -151,20 +151,6 @@ func (generalUserController *GeneralUserController) ConfirmOTP(c *gin.Context) {
 	controller.Response(c, 200, "", tokens{AccessToken: accessToken, RefreshToken: refreshToken})
 }
 
-func (generalUserController *GeneralUserController) ResetPassword(c *gin.Context) {
-	type resetPasswordParams struct {
-		Email           string `json:"email" validate:"required,email"`
-		Password        string `json:"password" validate:"required"`
-		ConfirmPassword string `json:"confirmPassword" validate:"required"`
-	}
-	param := controller.Validated[resetPasswordParams](c, &generalUserController.constants.Context)
-	generalUserController.userService.ResetPasswordService(param.Email, param.Password, param.ConfirmPassword)
-
-	trans := controller.GetTranslator(c, generalUserController.constants.Context.Translator)
-	message, _ := trans.T("successMessage.resetPassword")
-	controller.Response(c, 200, message, nil)
-}
-
 func (generalUserController *GeneralUserController) GetCouncilors(c *gin.Context) {
 	type getCouncilorsParams struct {
 		PromotedYear int `form:"promotedYear" validate:"required"`

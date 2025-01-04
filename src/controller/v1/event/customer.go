@@ -28,6 +28,13 @@ func NewCustomerEventController(
 	}
 }
 
+func (customerEventController *CustomerEventController) GetAllUserJoinedEvents(c *gin.Context) {
+	userID, _ := c.Get(customerEventController.constants.Context.UserID)
+	events := customerEventController.eventService.GetAllUserJoinedEvents(userID.(uint))
+
+	controller.Response(c, 200, "", events)
+}
+
 func (customerEventController *CustomerEventController) GetAvailableEventTicketsList(c *gin.Context) {
 	type getEventParams struct {
 		EventID uint `uri:"eventID" validate:"required"`

@@ -909,6 +909,7 @@ func (eventService *eventService) ReserveEventTicket(userID, eventID uint, disco
 
 		reservation := &entities.Reservation{
 			UserID:        userID,
+			EventID:       eventID,
 			Expiration:    time.Now().Add(15 * time.Minute),
 			Status:        enums.Pending,
 			TotalPrice:    totalPrice,
@@ -977,6 +978,7 @@ func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservati
 		}
 		order := &entities.Order{
 			UserID:           userID,
+			EventID:          eventID,
 			ReservationID:    &reservationID,
 			TotalPrice:       reservation.TotalPrice,
 			DiscountID:       reservation.DiscountID,
@@ -995,4 +997,32 @@ func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservati
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (eventService *eventService) GetAllUserJoinedEvents(userID uint) []dto.EventDetailsResponse {
+	orders := eventService.purchaseRepository.GetUserOrders(eventService.db, userID)
+	eventsDetails := make([]dto.EventDetailsResponse, len(orders))
+	for i, order := range orders {
+		event := eventService.FetchEventByID(order.EventID)
+		categories := eventService.eventRepository.FindEventCategoriesByEvent(eventService.db, event)
+		categoryNames := make([]string, len(categories))
+		for i, category := range categories {
+			categoryNames[i] = category.Name
+		}
+		banner := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, event.BannerPath, 8*time.Hour)
+		eventsDetails[i] = dto.EventDetailsResponse{
+			ID:          event.ID,
+			CreatedAt:   event.CreatedAt,
+			Name:        event.Name,
+			Status:      event.Status.String(),
+			Description: event.Description,
+			FromDate:    event.FromDate,
+			ToDate:      event.ToDate,
+			VenueType:   event.VenueType.String(),
+			Banner:      banner,
+			BasePrice:   event.BasePrice,
+			Categories:  categoryNames,
+		}
+	}
+	return eventsDetails
 }
