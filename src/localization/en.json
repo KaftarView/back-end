@@ -23,7 +23,8 @@
         "notFoundError": "`{0}` not found.",
         "alreadySubscribed" : "You have already subscribed to `{0}`.",
         "notSubscribed": "You have not subscribed to `{0}`.",
-        "notAvailable": "`{0}` not available."
+        "notAvailable": "`{0}` not available.",
+        "purchaseFailed": "Purchase failed. Try again..."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
@@ -77,6 +78,7 @@
         "updateJournal": "Journal created successfully.",
         "deleteJournal" :"Journal deleted successfully.",
         "createCouncilor": "Councilor created successfully.",
-        "buyTicket": "Tickets registered successfully."
+        "reserveTicket": "Tickets reserved successfully.",
+        "purchaseTicket": "Tickets purchased successfully."
     }
 }

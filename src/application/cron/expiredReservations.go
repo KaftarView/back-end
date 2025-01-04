@@ -38,13 +38,13 @@ func (cronJob *CronJob) processReservation(tx *gorm.DB, reservation *entities.Re
 	}
 
 	reservation.Status = enums.Expired
-	cronJob.reservationRepository.UpdateReservation(tx, reservation)
+	cronJob.purchaseRepository.UpdateReservation(tx, reservation)
 	return nil
 }
 
 func (cronJob *CronJob) cleanupExpiredReservations() {
 	err := repository_database.ExecuteInTransaction(cronJob.db, func(tx *gorm.DB) error {
-		expiredReservations, err := cronJob.reservationRepository.GetExpiredReservations(tx)
+		expiredReservations, err := cronJob.purchaseRepository.GetExpiredReservations(tx)
 		if err != nil {
 			panic(err)
 		}

@@ -10,6 +10,7 @@ import (
 	"first-project/src/exceptions"
 	repository_database "first-project/src/repository/database"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
+	"math/rand/v2"
 	"mime/multipart"
 	"time"
 
@@ -17,12 +18,13 @@ import (
 )
 
 type eventService struct {
-	constants         *bootstrap.Constants
-	awsS3Service      *application_aws.S3service
-	categoryService   application_interfaces.CategoryService
-	eventRepository   repository_database_interfaces.EventRepository
-	commentRepository repository_database_interfaces.CommentRepository
-	db                *gorm.DB
+	constants          *bootstrap.Constants
+	awsS3Service       *application_aws.S3service
+	categoryService    application_interfaces.CategoryService
+	eventRepository    repository_database_interfaces.EventRepository
+	commentRepository  repository_database_interfaces.CommentRepository
+	purchaseRepository repository_database_interfaces.PurchaseRepository
+	db                 *gorm.DB
 }
 
 func NewEventService(
@@ -31,15 +33,17 @@ func NewEventService(
 	categoryService application_interfaces.CategoryService,
 	eventRepository repository_database_interfaces.EventRepository,
 	commentRepository repository_database_interfaces.CommentRepository,
+	purchaseRepository repository_database_interfaces.PurchaseRepository,
 	db *gorm.DB,
 ) *eventService {
 	return &eventService{
-		constants:         constants,
-		awsS3Service:      awsService,
-		categoryService:   categoryService,
-		eventRepository:   eventRepository,
-		commentRepository: commentRepository,
-		db:                db,
+		constants:          constants,
+		awsS3Service:       awsService,
+		categoryService:    categoryService,
+		eventRepository:    eventRepository,
+		commentRepository:  commentRepository,
+		purchaseRepository: purchaseRepository,
+		db:                 db,
 	}
 }
 
@@ -864,7 +868,7 @@ func applyDiscount(totalPrice float64, discount *entities.Discount) float64 {
 	}
 }
 
-func (eventService *eventService) BuyEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64 {
+func (eventService *eventService) ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64 {
 	var totalRequestedTickets uint = 0
 	var totalPrice float64 = 0
 	var discountID *uint
@@ -913,7 +917,7 @@ func (eventService *eventService) BuyEventTicket(userID, eventID uint, discountC
 			DiscountValue: discountValue,
 			Items:         reservationItems,
 		}
-		if err := eventService.eventRepository.CreateReservation(tx, reservation); err != nil {
+		if err := eventService.purchaseRepository.CreateReservation(tx, reservation); err != nil {
 			panic(err)
 		}
 		return nil
@@ -923,4 +927,72 @@ func (eventService *eventService) BuyEventTicket(userID, eventID uint, discountC
 		panic(err)
 	}
 	return totalPrice
+}
+
+func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservationID uint) {
+	var notFoundError exceptions.NotFoundError
+	eventService.FetchEventByID(eventID)
+	reservation, reservationExist := eventService.purchaseRepository.GetReservationByID(eventService.db, reservationID)
+	if !reservationExist {
+		notFoundError.ErrorField = eventService.constants.ErrorField.Reservation
+		panic(notFoundError)
+	}
+
+	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
+		transaction := &entities.Transaction{
+			ReservationID: reservationID,
+			UserID:        userID,
+			Amount:        reservation.TotalPrice,
+			GatewayName:   "MOCKED",
+			TrackingID:    "MOCKED",
+		}
+		if rand.Float64() < 0.1 {
+			appError := exceptions.NewAppError(
+				eventService.constants.ErrorField.Reservation,
+				eventService.constants.ErrorTag.PurchaseFailed)
+			transaction.Status = enums.Failed
+			if err := eventService.purchaseRepository.CreateTransaction(tx, transaction); err != nil {
+				panic(err)
+			}
+			panic(appError)
+		}
+
+		transaction.Status = enums.Success
+		if err := eventService.purchaseRepository.CreateTransaction(tx, transaction); err != nil {
+			panic(err)
+		}
+
+		reservation.Status = enums.Confirmed
+		eventService.purchaseRepository.UpdateReservation(tx, reservation)
+
+		orderItems := make([]*entities.OrderItem, len(reservation.Items))
+		for i, item := range reservation.Items {
+			orderItems[i] = &entities.OrderItem{
+				OrderID:        item.ID,
+				TicketID:       item.TicketID,
+				TicketName:     item.TicketName,
+				TicketPrice:    item.TicketPrice,
+				TicketQuantity: item.TicketQuantity,
+			}
+		}
+		order := &entities.Order{
+			UserID:           userID,
+			ReservationID:    &reservationID,
+			TotalPrice:       reservation.TotalPrice,
+			DiscountID:       reservation.DiscountID,
+			DiscountType:     reservation.DiscountType,
+			DiscountValue:    reservation.DiscountValue,
+			PaymentMethod:    "MOCKED",
+			PaymentReference: "MOCKED",
+			Items:            orderItems,
+		}
+		if err := eventService.purchaseRepository.CreateOrder(tx, order); err != nil {
+			panic(err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 }

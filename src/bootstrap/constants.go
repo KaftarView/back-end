@@ -45,6 +45,7 @@ type ErrorField struct {
 	Episode     string
 	News        string
 	Journal     string
+	Reservation string
 }
 
 type ErrorTag struct {
@@ -65,6 +66,7 @@ type ErrorTag struct {
 	AlreadySubscribed       string
 	NotSubscribe            string
 	NotAvailable            string
+	PurchaseFailed          string
 }
 
 type Redis struct {
@@ -106,6 +108,7 @@ func NewConstants() *Constants {
 			Episode:     "episode",
 			News:        "news",
 			Journal:     "journal",
+			Reservation: "reservation",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
@@ -125,6 +128,7 @@ func NewConstants() *Constants {
 			AlreadySubscribed:       "alreadySubscribed",
 			NotSubscribe:            "notSubscribed",
 			NotAvailable:            "notAvailable",
+			PurchaseFailed:          "purchaseFailed",
 		},
 		Redis:       Redis{},
 		JWTKeysPath: "./src/jwtKeys",

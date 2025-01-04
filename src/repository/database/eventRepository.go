@@ -292,10 +292,6 @@ func (repo *eventRepository) CreateNewMedia(db *gorm.DB, media *entities.Media) 
 	return db.Create(media).Error
 }
 
-func (repo *eventRepository) CreateReservation(db *gorm.DB, reservation *entities.Reservation) error {
-	return db.Create(reservation).Error
-}
-
 func (repo *eventRepository) FindMediaByID(db *gorm.DB, mediaID uint) (*entities.Media, bool) {
 	var media entities.Media
 	result := db.Where(queryByID, mediaID).First(&media)

@@ -9,7 +9,6 @@ import (
 )
 
 type EventService interface {
-	BuyEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64
 	ChangeEventStatus(eventID uint, newStatus string)
 	CreateEvent(eventDetails dto.CreateEventRequest) *entities.Event
 	CreateEventDiscount(discountDetails dto.CreateDiscountRequest) *entities.Discount
@@ -31,6 +30,8 @@ type EventService interface {
 	GetEventsList(allowedStatus []enums.EventStatus, page int, pageSize int) []dto.EventDetailsResponse
 	GetListEventMedia(eventID uint) []dto.MediaDetailsResponse
 	GetTicketDetails(ticketID uint) dto.TicketDetailsResponse
+	PurchaseEventTicket(userID, eventID, reservationID uint)
+	ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64
 	SearchEvents(query string, page int, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse
 	UpdateEvent(updateDetails dto.UpdateEventRequest)
 	UpdateEventDiscount(discountDetails dto.UpdateDiscountRequest)
