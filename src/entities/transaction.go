@@ -1,13 +1,19 @@
 package entities
 
-import "gorm.io/gorm"
+import (
+	"first-project/src/enums"
+
+	"gorm.io/gorm"
+)
 
 type Transaction struct {
 	gorm.Model
-	FinalPrice    float64
-	Quantity      uint
-	PurchasableID uint        `gorm:"not null"`
-	Purchasable   Purchasable `gorm:"foreignKey:PurchasableID"`
-	// WalletID uint   `gorm:"index"`
-	// Wallet   Wallet `gorm:"-"`
+	ReservationID uint                    `gorm:"not null"`
+	Reservation   Reservation             `gorm:"foreignKey:ReservationID"`
+	UserID        uint                    `gorm:"not null"`
+	Amount        float64                 `gorm:"type:decimal(10,2);not null"`
+	Status        enums.TransactionStatus `gorm:"type:int;not null"`
+	GatewayName   string                  `gorm:"type:varchar(100);not null"`
+	TrackingID    string                  `gorm:"type:varchar(100);not null"`
+	ErrorMessage  *string                 `gorm:"type:varchar(200)"`
 }

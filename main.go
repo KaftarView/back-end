@@ -63,13 +63,14 @@ func main() {
 		&entities.Permission{},
 		&entities.Podcast{},
 		&entities.News{},
-		&entities.Purchasable{},
+		&entities.Order{},
+		&entities.OrderItem{},
+		// &entities.Purchasable{},
 		&entities.Reservation{},
 		&entities.ReservationItem{},
 		&entities.Role{},
 		&entities.Ticket{},
 		&entities.Transaction{},
-		// &entities.Wallet{},
 		&entities.User{},
 	)
 
@@ -95,7 +96,7 @@ func main() {
 	}
 	if backgroundEnabled {
 		emailService := application_communication.NewEmailService(&di.Env.Email)
-		reservationRepository := repository.NewReservationRepository(db)
+		reservationRepository := repository.NewPurchaseRepository(db)
 		eventRepository := repository.NewEventRepository(db)
 		cronJob := application_cron.NewCronJob(di.Constants, userRepository, reservationRepository, eventRepository, emailService, db)
 		cronJob.RunCronJob()

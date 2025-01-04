@@ -22,6 +22,7 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	eventRepository := repository_database.NewEventRepository(db)
 	commentRepository := repository_database.NewCommentRepository(db)
 	podcastRepository := repository_database.NewPodcastRepository(db)
+	purchaseRepository := repository_database.NewPurchaseRepository(db)
 
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	awsService := application_aws.NewS3Service(
@@ -30,7 +31,7 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 
@@ -41,7 +42,8 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	event := routerGroup.Group("/events/:eventID")
 	{
 		event.GET("/tickets", customerEventController.GetAvailableEventTicketsList)
-		event.POST("/buy", customerEventController.BuyTickets)
+		event.POST("/reserve", customerEventController.ReserveTickets)
+		event.POST("/purchase/:reservationID", customerEventController.PurchaseTickets)
 	}
 
 	comments := routerGroup.Group("/comments")

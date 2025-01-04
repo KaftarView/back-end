@@ -29,6 +29,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	podcastRepository := repository_database.NewPodcastRepository(db)
 	newsRepository := repository_database.NewNewsRepository(db)
 	journalRepository := repository_database.NewJournalRepository(db)
+	purchaseRepository := repository_database.NewPurchaseRepository(db)
 
 	jwtService := application_jwt.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
@@ -39,7 +40,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)

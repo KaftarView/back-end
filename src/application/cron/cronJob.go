@@ -11,29 +11,29 @@ import (
 )
 
 type CronJob struct {
-	constants             *bootstrap.Constants
-	userRepository        repository_database_interfaces.UserRepository
-	reservationRepository repository_database_interfaces.ReservationRepository
-	eventRepository       repository_database_interfaces.EventRepository
-	emailService          *application_communication.EmailService
-	db                    *gorm.DB
+	constants          *bootstrap.Constants
+	userRepository     repository_database_interfaces.UserRepository
+	purchaseRepository repository_database_interfaces.PurchaseRepository
+	eventRepository    repository_database_interfaces.EventRepository
+	emailService       *application_communication.EmailService
+	db                 *gorm.DB
 }
 
 func NewCronJob(
 	constants *bootstrap.Constants,
 	userRepository repository_database_interfaces.UserRepository,
-	reservationRepository repository_database_interfaces.ReservationRepository,
+	purchaseRepository repository_database_interfaces.PurchaseRepository,
 	eventRepository repository_database_interfaces.EventRepository,
 	emailService *application_communication.EmailService,
 	db *gorm.DB,
 ) *CronJob {
 	return &CronJob{
-		constants:             constants,
-		userRepository:        userRepository,
-		reservationRepository: reservationRepository,
-		eventRepository:       eventRepository,
-		emailService:          emailService,
-		db:                    db,
+		constants:          constants,
+		userRepository:     userRepository,
+		purchaseRepository: purchaseRepository,
+		eventRepository:    eventRepository,
+		emailService:       emailService,
+		db:                 db,
 	}
 }
 

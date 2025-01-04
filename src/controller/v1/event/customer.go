@@ -37,17 +37,17 @@ func (customerEventController *CustomerEventController) GetAvailableEventTickets
 	controller.Response(c, 200, "", ticketDetails)
 }
 
-func (customerEventController *CustomerEventController) BuyTickets(c *gin.Context) {
+func (customerEventController *CustomerEventController) ReserveTickets(c *gin.Context) {
 	type ticketParams struct {
 		TicketID uint `json:"ticketID" validate:"required"`
 		Quantity uint `json:"quantity" validate:"required"`
 	}
-	type buyTicketsParams struct {
+	type reserveTicketsParams struct {
 		Tickets      []ticketParams `json:"tickets" validate:"required"`
 		DiscountCode *string        `json:"discountCode"`
 		EventID      uint           `uri:"eventID" validate:"required"`
 	}
-	param := controller.Validated[buyTicketsParams](c, &customerEventController.constants.Context)
+	param := controller.Validated[reserveTicketsParams](c, &customerEventController.constants.Context)
 
 	userID, _ := c.Get(customerEventController.constants.Context.UserID)
 	tickets := make([]dto.BuyTicketRequest, len(param.Tickets))
@@ -57,9 +57,23 @@ func (customerEventController *CustomerEventController) BuyTickets(c *gin.Contex
 			Quantity: ticket.Quantity,
 		}
 	}
-	totalPrice := customerEventController.eventService.BuyEventTicket(userID.(uint), param.EventID, param.DiscountCode, tickets)
+	totalPrice := customerEventController.eventService.ReserveEventTicket(userID.(uint), param.EventID, param.DiscountCode, tickets)
 
 	trans := controller.GetTranslator(c, customerEventController.constants.Context.Translator)
-	message, _ := trans.T("successMessage.buyTicket")
+	message, _ := trans.T("successMessage.reserveTicket")
 	controller.Response(c, 200, message, totalPrice)
+}
+
+func (customerEventController *CustomerEventController) PurchaseTickets(c *gin.Context) {
+	type purchaseTicketsParams struct {
+		ReservationID uint `uri:"reservationID" validate:"required"`
+		EventID       uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[purchaseTicketsParams](c, &customerEventController.constants.Context)
+	userID, _ := c.Get(customerEventController.constants.Context.UserID)
+	customerEventController.eventService.PurchaseEventTicket(userID.(uint), param.EventID, param.ReservationID)
+
+	trans := controller.GetTranslator(c, customerEventController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.purchaseTicket")
+	controller.Response(c, 200, message, nil)
 }
