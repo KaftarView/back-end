@@ -114,16 +114,16 @@ type UpdateDiscountRequest struct {
 }
 
 type DiscountDetailsResponse struct {
-	ID             uint      `json:"id"`
-	CreatedAt      time.Time `json:"createdAt"`
-	Code           string    `json:"code"`
-	Type           string    `json:"type"`
-	Value          float64   `json:"value"`
-	AvailableFrom  time.Time `json:"availableFrom"`
-	AvailableUntil time.Time `json:"availableUntil"`
-	Quantity       uint      `json:"quantity"`
-	UsedCount      uint      `json:"usedCount"`
-	MinTickets     uint      `json:"minTickets"`
+	ID         uint      `json:"id"`
+	CreatedAt  time.Time `json:"createdAt"`
+	Code       string    `json:"code"`
+	Type       string    `json:"type"`
+	Value      float64   `json:"value"`
+	ValidFrom  time.Time `json:"validFrom"`
+	ValidUntil time.Time `json:"validUntil"`
+	Quantity   uint      `json:"quantity"`
+	UsedCount  uint      `json:"usedCount"`
+	MinTickets uint      `json:"minTickets"`
 }
 
 type MediaDetailsResponse struct {

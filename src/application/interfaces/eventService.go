@@ -34,8 +34,8 @@ type EventService interface {
 	ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64
 	SearchEvents(query string, page int, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse
 	UpdateEvent(updateDetails dto.UpdateEventRequest)
-	UpdateEventDiscount(discountDetails dto.UpdateDiscountRequest)
+	UpdateEventDiscount(discountID uint, discountDetails dto.CreateDiscountRequest)
 	UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader)
-	UpdateEventTicket(ticketDetails dto.UpdateTicketRequest)
+	UpdateEventTicket(ticketID uint, ticketDetails dto.CreateTicketRequest)
 	ValidateEventCreationDetails(name string, venueType string, location string, fromDate time.Time, toDate time.Time)
 }

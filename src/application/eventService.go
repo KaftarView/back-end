@@ -230,21 +230,21 @@ func (eventService *eventService) CreateEventTicket(ticketDetails dto.CreateTick
 	return ticket
 }
 
-func (eventService *eventService) UpdateEventTicket(ticketDetails dto.UpdateTicketRequest) {
-	ticket := eventService.fetchTicketByID(ticketDetails.TicketID)
+func (eventService *eventService) UpdateEventTicket(ticketID uint, ticketDetails dto.CreateTicketRequest) {
+	ticket := eventService.fetchTicketByID(ticketID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
-		if ticketDetails.Name != nil {
-			eventService.validateUniqueTicketName(*ticketDetails.Name, ticket.EventID)
-			ticket.Name = *ticketDetails.Name
+		if ticket.Name != ticketDetails.Name {
+			eventService.validateUniqueTicketName(ticketDetails.Name, ticket.EventID)
 		}
-		updateField(ticketDetails.Description, &ticket.Description)
-		updateField(ticketDetails.Price, &ticket.Price)
-		updateField(ticketDetails.Quantity, &ticket.Quantity)
-		updateField(ticketDetails.SoldCount, &ticket.SoldCount)
-		updateField(ticketDetails.IsAvailable, &ticket.IsAvailable)
-		updateField(ticketDetails.AvailableFrom, &ticket.AvailableFrom)
-		updateField(ticketDetails.AvailableUntil, &ticket.AvailableUntil)
+		ticket.Name = ticketDetails.Name
+		ticket.Description = ticketDetails.Description
+		ticket.Price = ticketDetails.Price
+		ticket.Quantity = ticketDetails.Quantity
+		ticket.SoldCount = ticketDetails.SoldCount
+		ticket.IsAvailable = ticketDetails.IsAvailable
+		ticket.AvailableFrom = ticketDetails.AvailableFrom
+		ticket.AvailableUntil = ticketDetails.AvailableUntil
 
 		if err := eventService.eventRepository.UpdateEventTicket(tx, ticket); err != nil {
 			panic(err)
@@ -294,21 +294,20 @@ func (eventService *eventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-func (eventService *eventService) UpdateEventDiscount(discountDetails dto.UpdateDiscountRequest) {
-	discount := eventService.fetchDiscountByID(discountDetails.DiscountID)
+func (eventService *eventService) UpdateEventDiscount(discountID uint, discountDetails dto.CreateDiscountRequest) {
+	discount := eventService.fetchDiscountByID(discountID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
-		if discountDetails.Code != nil {
-			eventService.validateUniqueDiscountCode(*discountDetails.Code, discount.EventID)
-			discount.Code = *discountDetails.Code
+		if discountDetails.Code != discount.Code {
+			eventService.validateUniqueDiscountCode(discountDetails.Code, discount.EventID)
 		}
 
-		discount.Type = updateEnumField(discount.Type, discountDetails.Type, enums.GetAllDiscountTypes)
-		updateField(discountDetails.Value, &discount.Value)
-		updateField(discountDetails.AvailableFrom, &discount.ValidFrom)
-		updateField(discountDetails.AvailableUntil, &discount.ValidUntil)
-		updateField(discountDetails.Quantity, &discount.Quantity)
-		updateField(discountDetails.UsedCount, &discount.UsedCount)
+		discount.Code = discountDetails.Code
+		discount.Value = discountDetails.Value
+		discount.ValidFrom = discountDetails.ValidFrom
+		discount.ValidUntil = discountDetails.ValidUntil
+		discount.Quantity = discountDetails.Quantity
+		discount.UsedCount = discountDetails.UsedCount
 
 		if err := eventService.eventRepository.UpdateEventDiscount(tx, discount); err != nil {
 			panic(err)
@@ -526,16 +525,16 @@ func (eventService *eventService) GetEventDiscounts(eventID uint) []dto.Discount
 	discountsDetails := make([]dto.DiscountDetailsResponse, len(discounts))
 	for i, discount := range discounts {
 		discountsDetails[i] = dto.DiscountDetailsResponse{
-			ID:             discount.ID,
-			CreatedAt:      discount.CreatedAt,
-			Code:           discount.Code,
-			Type:           discount.Type.String(),
-			Value:          discount.Value,
-			AvailableFrom:  discount.ValidFrom,
-			AvailableUntil: discount.ValidUntil,
-			Quantity:       discount.Quantity,
-			UsedCount:      discount.UsedCount,
-			MinTickets:     discount.MinTickets,
+			ID:         discount.ID,
+			CreatedAt:  discount.CreatedAt,
+			Code:       discount.Code,
+			Type:       discount.Type.String(),
+			Value:      discount.Value,
+			ValidFrom:  discount.ValidFrom,
+			ValidUntil: discount.ValidUntil,
+			Quantity:   discount.Quantity,
+			UsedCount:  discount.UsedCount,
+			MinTickets: discount.MinTickets,
 		}
 	}
 	return discountsDetails
@@ -545,16 +544,16 @@ func (eventService *eventService) GetDiscountDetails(discountID uint) dto.Discou
 	discount := eventService.fetchDiscountByID(discountID)
 
 	discountDetails := dto.DiscountDetailsResponse{
-		ID:             discount.ID,
-		CreatedAt:      discount.CreatedAt,
-		Code:           discount.Code,
-		Type:           discount.Type.String(),
-		Value:          discount.Value,
-		AvailableFrom:  discount.ValidFrom,
-		AvailableUntil: discount.ValidUntil,
-		Quantity:       discount.Quantity,
-		UsedCount:      discount.UsedCount,
-		MinTickets:     discount.MinTickets,
+		ID:         discount.ID,
+		CreatedAt:  discount.CreatedAt,
+		Code:       discount.Code,
+		Type:       discount.Type.String(),
+		Value:      discount.Value,
+		ValidFrom:  discount.ValidFrom,
+		ValidUntil: discount.ValidUntil,
+		Quantity:   discount.Quantity,
+		UsedCount:  discount.UsedCount,
+		MinTickets: discount.MinTickets,
 	}
 
 	return discountDetails
