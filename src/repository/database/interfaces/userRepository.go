@@ -40,5 +40,6 @@ type UserRepository interface {
 	FindUsersByRoleID(db *gorm.DB, roleID uint) []*entities.User
 	UpdateCouncilor(db *gorm.DB, councilor *entities.Councilor) error
 	UpdateUserPassword(db *gorm.DB, user *entities.User, password string)
+	UpdateUser(db *gorm.DB, user *entities.User) error
 	UpdateUserToken(db *gorm.DB, user *entities.User, token string)
 }

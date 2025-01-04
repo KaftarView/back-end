@@ -70,6 +70,7 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 
 	profile := routerGroup.Group("/profile")
 	{
+		profile.PUT("/username", customerUserController.ChangeUsername)
 		profile.PUT("/reset-password", customerUserController.ResetPassword)
 		profile.GET("/events", customerEventController.GetAllUserJoinedEvents)
 	}

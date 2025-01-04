@@ -23,14 +23,27 @@ func NewCustomerUserController(
 	}
 }
 
+func (customerUserController *CustomerUserController) ChangeUsername(c *gin.Context) {
+	type changeUsernameParams struct {
+		Username string `json:"username" validate:"required"`
+	}
+	param := controller.Validated[changeUsernameParams](c, &customerUserController.constants.Context)
+	userID, _ := c.Get(customerUserController.constants.Context.UserID)
+	customerUserController.userService.UpdateUser(userID.(uint), param.Username)
+
+	trans := controller.GetTranslator(c, customerUserController.constants.Context.Translator)
+	message, _ := trans.T("successMessage.changeUsername")
+	controller.Response(c, 200, message, nil)
+}
+
 func (customerUserController *CustomerUserController) ResetPassword(c *gin.Context) {
 	type resetPasswordParams struct {
-		Email           string `json:"email" validate:"required,email"`
 		Password        string `json:"password" validate:"required"`
 		ConfirmPassword string `json:"confirmPassword" validate:"required"`
 	}
 	param := controller.Validated[resetPasswordParams](c, &customerUserController.constants.Context)
-	customerUserController.userService.ResetPasswordService(param.Email, param.Password, param.ConfirmPassword)
+	userID, _ := c.Get(customerUserController.constants.Context.UserID)
+	customerUserController.userService.ResetPasswordService(userID.(uint), param.Password, param.ConfirmPassword)
 
 	trans := controller.GetTranslator(c, customerUserController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.resetPassword")

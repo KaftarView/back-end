@@ -34,6 +34,7 @@
         "login": "Login successfully.",
         "forgotPassword": "Please check your email to enter OTP to reset your password.",
         "resetPassword": "Password reset successfully.",
+        "changeUsername": "Username changed successfully.",
         "refreshToken": "Your session has been extended.",
         "uploadObjectToBucket": "Object added to bucket created successfully.",
         "deleteObjectFromBucket": "Object deleted from bucket created successfully.",
