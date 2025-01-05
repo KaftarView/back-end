@@ -75,6 +75,7 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 			events.GET(searchEndpoint, generalEventController.SearchEvents)
 			events.GET(filterEndpoint, generalEventController.FilterEvents)
 			events.GET("/:eventID", generalEventController.GetEventDetails)
+			events.GET("/:eventID/organizers", generalEventController.GetEventOrganizers)
 		}
 
 		podcasts := public.Group("/podcasts")
