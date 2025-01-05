@@ -17,6 +17,7 @@ type Order struct {
 	DiscountValue    *float64            `gorm:"null"`
 	PaymentMethod    string              `gorm:"type:varchar(50);not null"`
 	PaymentReference string              `gorm:"type:varchar(100);not null"`
+	User             User                `gorm:"foreignKey:UserID"`
 	Reservation      *Reservation        `gorm:"foreignKey:ReservationID"`
 	Items            []*OrderItem        `gorm:"foreignKey:OrderID"`
 }

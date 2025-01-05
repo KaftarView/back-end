@@ -22,6 +22,7 @@ type EventRepository interface {
 	DeleteTicket(db *gorm.DB, ticketID uint) error
 	FindAllEventMedia(db *gorm.DB, eventID uint) ([]*entities.Media, bool)
 	FindAllEventOrganizers(db *gorm.DB, eventID uint) ([]*entities.Organizer, bool)
+	FindOrdersEventID(db *gorm.DB, eventID uint) []*entities.Order
 	FindDiscountByDiscountID(db *gorm.DB, discountID uint) (*entities.Discount, bool)
 	FindDiscountsByEventID(db *gorm.DB, eventID uint) ([]*entities.Discount, bool)
 	FindDuplicatedEvent(db *gorm.DB, name string, venueType string, location string, fromDate time.Time, toDate time.Time) (*entities.Event, bool)

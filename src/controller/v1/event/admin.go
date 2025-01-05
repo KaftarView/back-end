@@ -127,6 +127,16 @@ func (adminEventController *AdminEventController) GetEventMedia(c *gin.Context) 
 	controller.Response(c, 200, "", mediaDetails)
 }
 
+func (adminEventController *AdminEventController) GetEventAttendees(c *gin.Context) {
+	type getEventAttendeesParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[getEventAttendeesParams](c, &adminEventController.constants.Context)
+	attendees := adminEventController.eventService.GetEventAttendees(param.EventID)
+
+	controller.Response(c, 200, "", attendees)
+}
+
 func (adminEventController *AdminEventController) CreateEvent(c *gin.Context) {
 	type createEventParams struct {
 		Name        string                `form:"name" validate:"required,max=50"`

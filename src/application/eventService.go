@@ -586,6 +586,25 @@ func (eventService *eventService) GetDiscountDetails(discountID uint) dto.Discou
 	return discountDetails
 }
 
+func (eventService *eventService) GetEventAttendees(eventID uint) []dto.EventAttendeesResponse {
+	eventService.FetchEventByID(eventID)
+	orders := eventService.eventRepository.FindOrdersEventID(eventService.db, eventID)
+	var attendees []dto.EventAttendeesResponse
+	for _, order := range orders {
+		for _, item := range order.Items {
+			attendant := dto.EventAttendeesResponse{
+				Name:         order.User.Name,
+				Email:        order.User.Email,
+				Ticket:       item.TicketName,
+				CountTickets: item.TicketQuantity,
+				Price:        item.TicketPrice,
+			}
+			attendees = append(attendees, attendant)
+		}
+	}
+	return attendees
+}
+
 func (eventService *eventService) DeleteEvent(eventID uint) {
 	event := eventService.FetchEventByID(eventID)
 
@@ -698,7 +717,10 @@ func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDet
 
 func (eventService *eventService) GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse {
 	eventService.FetchEventByID(eventID)
-	eventService.eventRepository.IsUserAttendingEvent(eventService.db, userID, eventID)
+	isUserAttended := eventService.eventRepository.IsUserAttendingEvent(eventService.db, userID, eventID)
+	if !isUserAttended {
+		panic(exceptions.NewForbiddenError())
+	}
 	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventService.db, eventID)
 	allMediaDetails := make([]dto.MediaDetailsResponse, len(allEventMedia))
 	for i, media := range allEventMedia {

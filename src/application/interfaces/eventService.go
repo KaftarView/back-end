@@ -25,6 +25,7 @@ type EventService interface {
 	GetAllUserJoinedEvents(userID uint) []dto.EventDetailsResponse
 	GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse
 	GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse
+	GetEventAttendees(eventID uint) []dto.EventAttendeesResponse
 	GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse
 	GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse
 	GetEventMediaDetails(mediaID uint) dto.MediaDetailsResponse

@@ -94,7 +94,7 @@ func (repo *eventRepository) FindAvailableTicketsByEventID(db *gorm.DB, eventID 
 
 func (repo *eventRepository) FindAllTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool) {
 	var tickets []*entities.Ticket
-	result := db.Where("event_id = ?", eventID).Find(&tickets)
+	result := db.Where(queryByEventID, eventID).Find(&tickets)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -323,6 +323,23 @@ func (repo *eventRepository) FindMediaByID(db *gorm.DB, mediaID uint) (*entities
 		panic(result.Error)
 	}
 	return &media, true
+}
+
+func (repo *eventRepository) FindOrdersEventID(db *gorm.DB, eventID uint) []*entities.Order {
+	var orders []*entities.Order
+
+	result := db.Preload("User").
+		Preload("Items").
+		Where(queryByEventID, eventID).
+		Find(&orders)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return []*entities.Order{}
+		}
+		panic(result.Error)
+	}
+	return orders
 }
 
 func (repo *eventRepository) IsUserAttendingEvent(db *gorm.DB, eventID, userID uint) bool {
