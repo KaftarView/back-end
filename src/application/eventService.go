@@ -815,7 +815,7 @@ func (eventService *eventService) FilterEventsByCategories(categories []string, 
 }
 
 func (eventService *eventService) validateTicketAvailability(
-	ticket *entities.Ticket, ticketExist bool, inputTicket dto.BuyTicketRequest) error {
+	ticket *entities.Ticket, ticketExist bool, inputTicket dto.ReserveTicketRequest) error {
 	var notFoundError exceptions.NotFoundError
 	if !ticketExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Ticket
@@ -867,12 +867,14 @@ func applyDiscount(totalPrice float64, discount *entities.Discount) float64 {
 	}
 }
 
-func (eventService *eventService) ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64 {
+func (eventService *eventService) ReserveEventTicket(
+	userID, eventID uint, discountCode *string, tickets []dto.ReserveTicketRequest) dto.ReserveTicketResponse {
 	var totalRequestedTickets uint = 0
 	var totalPrice float64 = 0
 	var discountID *uint
 	var discountType *enums.DiscountType
 	var discountValue *float64
+	var reservation *entities.Reservation
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
 		reservationItems := make([]*entities.ReservationItem, len(tickets))
@@ -906,7 +908,7 @@ func (eventService *eventService) ReserveEventTicket(userID, eventID uint, disco
 			eventService.eventRepository.UpdateEventDiscount(tx, discount)
 		}
 
-		reservation := &entities.Reservation{
+		reservation = &entities.Reservation{
 			UserID:        userID,
 			EventID:       eventID,
 			Expiration:    time.Now().Add(15 * time.Minute),
@@ -926,7 +928,11 @@ func (eventService *eventService) ReserveEventTicket(userID, eventID uint, disco
 	if err != nil {
 		panic(err)
 	}
-	return totalPrice
+	reserveTicket := dto.ReserveTicketResponse{
+		ID:         reservation.ID,
+		FinalPrice: reservation.TotalPrice,
+	}
+	return reserveTicket
 }
 
 func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservationID uint) {

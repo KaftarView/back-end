@@ -135,7 +135,12 @@ type MediaDetailsResponse struct {
 	MediaPath string    `json:"mediaPath"`
 }
 
-type BuyTicketRequest struct {
+type ReserveTicketRequest struct {
 	ID       uint
 	Quantity uint
+}
+
+type ReserveTicketResponse struct {
+	ID         uint    `json:"id"`
+	FinalPrice float64 `json:"finalPrice"`
 }

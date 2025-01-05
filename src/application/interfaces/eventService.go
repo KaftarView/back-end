@@ -32,7 +32,7 @@ type EventService interface {
 	GetListEventMedia(eventID uint) []dto.MediaDetailsResponse
 	GetTicketDetails(ticketID uint) dto.TicketDetailsResponse
 	PurchaseEventTicket(userID, eventID, reservationID uint)
-	ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64
+	ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.ReserveTicketRequest) dto.ReserveTicketResponse
 	SearchEvents(query string, page int, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse
 	UpdateEvent(updateDetails dto.UpdateEventRequest)
 	UpdateEventDiscount(discountID uint, discountDetails dto.CreateDiscountRequest)
