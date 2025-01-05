@@ -84,6 +84,7 @@ type TicketDetailsResponse struct {
 	Description    string    `json:"description"`
 	Price          float64   `json:"price"`
 	Quantity       uint      `json:"quantity"`
+	RemainTickets  uint      `json:"remainTickets"`
 	IsAvailable    bool      `json:"isAvailable"`
 	AvailableFrom  time.Time `json:"availableFrom"`
 	AvailableUntil time.Time `json:"availableUntil"`
@@ -135,7 +136,12 @@ type MediaDetailsResponse struct {
 	MediaPath string    `json:"mediaPath"`
 }
 
-type BuyTicketRequest struct {
+type ReserveTicketRequest struct {
 	ID       uint
 	Quantity uint
+}
+
+type ReserveTicketResponse struct {
+	ID         uint    `json:"id"`
+	FinalPrice float64 `json:"finalPrice"`
 }

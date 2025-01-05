@@ -38,7 +38,8 @@ type EventRepository interface {
 	FindMediaByID(db *gorm.DB, mediaID uint) (*entities.Media, bool)
 	FindOrganizerByEmail(db *gorm.DB, eventID uint, email string) (*entities.Organizer, bool)
 	FindOrganizerByID(db *gorm.DB, organizerID uint) (*entities.Organizer, bool)
-	FindTicketsByEventID(db *gorm.DB, eventID uint, availability []bool) ([]*entities.Ticket, bool)
+	FindAllTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool)
+	FindAvailableTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool)
 	FullTextSearch(db *gorm.DB, query string, allowedStatus []enums.EventStatus, offset int, pageSize int) []*entities.Event
 	UpdateEvent(db *gorm.DB, event *entities.Event) error
 	UpdateEventCategories(db *gorm.DB, eventID uint, categories []entities.Category) error

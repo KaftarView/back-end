@@ -40,7 +40,7 @@ func (customerEventController *CustomerEventController) GetAvailableEventTickets
 		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &customerEventController.constants.Context)
-	ticketDetails := customerEventController.eventService.GetEventTickets(param.EventID, []bool{true})
+	ticketDetails := customerEventController.eventService.GetAvailableEventTickets(param.EventID)
 	controller.Response(c, 200, "", ticketDetails)
 }
 
@@ -57,9 +57,9 @@ func (customerEventController *CustomerEventController) ReserveTickets(c *gin.Co
 	param := controller.Validated[reserveTicketsParams](c, &customerEventController.constants.Context)
 
 	userID, _ := c.Get(customerEventController.constants.Context.UserID)
-	tickets := make([]dto.BuyTicketRequest, len(param.Tickets))
+	tickets := make([]dto.ReserveTicketRequest, len(param.Tickets))
 	for i, ticket := range param.Tickets {
-		tickets[i] = dto.BuyTicketRequest{
+		tickets[i] = dto.ReserveTicketRequest{
 			ID:       ticket.TicketID,
 			Quantity: ticket.Quantity,
 		}

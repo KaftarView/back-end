@@ -471,10 +471,10 @@ func (eventService *eventService) GetEventDetails(allowedStatus []enums.EventSta
 	return eventDetails
 }
 
-func (eventService *eventService) GetEventTickets(eventID uint, availability []bool) []dto.TicketDetailsResponse {
+func (eventService *eventService) GetAvailableEventTickets(eventID uint) []dto.TicketDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
-	tickets, ticketExist := eventService.eventRepository.FindTicketsByEventID(eventService.db, eventID, availability)
+	tickets, ticketExist := eventService.eventRepository.FindAvailableTicketsByEventID(eventService.db, eventID)
 	if !ticketExist {
 		return []dto.TicketDetailsResponse{}
 	}
@@ -486,6 +486,32 @@ func (eventService *eventService) GetEventTickets(eventID uint, availability []b
 			Name:           ticket.Name,
 			Description:    ticket.Description,
 			Price:          ticket.Price,
+			RemainTickets:  ticket.Quantity - ticket.SoldCount,
+			Quantity:       ticket.Quantity,
+			IsAvailable:    ticket.IsAvailable,
+			AvailableFrom:  ticket.AvailableFrom,
+			AvailableUntil: ticket.AvailableUntil,
+		}
+	}
+	return ticketsDetails
+}
+
+func (eventService *eventService) GetAllEventTickets(eventID uint) []dto.TicketDetailsResponse {
+	eventService.FetchEventByID(eventID)
+
+	tickets, ticketExist := eventService.eventRepository.FindAllTicketsByEventID(eventService.db, eventID)
+	if !ticketExist {
+		return []dto.TicketDetailsResponse{}
+	}
+	ticketsDetails := make([]dto.TicketDetailsResponse, len(tickets))
+	for i, ticket := range tickets {
+		ticketsDetails[i] = dto.TicketDetailsResponse{
+			ID:             ticket.ID,
+			CreatedAt:      ticket.CreatedAt,
+			Name:           ticket.Name,
+			Description:    ticket.Description,
+			Price:          ticket.Price,
+			RemainTickets:  ticket.Quantity - ticket.SoldCount,
 			Quantity:       ticket.Quantity,
 			IsAvailable:    ticket.IsAvailable,
 			AvailableFrom:  ticket.AvailableFrom,
@@ -506,6 +532,7 @@ func (eventService *eventService) GetTicketDetails(ticketID uint) dto.TicketDeta
 		Name:           ticket.Name,
 		Description:    ticket.Description,
 		Price:          ticket.Price,
+		RemainTickets:  ticket.Quantity - ticket.SoldCount,
 		Quantity:       ticket.Quantity,
 		IsAvailable:    ticket.IsAvailable,
 		AvailableFrom:  ticket.AvailableFrom,
@@ -815,7 +842,7 @@ func (eventService *eventService) FilterEventsByCategories(categories []string, 
 }
 
 func (eventService *eventService) validateTicketAvailability(
-	ticket *entities.Ticket, ticketExist bool, inputTicket dto.BuyTicketRequest) error {
+	ticket *entities.Ticket, ticketExist bool, inputTicket dto.ReserveTicketRequest) error {
 	var notFoundError exceptions.NotFoundError
 	if !ticketExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Ticket
@@ -857,22 +884,31 @@ func applyDiscount(totalPrice float64, discount *entities.Discount) float64 {
 		return totalPrice
 	}
 
+	var totalPriceAfterDiscount float64
 	switch discount.Type {
 	case enums.Percentage:
-		return totalPrice * (100 - discount.Value)
+		totalPriceAfterDiscount = totalPrice * (1 - discount.Value/100)
 	case enums.Fixed:
-		return totalPrice - discount.Value
+		totalPriceAfterDiscount = totalPrice - discount.Value
 	default:
-		return totalPrice
+		totalPriceAfterDiscount = totalPrice
 	}
+
+	if totalPriceAfterDiscount < 0 {
+		totalPriceAfterDiscount = 0
+	}
+
+	return totalPriceAfterDiscount
 }
 
-func (eventService *eventService) ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.BuyTicketRequest) float64 {
+func (eventService *eventService) ReserveEventTicket(
+	userID, eventID uint, discountCode *string, tickets []dto.ReserveTicketRequest) dto.ReserveTicketResponse {
 	var totalRequestedTickets uint = 0
 	var totalPrice float64 = 0
 	var discountID *uint
 	var discountType *enums.DiscountType
 	var discountValue *float64
+	var reservation *entities.Reservation
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
 		reservationItems := make([]*entities.ReservationItem, len(tickets))
@@ -906,7 +942,7 @@ func (eventService *eventService) ReserveEventTicket(userID, eventID uint, disco
 			eventService.eventRepository.UpdateEventDiscount(tx, discount)
 		}
 
-		reservation := &entities.Reservation{
+		reservation = &entities.Reservation{
 			UserID:        userID,
 			EventID:       eventID,
 			Expiration:    time.Now().Add(15 * time.Minute),
@@ -926,16 +962,27 @@ func (eventService *eventService) ReserveEventTicket(userID, eventID uint, disco
 	if err != nil {
 		panic(err)
 	}
-	return totalPrice
+	reserveTicket := dto.ReserveTicketResponse{
+		ID:         reservation.ID,
+		FinalPrice: reservation.TotalPrice,
+	}
+	return reserveTicket
 }
 
 func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservationID uint) {
 	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
 	eventService.FetchEventByID(eventID)
 	reservation, reservationExist := eventService.purchaseRepository.GetReservationByID(eventService.db, reservationID)
 	if !reservationExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Reservation
 		panic(notFoundError)
+	}
+	if reservation.Status == enums.Confirmed {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Reservation,
+			eventService.constants.ErrorTag.AlreadyPurchased)
+		panic(conflictError)
 	}
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
