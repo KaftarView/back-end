@@ -75,6 +75,7 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 				readSingleEventGroup.GET("/tickets", adminEventController.GetAllTicketDetails)
 				readSingleEventGroup.GET("/discounts", adminEventController.GetAllDiscountDetails)
 				readSingleEventGroup.GET("/media", adminEventController.GetEventMedia)
+				readSingleEventGroup.GET("/attendees", adminEventController.GetEventAttendees)
 			}
 		}
 
