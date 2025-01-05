@@ -696,6 +696,25 @@ func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDet
 	return allMediaDetails
 }
 
+func (eventService *eventService) GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse {
+	eventService.FetchEventByID(eventID)
+	eventService.eventRepository.IsUserAttendingEvent(eventService.db, userID, eventID)
+	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventService.db, eventID)
+	allMediaDetails := make([]dto.MediaDetailsResponse, len(allEventMedia))
+	for i, media := range allEventMedia {
+		mediaPath := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, media.Path, 8*time.Hour)
+		allMediaDetails[i] = dto.MediaDetailsResponse{
+			ID:        media.ID,
+			Name:      media.Name,
+			CreatedAt: media.CreatedAt,
+			Size:      media.Size,
+			Type:      media.Type,
+			MediaPath: mediaPath,
+		}
+	}
+	return allMediaDetails
+}
+
 func (eventService *eventService) UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader) {
 	media := eventService.fetchMediaByID(mediaID)
 

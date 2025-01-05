@@ -325,6 +325,19 @@ func (repo *eventRepository) FindMediaByID(db *gorm.DB, mediaID uint) (*entities
 	return &media, true
 }
 
+func (repo *eventRepository) IsUserAttendingEvent(db *gorm.DB, eventID, userID uint) bool {
+	var count int64
+
+	err := db.Model(&entities.Order{}).
+		Where("user_id = ? AND event_id = ?", userID, eventID).
+		Count(&count).Error
+
+	if err != nil {
+		panic(err)
+	}
+	return count > 0
+}
+
 func (repo *eventRepository) UpdateEventMedia(db *gorm.DB, media *entities.Media) error {
 	return db.Save(media).Error
 }

@@ -44,6 +44,17 @@ func (customerEventController *CustomerEventController) GetAvailableEventTickets
 	controller.Response(c, 200, "", ticketDetails)
 }
 
+func (customerEventController *CustomerEventController) GetEventMedia(c *gin.Context) {
+	type getEventMediaParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[getEventMediaParams](c, &customerEventController.constants.Context)
+	userID, _ := c.Get(customerEventController.constants.Context.UserID)
+	mediaDetails := customerEventController.eventService.GetAttendantEventMedia(param.EventID, userID.(uint))
+
+	controller.Response(c, 200, "", mediaDetails)
+}
+
 func (customerEventController *CustomerEventController) ReserveTickets(c *gin.Context) {
 	type ticketParams struct {
 		TicketID uint `json:"ticketID" validate:"required"`

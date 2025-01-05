@@ -23,6 +23,7 @@ type EventService interface {
 	FetchEventByID(eventID uint) *entities.Event
 	FilterEventsByCategories(categories []string, page int, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse
 	GetAllUserJoinedEvents(userID uint) []dto.EventDetailsResponse
+	GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse
 	GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse
 	GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse
 	GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse

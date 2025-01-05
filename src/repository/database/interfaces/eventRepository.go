@@ -41,6 +41,7 @@ type EventRepository interface {
 	FindAllTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool)
 	FindAvailableTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool)
 	FullTextSearch(db *gorm.DB, query string, allowedStatus []enums.EventStatus, offset int, pageSize int) []*entities.Event
+	IsUserAttendingEvent(db *gorm.DB, eventID, userID uint) bool
 	UpdateEvent(db *gorm.DB, event *entities.Event) error
 	UpdateEventCategories(db *gorm.DB, eventID uint, categories []entities.Category) error
 	UpdateEventDiscount(db *gorm.DB, discount *entities.Discount) error
