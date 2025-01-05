@@ -271,8 +271,8 @@ func (repo *eventRepository) FindOrganizerByEmail(db *gorm.DB, eventID uint, ema
 	return &organizer, true
 }
 
-func (repo *eventRepository) CreateOrganizerForEventID(db *gorm.DB, organizer *entities.Organizer) error {
-	return db.Create(*organizer).Error
+func (repo *eventRepository) CreateOrganizer(db *gorm.DB, organizer *entities.Organizer) error {
+	return db.Create(organizer).Error
 }
 
 func (repo *eventRepository) FindEventsByStatus(db *gorm.DB, allowedStatus []enums.EventStatus, offset, pageSize int) ([]*entities.Event, bool) {

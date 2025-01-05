@@ -153,3 +153,10 @@ type EventAttendeesResponse struct {
 	CountTickets uint    `json:"countTickets"`
 	Price        float64 `json:"price"`
 }
+
+type OrganizerDetailsResponse struct {
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Profile     string `json:"profile"`
+	Description string `json:"description"`
+}

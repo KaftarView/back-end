@@ -14,7 +14,7 @@ type EventRepository interface {
 	CreateNewEvent(db *gorm.DB, event *entities.Event) error
 	CreateNewMedia(db *gorm.DB, media *entities.Media) error
 	CreateNewTicket(db *gorm.DB, ticket *entities.Ticket) error
-	CreateOrganizerForEventID(db *gorm.DB, organizer *entities.Organizer) error
+	CreateOrganizer(db *gorm.DB, organizer *entities.Organizer) error
 	DeleteDiscount(db *gorm.DB, discountID uint) error
 	DeleteEvent(db *gorm.DB, eventID uint) error
 	DeleteMedia(db *gorm.DB, mediaID uint) error

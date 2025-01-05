@@ -255,17 +255,17 @@ func (adminEventController *AdminEventController) AddEventOrganizer(c *gin.Conte
 	param := controller.Validated[addEventOrganizerParams](c, &adminEventController.constants.Context)
 	adminEventController.eventService.CreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, param.Profile)
 
-	eventName := adminEventController.eventService.FetchEventByID(param.EventID).Name
-	emailTemplateData := struct {
-		Name      string
-		EventName string
-	}{
-		Name:      param.Name,
-		EventName: eventName,
-	}
-	templatePath := controller.GetTemplatePath(c, adminEventController.constants.Context.Translator)
-	adminEventController.emailService.SendEmail(
-		param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
+	// eventName := adminEventController.eventService.FetchEventByID(param.EventID).Name
+	// emailTemplateData := struct {
+	// 	Name      string
+	// 	EventName string
+	// }{
+	// 	Name:      param.Name,
+	// 	EventName: eventName,
+	// }
+	// templatePath := controller.GetTemplatePath(c, adminEventController.constants.Context.Translator)
+	// adminEventController.emailService.SendEmail(
+	// 	param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
 
 	trans := controller.GetTranslator(c, adminEventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.organizerRegistration")

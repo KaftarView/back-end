@@ -70,3 +70,13 @@ func (generalEventController *GeneralEventController) GetEventDetails(c *gin.Con
 
 	controller.Response(c, 200, "", eventDetails)
 }
+
+func (generalEventController *GeneralEventController) GetEventOrganizers(c *gin.Context) {
+	type getEventOrganizersParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[getEventOrganizersParams](c, &generalEventController.constants.Context)
+	organizersDetails := generalEventController.eventService.GetEventOrganizers(param.EventID)
+
+	controller.Response(c, 200, "", organizersDetails)
+}

@@ -379,8 +379,9 @@ func (eventService *eventService) CreateEventOrganizer(eventID uint, name, email
 		Description: description,
 		EventID:     eventID,
 	}
+
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
-		if err := eventService.eventRepository.CreateOrganizerForEventID(tx, organizer); err != nil {
+		if err := eventService.eventRepository.CreateOrganizer(tx, organizer); err != nil {
 			panic(err)
 		}
 
@@ -694,6 +695,23 @@ func (eventService *eventService) GetEventMediaDetails(mediaID uint) dto.MediaDe
 	}
 
 	return mediaDetails
+}
+
+func (eventService *eventService) GetEventOrganizers(eventID uint) []dto.OrganizerDetailsResponse {
+	eventService.FetchEventByID(eventID)
+
+	allEventOrganizers, _ := eventService.eventRepository.FindAllEventOrganizers(eventService.db, eventID)
+	organizersDetails := make([]dto.OrganizerDetailsResponse, len(allEventOrganizers))
+	for i, organizer := range allEventOrganizers {
+		profilePath := eventService.awsS3Service.GetPresignedURL(enums.ProfilesBucket, organizer.ProfilePath, 8*time.Hour)
+		organizersDetails[i] = dto.OrganizerDetailsResponse{
+			Name:        organizer.Name,
+			Email:       organizer.Email,
+			Profile:     profilePath,
+			Description: organizer.Description,
+		}
+	}
+	return organizersDetails
 }
 
 func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDetailsResponse {
