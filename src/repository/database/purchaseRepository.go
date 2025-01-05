@@ -52,3 +52,17 @@ func (repo *purchaseRepository) CreateTransaction(db *gorm.DB, transaction *enti
 func (repo *purchaseRepository) CreateOrder(db *gorm.DB, order *entities.Order) error {
 	return db.Create(order).Error
 }
+
+func (repo *purchaseRepository) GetUserOrders(db *gorm.DB, userID uint) []*entities.Order {
+	var orders []*entities.Order
+
+	result := db.Where("user_id = ?", userID).Find(&orders)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return orders
+}

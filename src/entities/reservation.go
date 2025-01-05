@@ -10,6 +10,7 @@ import (
 type Reservation struct {
 	gorm.Model
 	UserID        uint                    `gorm:"not null"`
+	EventID       uint                    `gorm:"not null"`
 	Expiration    time.Time               `gorm:"not null"`
 	Status        enums.ReservationStatus `gorm:"type:int;not null"`
 	TotalPrice    float64                 `gorm:"type:decimal(10,2);not null"`

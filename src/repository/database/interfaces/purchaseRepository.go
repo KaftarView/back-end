@@ -13,4 +13,5 @@ type PurchaseRepository interface {
 	UpdateReservation(db *gorm.DB, reservation *entities.Reservation) error
 	CreateTransaction(db *gorm.DB, transaction *entities.Transaction) error
 	CreateOrder(db *gorm.DB, order *entities.Order) error
+	GetUserOrders(db *gorm.DB, userID uint) []*entities.Order
 }

@@ -85,6 +85,10 @@ func (repo *userRepository) FindByEmailAndVerified(db *gorm.DB, email string, ve
 	return &user, true
 }
 
+func (repo *userRepository) UpdateUser(db *gorm.DB, user *entities.User) error {
+	return db.Save(user).Error
+}
+
 func (repo *userRepository) UpdateUserToken(db *gorm.DB, user *entities.User, token string) {
 	user.Token = token
 	db.Save(user)

@@ -9,6 +9,7 @@ import (
 type Order struct {
 	gorm.Model
 	UserID           uint                `gorm:"not null"`
+	EventID          uint                `gorm:"not null"`
 	ReservationID    *uint               `gorm:"null"`
 	TotalPrice       float64             `gorm:"type:decimal(10,2);not null"`
 	DiscountID       *uint               `gorm:"null"`

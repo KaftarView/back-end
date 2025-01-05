@@ -21,7 +21,8 @@ type UserService interface {
 	GetPermissionsList() []dto.PermissionDetailsResponse
 	GetRoleOwners(roleID uint) []dto.UserDetailsResponse
 	GetRolesList() []dto.RoleDetailsResponse
-	ResetPasswordService(email string, password string, confirmPassword string)
+	ResetPasswordService(userID uint, password string, confirmPassword string)
+	UpdateUser(userID uint, username string)
 	UpdateOrCreateUser(username string, email string, password string, otp string)
 	UpdateUserOTPIfExists(email string, otp string)
 	UpdateUserRoles(email string, roles []string)

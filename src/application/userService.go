@@ -199,7 +199,27 @@ func (userService *userService) ValidateUserOTP(email, otp string) uint {
 	return user.ID
 }
 
-func (userService *userService) ResetPasswordService(email, password, confirmPassword string) {
+func (userService *userService) UpdateUser(userID uint, username string) {
+	var conflictError exceptions.ConflictError
+	var notFoundError exceptions.NotFoundError
+	user, userExist := userService.userRepository.FindByUserID(userService.db, userID)
+	if !userExist {
+		notFoundError.ErrorField = userService.constants.ErrorField.User
+		panic(notFoundError)
+	}
+	_, usernameExist := userService.userRepository.FindActiveOrVerifiedUserByUsername(userService.db, username)
+	if usernameExist {
+		conflictError.AppendError(
+			userService.constants.ErrorField.Username,
+			userService.constants.ErrorTag.AlreadyExist)
+	}
+	user.Name = username
+	if err := userService.userRepository.UpdateUser(userService.db, user); err != nil {
+		panic(err)
+	}
+}
+
+func (userService *userService) ResetPasswordService(userID uint, password, confirmPassword string) {
 	var registrationError exceptions.UserRegistrationError
 	passwordErrorTags := userService.passwordValidation(password)
 	if len(passwordErrorTags) > 0 {
@@ -220,7 +240,7 @@ func (userService *userService) ResetPasswordService(email, password, confirmPas
 		panic(err)
 	}
 
-	user, _ := userService.userRepository.FindByEmailAndVerified(userService.db, email, true)
+	user, _ := userService.userRepository.FindByUserID(userService.db, userID)
 	userService.userRepository.UpdateUserPassword(userService.db, user, hashedPassword)
 }
 

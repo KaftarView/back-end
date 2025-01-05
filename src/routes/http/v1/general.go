@@ -123,7 +123,6 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 		auth.POST("/login", generalUserController.Login)
 		auth.POST("/forgot-password", generalUserController.ForgotPassword)
 		auth.POST("/confirm-otp", generalUserController.ConfirmOTP)
-		auth.PUT("/reset-password", generalUserController.ResetPassword)
 		auth.POST("/refresh-token", generalUserController.RefreshToken)
 	}
 }
