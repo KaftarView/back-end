@@ -487,6 +487,7 @@ func (eventService *eventService) GetEventTickets(eventID uint, availability []b
 			Description:    ticket.Description,
 			Price:          ticket.Price,
 			RemainTickets:  ticket.Quantity - ticket.SoldCount,
+			Quantity:       ticket.Quantity,
 			IsAvailable:    ticket.IsAvailable,
 			AvailableFrom:  ticket.AvailableFrom,
 			AvailableUntil: ticket.AvailableUntil,
@@ -507,6 +508,7 @@ func (eventService *eventService) GetTicketDetails(ticketID uint) dto.TicketDeta
 		Description:    ticket.Description,
 		Price:          ticket.Price,
 		RemainTickets:  ticket.Quantity - ticket.SoldCount,
+		Quantity:       ticket.Quantity,
 		IsAvailable:    ticket.IsAvailable,
 		AvailableFrom:  ticket.AvailableFrom,
 		AvailableUntil: ticket.AvailableUntil,
@@ -937,11 +939,18 @@ func (eventService *eventService) ReserveEventTicket(
 
 func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservationID uint) {
 	var notFoundError exceptions.NotFoundError
+	var conflictError exceptions.ConflictError
 	eventService.FetchEventByID(eventID)
 	reservation, reservationExist := eventService.purchaseRepository.GetReservationByID(eventService.db, reservationID)
 	if !reservationExist {
 		notFoundError.ErrorField = eventService.constants.ErrorField.Reservation
 		panic(notFoundError)
+	}
+	if reservation.Status == enums.Confirmed {
+		conflictError.AppendError(
+			eventService.constants.ErrorField.Reservation,
+			eventService.constants.ErrorTag.AlreadyPurchased)
+		panic(conflictError)
 	}
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {

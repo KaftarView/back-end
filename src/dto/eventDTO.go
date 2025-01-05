@@ -83,6 +83,7 @@ type TicketDetailsResponse struct {
 	Name           string    `json:"name"`
 	Description    string    `json:"description"`
 	Price          float64   `json:"price"`
+	Quantity       uint      `json:"quantity"`
 	RemainTickets  uint      `json:"remainTickets"`
 	IsAvailable    bool      `json:"isAvailable"`
 	AvailableFrom  time.Time `json:"availableFrom"`

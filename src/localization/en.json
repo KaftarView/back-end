@@ -24,7 +24,8 @@
         "alreadySubscribed" : "You have already subscribed to `{0}`.",
         "notSubscribed": "You have not subscribed to `{0}`.",
         "notAvailable": "`{0}` not available.",
-        "purchaseFailed": "Purchase failed. Try again..."
+        "purchaseFailed": "Purchase failed. Try again...",
+        "AlreadyPurchased": "Ticket already purchased."
     },
     "successMessage": {
         "userRegistration": "Successfully! Please verify your Email to activate your account.",
