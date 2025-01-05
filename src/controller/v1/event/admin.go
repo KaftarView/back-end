@@ -356,18 +356,18 @@ func (adminEventController *AdminEventController) DeleteEvent(c *gin.Context) {
 
 func (adminEventController *AdminEventController) UpdateEventTicket(c *gin.Context) {
 	type EditEventTicketParams struct {
-		Name           *string    `json:"name"`
-		Description    *string    `json:"description"`
-		Price          *float64   `json:"price"`
-		Quantity       *uint      `json:"quantity" `
-		SoldCount      *uint      `json:"soldCount"`
-		IsAvailable    *bool      `json:"isAvailable" `
-		AvailableFrom  *time.Time `json:"availableFrom" `
-		AvailableUntil *time.Time `json:"availableUntil" `
-		TicketID       uint       `uri:"ticketID" validate:"required"`
+		Name           string    `json:"name" validate:"required,max=50"`
+		Description    string    `json:"description"`
+		Price          float64   `json:"price"`
+		Quantity       uint      `json:"quantity" `
+		SoldCount      uint      `json:"soldCount"`
+		IsAvailable    bool      `json:"isAvailable" `
+		AvailableFrom  time.Time `json:"availableFrom" `
+		AvailableUntil time.Time `json:"availableUntil" `
+		TicketID       uint      `uri:"ticketID" validate:"required"`
 	}
 	param := controller.Validated[EditEventTicketParams](c, &adminEventController.constants.Context)
-	ticketDetails := dto.UpdateTicketRequest{
+	ticketDetails := dto.CreateTicketRequest{
 		Name:           param.Name,
 		Description:    param.Description,
 		Price:          param.Price,
@@ -376,9 +376,9 @@ func (adminEventController *AdminEventController) UpdateEventTicket(c *gin.Conte
 		IsAvailable:    param.IsAvailable,
 		AvailableFrom:  param.AvailableFrom,
 		AvailableUntil: param.AvailableUntil,
-		TicketID:       param.TicketID,
+		// TicketID:       param.TicketID,
 	}
-	adminEventController.eventService.UpdateEventTicket(ticketDetails)
+	adminEventController.eventService.UpdateEventTicket(param.TicketID, ticketDetails)
 
 	trans := controller.GetTranslator(c, adminEventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updateTicket")
@@ -399,30 +399,29 @@ func (adminEventController *AdminEventController) DeleteTicket(c *gin.Context) {
 
 func (adminEventController *AdminEventController) UpdateEventDiscount(c *gin.Context) {
 	type updateEventDiscountParams struct {
-		Code       *string    `json:"code"`
-		Type       *string    `json:"type"`
-		Value      *float64   `json:"value"`
-		ValidFrom  *time.Time `json:"validFrom"`
-		ValidUntil *time.Time `json:"validUntil"`
-		Quantity   *uint      `json:"quantity"`
-		UsedCount  *uint      `json:"usedCount"`
-		MinTickets *uint      `json:"minTickets"`
-		DiscountID uint       `uri:"discountID" validate:"required"`
+		Code       string    `json:"code" validate:"required,max=50"`
+		Type       string    `json:"type"`
+		Value      float64   `json:"value"`
+		ValidFrom  time.Time `json:"validFrom"`
+		ValidUntil time.Time `json:"validUntil" validate:"required,gtfield=ValidFrom"`
+		Quantity   uint      `json:"quantity"`
+		UsedCount  uint      `json:"usedCount"`
+		MinTickets uint      `json:"minTickets"`
+		DiscountID uint      `uri:"discountID" validate:"required"`
 	}
 	param := controller.Validated[updateEventDiscountParams](c, &adminEventController.constants.Context)
 
-	discountDetails := dto.UpdateDiscountRequest{
-		Code:           param.Code,
-		Type:           param.Type,
-		Value:          param.Value,
-		AvailableFrom:  param.ValidFrom,
-		AvailableUntil: param.ValidUntil,
-		Quantity:       param.Quantity,
-		UsedCount:      param.UsedCount,
-		MinTickets:     param.MinTickets,
-		DiscountID:     param.DiscountID,
+	discountDetails := dto.CreateDiscountRequest{
+		Code:       param.Code,
+		Type:       param.Type,
+		Value:      param.Value,
+		ValidFrom:  param.ValidFrom,
+		ValidUntil: param.ValidUntil,
+		Quantity:   param.Quantity,
+		UsedCount:  param.UsedCount,
+		MinTickets: param.MinTickets,
 	}
-	adminEventController.eventService.UpdateEventDiscount(discountDetails)
+	adminEventController.eventService.UpdateEventDiscount(param.DiscountID, discountDetails)
 
 	trans := controller.GetTranslator(c, adminEventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.updateDiscount")
