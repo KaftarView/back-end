@@ -40,7 +40,7 @@ func (customerEventController *CustomerEventController) GetAvailableEventTickets
 		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &customerEventController.constants.Context)
-	ticketDetails := customerEventController.eventService.GetEventTickets(param.EventID, []bool{true})
+	ticketDetails := customerEventController.eventService.GetAvailableEventTickets(param.EventID)
 	controller.Response(c, 200, "", ticketDetails)
 }
 

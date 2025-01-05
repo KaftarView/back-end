@@ -471,10 +471,35 @@ func (eventService *eventService) GetEventDetails(allowedStatus []enums.EventSta
 	return eventDetails
 }
 
-func (eventService *eventService) GetEventTickets(eventID uint, availability []bool) []dto.TicketDetailsResponse {
+func (eventService *eventService) GetAvailableEventTickets(eventID uint) []dto.TicketDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
-	tickets, ticketExist := eventService.eventRepository.FindTicketsByEventID(eventService.db, eventID, availability)
+	tickets, ticketExist := eventService.eventRepository.FindAvailableTicketsByEventID(eventService.db, eventID)
+	if !ticketExist {
+		return []dto.TicketDetailsResponse{}
+	}
+	ticketsDetails := make([]dto.TicketDetailsResponse, len(tickets))
+	for i, ticket := range tickets {
+		ticketsDetails[i] = dto.TicketDetailsResponse{
+			ID:             ticket.ID,
+			CreatedAt:      ticket.CreatedAt,
+			Name:           ticket.Name,
+			Description:    ticket.Description,
+			Price:          ticket.Price,
+			RemainTickets:  ticket.Quantity - ticket.SoldCount,
+			Quantity:       ticket.Quantity,
+			IsAvailable:    ticket.IsAvailable,
+			AvailableFrom:  ticket.AvailableFrom,
+			AvailableUntil: ticket.AvailableUntil,
+		}
+	}
+	return ticketsDetails
+}
+
+func (eventService *eventService) GetAllEventTickets(eventID uint) []dto.TicketDetailsResponse {
+	eventService.FetchEventByID(eventID)
+
+	tickets, ticketExist := eventService.eventRepository.FindAllTicketsByEventID(eventService.db, eventID)
 	if !ticketExist {
 		return []dto.TicketDetailsResponse{}
 	}
@@ -859,14 +884,21 @@ func applyDiscount(totalPrice float64, discount *entities.Discount) float64 {
 		return totalPrice
 	}
 
+	var totalPriceAfterDiscount float64
 	switch discount.Type {
 	case enums.Percentage:
-		return totalPrice * (100 - discount.Value)
+		totalPriceAfterDiscount = totalPrice * (1 - discount.Value/100)
 	case enums.Fixed:
-		return totalPrice - discount.Value
+		totalPriceAfterDiscount = totalPrice - discount.Value
 	default:
-		return totalPrice
+		totalPriceAfterDiscount = totalPrice
 	}
+
+	if totalPriceAfterDiscount < 0 {
+		totalPriceAfterDiscount = 0
+	}
+
+	return totalPriceAfterDiscount
 }
 
 func (eventService *eventService) ReserveEventTicket(

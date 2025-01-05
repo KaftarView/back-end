@@ -105,7 +105,7 @@ func (adminEventController *AdminEventController) GetAllTicketDetails(c *gin.Con
 		EventID uint `uri:"eventID" validate:"required"`
 	}
 	param := controller.Validated[getEventParams](c, &adminEventController.constants.Context)
-	ticketDetails := adminEventController.eventService.GetEventTickets(param.EventID, []bool{true, false})
+	ticketDetails := adminEventController.eventService.GetAllEventTickets(param.EventID)
 	controller.Response(c, 200, "", ticketDetails)
 }
 

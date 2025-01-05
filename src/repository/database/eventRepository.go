@@ -72,9 +72,29 @@ func (repo *eventRepository) FindEventCategoriesByEvent(db *gorm.DB, event *enti
 	return event.Categories
 }
 
-func (repo *eventRepository) FindTicketsByEventID(db *gorm.DB, eventID uint, availability []bool) ([]*entities.Ticket, bool) {
+func (repo *eventRepository) FindAvailableTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool) {
 	var tickets []*entities.Ticket
-	result := db.Where("event_id = ? AND is_available IN ?", eventID, availability).Find(&tickets)
+	now := time.Now()
+
+	result := db.Where(&entities.Ticket{
+		EventID:     eventID,
+		IsAvailable: true,
+	}).Where("available_from <= ?", now).
+		Where("available_until >= ?", now).
+		Find(&tickets)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, false
+		}
+		panic(result.Error)
+	}
+	return tickets, true
+}
+
+func (repo *eventRepository) FindAllTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool) {
+	var tickets []*entities.Ticket
+	result := db.Where("event_id = ?", eventID).Find(&tickets)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
