@@ -255,17 +255,17 @@ func (adminEventController *AdminEventController) AddEventOrganizer(c *gin.Conte
 	param := controller.Validated[addEventOrganizerParams](c, &adminEventController.constants.Context)
 	adminEventController.eventService.CreateEventOrganizer(param.EventID, param.Name, param.Email, param.Description, param.Profile)
 
-	// eventName := adminEventController.eventService.FetchEventByID(param.EventID).Name
-	// emailTemplateData := struct {
-	// 	Name      string
-	// 	EventName string
-	// }{
-	// 	Name:      param.Name,
-	// 	EventName: eventName,
-	// }
-	// templatePath := controller.GetTemplatePath(c, adminEventController.constants.Context.Translator)
-	// adminEventController.emailService.SendEmail(
-	// 	param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
+	eventName := adminEventController.eventService.FetchEventByID(param.EventID).Name
+	emailTemplateData := struct {
+		Name      string
+		EventName string
+	}{
+		Name:      param.Name,
+		EventName: eventName,
+	}
+	templatePath := controller.GetTemplatePath(c, adminEventController.constants.Context.Translator)
+	adminEventController.emailService.SendEmail(
+		param.Email, "Accept invitation", "acceptInvitation/"+templatePath, emailTemplateData)
 
 	trans := controller.GetTranslator(c, adminEventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.organizerRegistration")
@@ -315,16 +315,16 @@ func (adminEventController *AdminEventController) UpdateEvent(c *gin.Context) {
 		Name        *string               `form:"name" validate:"omitempty,max=50"`
 		Status      *string               `form:"status"`
 		Description *string               `form:"description"`
-		FromDate    *time.Time            `form:"fromDate" validate:"omitempty"`
-		ToDate      *time.Time            `form:"toDate" validate:"omitempty,gtfield=FromDate"`
+		FromDate    *time.Time            `form:"fromDate"`
+		ToDate      *time.Time            `form:"toDate"`
 		BasePrice   *float64              `form:"basePrice"`
 		MinCapacity *uint                 `form:"minCapacity" validate:"omitempty,min=1"`
-		MaxCapacity *uint                 `form:"maxCapacity" validate:"omitempty,gtfield=MinCapacity"`
-		VenueType   *string               `form:"eventType" validate:"omitempty"`
-		Location    *string               `form:"address"`
+		MaxCapacity *uint                 `form:"maxCapacity"`
+		VenueType   *string               `form:"venueType"`
+		Location    *string               `form:"location"`
 		Banner      *multipart.FileHeader `form:"banner"`
 		Categories  *[]string             `form:"categories"`
-		EventID     uint                  `uri:"eventID" binding:"required"`
+		EventID     uint                  `uri:"eventID" validate:"required"`
 	}
 
 	param := controller.Validated[updateEventParams](c, &adminEventController.constants.Context)
