@@ -325,6 +325,7 @@ func (eventService *eventService) UpdateEvent(updateDetails dto.UpdateEventReque
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
 		updateField(updateDetails.Description, &event.Description)
+		updateField(updateDetails.Location, &event.Location)
 		updateField(updateDetails.FromDate, &event.FromDate)
 		updateField(updateDetails.ToDate, &event.ToDate)
 		updateField(updateDetails.BasePrice, &event.BasePrice)
@@ -797,7 +798,10 @@ func (eventService *eventService) DeleteEventMedia(mediaID uint) {
 
 func (eventService *eventService) ChangeEventStatus(eventID uint, newStatus string) {
 	event := eventService.FetchEventByID(eventID)
-	updateEnumField(event.Status, &newStatus, enums.GetAllEventStatus)
+	event.Status = updateEnumField(event.Status, &newStatus, enums.GetAllEventStatus)
+	if err := eventService.eventRepository.UpdateEvent(eventService.db, event); err != nil {
+		panic(err)
+	}
 }
 
 func (eventService *eventService) CreateEventMedia(eventID uint, mediaName string, mediaFile *multipart.FileHeader) {
