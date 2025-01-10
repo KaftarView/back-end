@@ -8,7 +8,7 @@ import (
 
 type categoryRepository struct{}
 
-func NewCategoryRepository(db *gorm.DB) *categoryRepository {
+func NewCategoryRepository() *categoryRepository {
 	return &categoryRepository{}
 }
 

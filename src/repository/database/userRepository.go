@@ -10,7 +10,7 @@ import (
 
 type userRepository struct{}
 
-func NewUserRepository(db *gorm.DB) *userRepository {
+func NewUserRepository() *userRepository {
 	return &userRepository{}
 }
 

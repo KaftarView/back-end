@@ -20,6 +20,7 @@ type Context struct {
 	AccessToken                  string
 	RefreshToken                 string
 	UserID                       string
+	WSConnection                 string
 }
 
 type ErrorField struct {
@@ -85,6 +86,7 @@ func NewConstants() *Constants {
 			AccessToken:                  "access_token",
 			RefreshToken:                 "refresh_token",
 			UserID:                       "userID",
+			WSConnection:                 "wsConnection",
 		},
 		ErrorField: ErrorField{
 			Username:    "username",

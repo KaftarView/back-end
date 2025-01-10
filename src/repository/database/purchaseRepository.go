@@ -10,7 +10,7 @@ import (
 
 type purchaseRepository struct{}
 
-func NewPurchaseRepository(db *gorm.DB) *purchaseRepository {
+func NewPurchaseRepository() *purchaseRepository {
 	return &purchaseRepository{}
 }
 

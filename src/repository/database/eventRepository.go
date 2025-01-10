@@ -12,7 +12,7 @@ import (
 
 type eventRepository struct{}
 
-func NewEventRepository(db *gorm.DB) *eventRepository {
+func NewEventRepository() *eventRepository {
 	return &eventRepository{}
 }
 

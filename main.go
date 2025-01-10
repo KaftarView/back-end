@@ -51,6 +51,8 @@ func main() {
 	}
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(
 		&entities.Category{},
+		&entities.ChatMessage{},
+		&entities.ChatRoom{},
 		&entities.Comment{},
 		&entities.Discount{},
 		&entities.Episode{},
@@ -86,7 +88,7 @@ func main() {
 		log.Fatal("Error connecting to Redis:", err)
 	}
 
-	userRepository := repository.NewUserRepository(db)
+	userRepository := repository.NewUserRepository()
 	roleSeeder := seed.NewRoleSeeder(db, userRepository, &di.Env.SuperAdmin)
 	roleSeeder.SeedRoles()
 
@@ -96,8 +98,8 @@ func main() {
 	}
 	if backgroundEnabled {
 		emailService := application_communication.NewEmailService(&di.Env.Email)
-		reservationRepository := repository.NewPurchaseRepository(db)
-		eventRepository := repository.NewEventRepository(db)
+		reservationRepository := repository.NewPurchaseRepository()
+		eventRepository := repository.NewEventRepository()
 		cronJob := application_cron.NewCronJob(di.Constants, userRepository, reservationRepository, eventRepository, emailService, db)
 		cronJob.RunCronJob()
 	}
