@@ -20,7 +20,7 @@ type Context struct {
 	AccessToken                  string
 	RefreshToken                 string
 	UserID                       string
-	WSConnection                 string
+	WebsocketConnection          string
 }
 
 type ErrorField struct {
@@ -47,6 +47,7 @@ type ErrorField struct {
 	News        string
 	Journal     string
 	Reservation string
+	Room        string
 }
 
 type ErrorTag struct {
@@ -86,7 +87,7 @@ func NewConstants() *Constants {
 			AccessToken:                  "access_token",
 			RefreshToken:                 "refresh_token",
 			UserID:                       "userID",
-			WSConnection:                 "wsConnection",
+			WebsocketConnection:          "wsConnection",
 		},
 		ErrorField: ErrorField{
 			Username:    "username",
@@ -112,6 +113,7 @@ func NewConstants() *Constants {
 			News:        "news",
 			Journal:     "journal",
 			Reservation: "reservation",
+			Room:        "room",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",

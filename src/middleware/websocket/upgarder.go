@@ -31,7 +31,7 @@ func (wsMiddleware *WebsocketMiddleware) UpgradeToWebSocket(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	c.Set(wsMiddleware.constants.Context.WSConnection, conn)
+	c.Set(wsMiddleware.constants.Context.WebsocketConnection, conn)
 
 	c.Next()
 }

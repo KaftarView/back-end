@@ -10,6 +10,7 @@ import (
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_podcast "first-project/src/controller/v1/podcast"
 	controller_v1_user "first-project/src/controller/v1/user"
+	"first-project/src/websocket"
 
 	repository_database "first-project/src/repository/database"
 
@@ -18,7 +19,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
+func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
 	userRepository := repository_database.NewUserRepository()
 	categoryRepository := repository_database.NewCategoryRepository()
 	eventRepository := repository_database.NewEventRepository()
@@ -39,13 +40,13 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 	otpService := application.NewOTPService()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
-	chatService := application.NewChatService(di.Constants, chatRepository, db)
+	chatService := application.NewChatService(di.Constants, userService, chatRepository, db)
 
 	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
 	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
 	customerPodcastController := controller_v1_podcast.NewCustomerPodcastController(di.Constants, podcastService)
 	customerUserController := controller_v1_user.NewCustomerUserController(di.Constants, userService)
-	customerChatController := controller_v1_chat.NewCustomerCommentController(di.Constants, chatService)
+	customerChatController := controller_v1_chat.NewCustomerChatController(di.Constants, chatService, hub)
 
 	event := routerGroup.Group("/events/:eventID")
 	{
@@ -83,5 +84,6 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	chat := routerGroup.Group("/chat")
 	{
 		chat.POST("/room", customerChatController.CreateOrGetRoom)
+		chat.GET("/room/:roomID/messages", customerChatController.GetMessages)
 	}
 }

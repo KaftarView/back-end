@@ -335,3 +335,20 @@ func (repo *userRepository) DeleteCouncilor(db *gorm.DB, councilorID uint) {
 		panic(err)
 	}
 }
+
+func (repo *userRepository) FindUsersByPermissions(db *gorm.DB, permissions []enums.PermissionType) []entities.User {
+	var users []entities.User
+	result := db.Joins("JOIN user_roles ur ON ur.user_id = users.id").
+		Joins("JOIN role_permissions rp ON rp.role_id = ur.role_id").
+		Joins("JOIN permissions p ON p.id = rp.permission_id").
+		Where("p.type IN ?", permissions).
+		Find(&users)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil
+		}
+		panic(result.Error)
+	}
+	return users
+}

@@ -20,6 +20,7 @@ import (
 	repository "first-project/src/repository/database"
 	"first-project/src/routes"
 	"first-project/src/seed"
+	"first-project/src/websocket"
 )
 
 func main() {
@@ -88,6 +89,9 @@ func main() {
 		log.Fatal("Error connecting to Redis:", err)
 	}
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	userRepository := repository.NewUserRepository()
 	roleSeeder := seed.NewRoleSeeder(db, userRepository, &di.Env.SuperAdmin)
 	roleSeeder.SeedRoles()
@@ -109,7 +113,7 @@ func main() {
 		log.Fatal("Error during checking API service enable")
 	}
 	if APIServiceEnabled {
-		routes.Run(ginEngine, di, db, rdb)
+		routes.Run(ginEngine, di, db, rdb, hub)
 	}
 
 	ginEngine.Run(":8080")

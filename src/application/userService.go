@@ -509,3 +509,11 @@ func (userService *userService) DeleteCouncilor(councilorID uint) {
 		userService.awsS3Service.DeleteObject(enums.ProfilesBucket, councilor.ProfilePath)
 	}
 }
+
+func (userService *userService) GetUsersByPermissions(permissions []enums.PermissionType) []entities.User {
+	users := userService.userRepository.FindUsersByPermissions(userService.db, permissions)
+	if len(users) == 0 {
+		return nil
+	}
+	return users
+}
