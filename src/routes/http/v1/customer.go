@@ -5,10 +5,12 @@ import (
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
 	"first-project/src/bootstrap"
+	controller_v1_chat "first-project/src/controller/v1/chat"
 	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
 	controller_v1_podcast "first-project/src/controller/v1/podcast"
 	controller_v1_user "first-project/src/controller/v1/user"
+	"first-project/src/websocket"
 
 	repository_database "first-project/src/repository/database"
 
@@ -17,13 +19,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
-	userRepository := repository_database.NewUserRepository(db)
-	categoryRepository := repository_database.NewCategoryRepository(db)
-	eventRepository := repository_database.NewEventRepository(db)
+func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
+	userRepository := repository_database.NewUserRepository()
+	categoryRepository := repository_database.NewCategoryRepository()
+	eventRepository := repository_database.NewEventRepository()
 	commentRepository := repository_database.NewCommentRepository(db)
-	podcastRepository := repository_database.NewPodcastRepository(db)
-	purchaseRepository := repository_database.NewPurchaseRepository(db)
+	podcastRepository := repository_database.NewPodcastRepository()
+	purchaseRepository := repository_database.NewPurchaseRepository()
+	chatRepository := repository_database.NewChatRepository()
 
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	awsService := application_aws.NewS3Service(
@@ -37,11 +40,13 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 	otpService := application.NewOTPService()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
+	chatService := application.NewChatService(di.Constants, userService, chatRepository, db)
 
 	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
 	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
 	customerPodcastController := controller_v1_podcast.NewCustomerPodcastController(di.Constants, podcastService)
 	customerUserController := controller_v1_user.NewCustomerUserController(di.Constants, userService)
+	customerChatController := controller_v1_chat.NewCustomerChatController(di.Constants, chatService, hub)
 
 	event := routerGroup.Group("/events/:eventID")
 	{
@@ -74,5 +79,11 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 		profile.PUT("/username", customerUserController.ChangeUsername)
 		profile.PUT("/reset-password", customerUserController.ResetPassword)
 		profile.GET("/events", customerEventController.GetAllUserJoinedEvents)
+	}
+
+	chat := routerGroup.Group("/chat")
+	{
+		chat.POST("/room", customerChatController.CreateOrGetRoom)
+		chat.GET("/room/:roomID/messages", customerChatController.GetMessages)
 	}
 }

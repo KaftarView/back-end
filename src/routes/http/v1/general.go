@@ -23,14 +23,14 @@ import (
 )
 
 func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
-	userRepository := repository_database.NewUserRepository(db)
-	categoryRepository := repository_database.NewCategoryRepository(db)
-	eventRepository := repository_database.NewEventRepository(db)
+	userRepository := repository_database.NewUserRepository()
+	categoryRepository := repository_database.NewCategoryRepository()
+	eventRepository := repository_database.NewEventRepository()
 	commentRepository := repository_database.NewCommentRepository(db)
-	podcastRepository := repository_database.NewPodcastRepository(db)
-	newsRepository := repository_database.NewNewsRepository(db)
-	journalRepository := repository_database.NewJournalRepository(db)
-	purchaseRepository := repository_database.NewPurchaseRepository(db)
+	podcastRepository := repository_database.NewPodcastRepository()
+	newsRepository := repository_database.NewNewsRepository()
+	journalRepository := repository_database.NewJournalRepository()
+	purchaseRepository := repository_database.NewPurchaseRepository()
 	userCache := repository_cache.NewUserCache(db, di.Constants, rdb, userRepository)
 
 	jwtService := application_jwt.NewJWTToken()

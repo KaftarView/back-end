@@ -3,6 +3,7 @@ package application_interfaces
 import (
 	"first-project/src/dto"
 	"first-project/src/entities"
+	"first-project/src/enums"
 	"mime/multipart"
 )
 
@@ -21,6 +22,7 @@ type UserService interface {
 	GetPermissionsList() []dto.PermissionDetailsResponse
 	GetRoleOwners(roleID uint) []dto.UserDetailsResponse
 	GetRolesList() []dto.RoleDetailsResponse
+	GetUsersByPermissions(permissions []enums.PermissionType) []entities.User
 	ResetPasswordService(userID uint, password string, confirmPassword string)
 	UpdateUser(userID uint, username string)
 	UpdateOrCreateUser(username string, email string, password string, otp string)

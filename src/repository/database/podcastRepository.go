@@ -9,7 +9,7 @@ import (
 
 type podcastRepository struct{}
 
-func NewPodcastRepository(db *gorm.DB) *podcastRepository {
+func NewPodcastRepository() *podcastRepository {
 	return &podcastRepository{}
 }
 

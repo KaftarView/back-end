@@ -38,6 +38,7 @@ type UserRepository interface {
 	FindUnverifiedUsersWeekAgo(db *gorm.DB, startOfWeekAgo time.Time, endOfWeekAgo time.Time) []*entities.User
 	FindUserRoleTypesByUserID(db *gorm.DB, userID uint) []entities.Role
 	FindUsersByRoleID(db *gorm.DB, roleID uint) []*entities.User
+	FindUsersByPermissions(db *gorm.DB, permissions []enums.PermissionType) []entities.User
 	UpdateCouncilor(db *gorm.DB, councilor *entities.Councilor) error
 	UpdateUserPassword(db *gorm.DB, user *entities.User, password string)
 	UpdateUser(db *gorm.DB, user *entities.User) error

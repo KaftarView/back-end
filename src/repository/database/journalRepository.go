@@ -9,7 +9,7 @@ import (
 
 type journalRepository struct{}
 
-func NewJournalRepository(db *gorm.DB) *journalRepository {
+func NewJournalRepository() *journalRepository {
 	return &journalRepository{}
 }
 
