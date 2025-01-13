@@ -35,11 +35,11 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 	otpService := application.NewOTPService()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
+	commentService := application.NewCommentService(di.Constants, commentRepository, userService, db)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userService, db)
 	chatService := application.NewChatService(di.Constants, userService, chatRepository, db)
 
 	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)

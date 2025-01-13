@@ -2,6 +2,7 @@ package application
 
 import (
 	application_aws "first-project/src/application/aws"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
@@ -18,7 +19,7 @@ import (
 type journalService struct {
 	constants         *bootstrap.Constants
 	awsS3Service      *application_aws.S3service
-	userRepository    repository_database_interfaces.UserRepository
+	userService       application_interfaces.UserService
 	journalRepository repository_database_interfaces.JournalRepository
 	db                *gorm.DB
 }
@@ -26,14 +27,14 @@ type journalService struct {
 func NewJournalService(
 	constants *bootstrap.Constants,
 	awsS3Service *application_aws.S3service,
-	userRepository repository_database_interfaces.UserRepository,
+	userService application_interfaces.UserService,
 	journalRepository repository_database_interfaces.JournalRepository,
 	db *gorm.DB,
 ) *journalService {
 	return &journalService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
-		userRepository:    userRepository,
+		userService:       userService,
 		journalRepository: journalRepository,
 		db:                db,
 	}
@@ -86,7 +87,7 @@ func (journalService *journalService) GetJournalsList(page, pageSize int) []dto.
 		if journal.JournalFilePath != "" {
 			file = journalService.awsS3Service.GetPresignedURL(enums.JournalsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
-		author, _ := journalService.userRepository.FindByUserID(journalService.db, journal.AuthorID)
+		author, _ := journalService.userService.FindByUserID(journal.AuthorID)
 		journalsDetails[i] = dto.JournalDetailsResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
@@ -197,7 +198,7 @@ func (journalService *journalService) SearchJournals(query string, page, pageSiz
 		if journal.JournalFilePath != "" {
 			banner = journalService.awsS3Service.GetPresignedURL(enums.JournalsBucket, journal.JournalFilePath, 8*time.Hour)
 		}
-		author, _ := journalService.userRepository.FindByUserID(journalService.db, journal.AuthorID)
+		author, _ := journalService.userService.FindByUserID(journal.AuthorID)
 		journalsDetails[i] = dto.JournalDetailsResponse{
 			ID:          journal.ID,
 			Name:        journal.Name,
