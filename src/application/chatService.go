@@ -61,13 +61,11 @@ func (chatService *chatService) CreateOrGetRoom(userID uint) []dto.RoomDetailsRe
 		}
 		chatService.chatRepository.CreateRoom(chatService.db, room)
 		roomsDetails = append(roomsDetails, getRoomDetails(room))
-	} else {
-		for _, room := range rooms {
-			roomsDetails = append(roomsDetails, getRoomDetails(room))
-		}
 		return roomsDetails
 	}
-
+	for _, room := range rooms {
+		roomsDetails = append(roomsDetails, getRoomDetails(room))
+	}
 	return roomsDetails
 }
 

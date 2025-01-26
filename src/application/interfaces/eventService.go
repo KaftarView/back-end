@@ -35,6 +35,7 @@ type EventService interface {
 	GetEventsList(allowedStatus []enums.EventStatus, page int, pageSize int) []dto.EventDetailsResponse
 	GetListEventMedia(eventID uint) []dto.MediaDetailsResponse
 	GetTicketDetails(ticketID uint) dto.TicketDetailsResponse
+	IsUserAttended(eventID, userID uint) bool
 	PurchaseEventTicket(userID, eventID, reservationID uint)
 	ReserveEventTicket(userID, eventID uint, discountCode *string, tickets []dto.ReserveTicketRequest) dto.ReserveTicketResponse
 	SearchEvents(query string, page int, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse

@@ -4,7 +4,9 @@ WORKDIR /go/src/app
 
 COPY . .
 
-RUN chmod +x jwt-decoder.sh \
+RUN apk add --no-cache sed \
+    && sed -i 's/\r$//' jwt-decoder.sh \
+    && chmod +x jwt-decoder.sh \
     && go mod download \
     && CGO_ENABLED=0 go build -o /go/bin/app
 

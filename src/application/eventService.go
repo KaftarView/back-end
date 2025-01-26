@@ -480,9 +480,12 @@ func (eventService *eventService) GetAvailableEventTickets(eventID uint) []dto.T
 	if !ticketExist {
 		return []dto.TicketDetailsResponse{}
 	}
-	ticketsDetails := make([]dto.TicketDetailsResponse, len(tickets))
-	for i, ticket := range tickets {
-		ticketsDetails[i] = dto.TicketDetailsResponse{
+	var ticketsDetails []dto.TicketDetailsResponse
+	for _, ticket := range tickets {
+		if ticket.Quantity-ticket.SoldCount == 0 {
+			continue
+		}
+		ticketsDetails = append(ticketsDetails, dto.TicketDetailsResponse{
 			ID:             ticket.ID,
 			CreatedAt:      ticket.CreatedAt,
 			Name:           ticket.Name,
@@ -493,7 +496,7 @@ func (eventService *eventService) GetAvailableEventTickets(eventID uint) []dto.T
 			IsAvailable:    ticket.IsAvailable,
 			AvailableFrom:  ticket.AvailableFrom,
 			AvailableUntil: ticket.AvailableUntil,
-		}
+		})
 	}
 	return ticketsDetails
 }
@@ -734,10 +737,14 @@ func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDet
 	return allMediaDetails
 }
 
+func (eventService *eventService) IsUserAttended(eventID, userID uint) bool {
+	eventService.FetchEventByID(eventID)
+	return eventService.eventRepository.IsUserAttendingEvent(eventService.db, userID, eventID)
+}
+
 func (eventService *eventService) GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse {
 	eventService.FetchEventByID(eventID)
-	isUserAttended := eventService.eventRepository.IsUserAttendingEvent(eventService.db, userID, eventID)
-	if !isUserAttended {
+	if !eventService.IsUserAttended(eventID, userID) {
 		panic(exceptions.NewForbiddenError())
 	}
 	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventService.db, eventID)

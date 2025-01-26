@@ -27,7 +27,7 @@ func main() {
 	gin.DisableConsoleColor()
 	ginEngine := gin.Default()
 	config := cors.Config{
-		AllowOrigins:     []string{"http://localhost:5174", "http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5174", "http://localhost:5173", "https://cesaiust.ir", "http://cesaiust.ir"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "ngrok-skip-browser-warning"},
 		ExposeHeaders:    []string{"Content-Length"},
