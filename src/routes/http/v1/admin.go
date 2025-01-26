@@ -40,12 +40,12 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
-	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userRepository, db)
-	journalService := application.NewJournalService(di.Constants, awsService, userRepository, journalRepository, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userService, db)
+	commentService := application.NewCommentService(di.Constants, commentRepository, userService, db)
+	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userService, db)
+	journalService := application.NewJournalService(di.Constants, awsService, userService, journalRepository, db)
 
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
 

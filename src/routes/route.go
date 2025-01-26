@@ -48,7 +48,7 @@ func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, 
 	customerGroup.Use(authMiddleware.AuthRequired)
 	routes_http_v1.SetupCustomerRoutes(customerGroup, di, db, rdb, hub)
 
-	ws := customerGroup.Group("/ws")
+	ws := v1.Group("/ws")
 	ws.Use(wsMiddleware.UpgradeToWebSocket)
 	routes_websocket_v1.SetupCustomerRoutes(ws, di, db, rdb, hub)
 }

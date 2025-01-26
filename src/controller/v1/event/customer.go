@@ -44,6 +44,17 @@ func (customerEventController *CustomerEventController) GetAvailableEventTickets
 	controller.Response(c, 200, "", ticketDetails)
 }
 
+func (customerEventController *CustomerEventController) IsUserAttended(c *gin.Context) {
+	type isUserAttendantParams struct {
+		EventID uint `uri:"eventID" validate:"required"`
+	}
+	param := controller.Validated[isUserAttendantParams](c, &customerEventController.constants.Context)
+	userID, _ := c.Get(customerEventController.constants.Context.UserID)
+	attendantStatus := customerEventController.eventService.IsUserAttended(param.EventID, userID.(uint))
+
+	controller.Response(c, 200, "", attendantStatus)
+}
+
 func (customerEventController *CustomerEventController) GetEventMedia(c *gin.Context) {
 	type getEventMediaParams struct {
 		EventID uint `uri:"eventID" validate:"required"`
@@ -75,11 +86,11 @@ func (customerEventController *CustomerEventController) ReserveTickets(c *gin.Co
 			Quantity: ticket.Quantity,
 		}
 	}
-	totalPrice := customerEventController.eventService.ReserveEventTicket(userID.(uint), param.EventID, param.DiscountCode, tickets)
+	reserveInfo := customerEventController.eventService.ReserveEventTicket(userID.(uint), param.EventID, param.DiscountCode, tickets)
 
 	trans := controller.GetTranslator(c, customerEventController.constants.Context.Translator)
 	message, _ := trans.T("successMessage.reserveTicket")
-	controller.Response(c, 200, message, totalPrice)
+	controller.Response(c, 200, message, reserveInfo)
 }
 
 func (customerEventController *CustomerEventController) PurchaseTickets(c *gin.Context) {

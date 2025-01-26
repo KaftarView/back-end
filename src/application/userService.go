@@ -70,6 +70,10 @@ func (userService *userService) passwordValidation(password string) []string {
 	return errors
 }
 
+func (userService *userService) FindByUserID(id uint) (*entities.User, bool) {
+	return userService.userRepository.FindByUserID(userService.db, id)
+}
+
 func (userService *userService) ValidateUserRegistrationDetails(
 	username string, email string, password string, confirmPassword string) {
 	var registrationError exceptions.UserRegistrationError
@@ -202,7 +206,7 @@ func (userService *userService) ValidateUserOTP(email, otp string) uint {
 func (userService *userService) UpdateUser(userID uint, username string) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
-	user, userExist := userService.userRepository.FindByUserID(userService.db, userID)
+	user, userExist := userService.FindByUserID(userID)
 	if !userExist {
 		notFoundError.ErrorField = userService.constants.ErrorField.User
 		panic(notFoundError)
@@ -240,7 +244,7 @@ func (userService *userService) ResetPasswordService(userID uint, password, conf
 		panic(err)
 	}
 
-	user, _ := userService.userRepository.FindByUserID(userService.db, userID)
+	user, _ := userService.FindByUserID(userID)
 	userService.userRepository.UpdateUserPassword(userService.db, user, hashedPassword)
 }
 
@@ -438,7 +442,7 @@ func (userService *userService) GetCouncilorsList(promotedYear int) []dto.Counci
 		if councilor.ProfilePath != "" {
 			profile = userService.awsS3Service.GetPresignedURL(enums.ProfilesBucket, councilor.ProfilePath, 8*time.Hour)
 		}
-		user, _ := userService.userRepository.FindByUserID(userService.db, councilor.UserID)
+		user, _ := userService.FindByUserID(councilor.UserID)
 		councilorsDetails[i] = dto.CouncilorsDetailsResponse{
 			ID:           councilor.ID,
 			FirstName:    councilor.FirstName,

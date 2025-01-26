@@ -288,11 +288,11 @@ func (repo *eventRepository) FindEventsByStatus(db *gorm.DB, allowedStatus []enu
 }
 
 func (repo *eventRepository) DeleteEvent(db *gorm.DB, eventID uint) error {
-	return db.Unscoped().Delete(&entities.Event{}, eventID).Error
+	return db.Delete(&entities.Event{}, eventID).Error
 }
 
 func (repo *eventRepository) DeleteTicket(db *gorm.DB, ticketID uint) error {
-	return db.Unscoped().Delete(&entities.Ticket{}, ticketID).Error
+	return db.Delete(&entities.Ticket{}, ticketID).Error
 }
 
 func (repo *eventRepository) DeleteDiscount(db *gorm.DB, discountID uint) error {
@@ -342,7 +342,7 @@ func (repo *eventRepository) FindOrdersEventID(db *gorm.DB, eventID uint) []*ent
 	return orders
 }
 
-func (repo *eventRepository) IsUserAttendingEvent(db *gorm.DB, eventID, userID uint) bool {
+func (repo *eventRepository) IsUserAttendingEvent(db *gorm.DB, userID, eventID uint) bool {
 	var count int64
 
 	err := db.Model(&entities.Order{}).

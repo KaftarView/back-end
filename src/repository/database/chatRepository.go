@@ -14,7 +14,7 @@ func NewChatRepository() *chatRepository {
 
 func (repo *chatRepository) GetRoomByID(db *gorm.DB, roomID uint) (*entities.ChatRoom, bool) {
 	var room entities.ChatRoom
-	result := db.First(&room, "id = ?", roomID).Preload("Admins")
+	result := db.Preload("Admins").First(&room, "id = ?", roomID)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

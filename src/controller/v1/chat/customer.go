@@ -2,8 +2,10 @@ package controller_v1_chat
 
 import (
 	application_interfaces "first-project/src/application/interfaces"
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
+	jwt_keys "first-project/src/jwtKeys"
 	"first-project/src/websocket"
 
 	"github.com/gin-gonic/gin"
@@ -12,17 +14,20 @@ import (
 type CustomerChatController struct {
 	constants   *bootstrap.Constants
 	chatService application_interfaces.ChatService
+	jwtService  *application_jwt.JWTToken
 	hub         *websocket.Hub
 }
 
 func NewCustomerChatController(
 	constants *bootstrap.Constants,
 	chatService application_interfaces.ChatService,
+	jwtService *application_jwt.JWTToken,
 	hub *websocket.Hub,
 ) *CustomerChatController {
 	return &CustomerChatController{
 		constants:   constants,
 		chatService: chatService,
+		jwtService:  jwtService,
 		hub:         hub,
 	}
 }
@@ -46,13 +51,15 @@ func (customerChatController *CustomerChatController) GetMessages(c *gin.Context
 
 func (customerChatController *CustomerChatController) HandleWebsocket(c *gin.Context) {
 	type roomConnectionParams struct {
-		RoomID uint `uri:"roomID" validate:"required"`
+		RoomID uint   `uri:"roomID" validate:"required"`
+		Token  string `uri:"token" validate:"required"`
 	}
 	param := controller.Validated[roomConnectionParams](c, &customerChatController.constants.Context)
-	userID, _ := c.Get(customerChatController.constants.Context.UserID)
+	jwt_keys.SetupJWTKeys(c, customerChatController.constants.Context.IsLoadedJWTKeys, customerChatController.constants.JWTKeysPath)
+	userID := customerChatController.jwtService.VerifyToken(param.Token)["sub"].(float64)
 	conn, _ := c.Get(customerChatController.constants.Context.WebsocketConnection)
 
-	client := websocket.NewClient(customerChatController.hub, conn, param.RoomID, userID.(uint), customerChatController.chatService)
+	client := websocket.NewClient(customerChatController.hub, conn, param.RoomID, uint(userID), customerChatController.chatService)
 
 	client.Hub.Register <- client
 

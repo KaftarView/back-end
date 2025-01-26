@@ -4,6 +4,7 @@ import (
 	"first-project/src/application"
 	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
+	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_chat "first-project/src/controller/v1/chat"
 	controller_v1_comment "first-project/src/controller/v1/comment"
@@ -35,21 +36,23 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
 	)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userRepository, db)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userRepository, db)
 	otpService := application.NewOTPService()
+	jwtService := application_jwt.NewJWTToken()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
+	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
+	commentService := application.NewCommentService(di.Constants, commentRepository, userService, db)
+	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userService, db)
 	chatService := application.NewChatService(di.Constants, userService, chatRepository, db)
 
 	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
 	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
 	customerPodcastController := controller_v1_podcast.NewCustomerPodcastController(di.Constants, podcastService)
 	customerUserController := controller_v1_user.NewCustomerUserController(di.Constants, userService)
-	customerChatController := controller_v1_chat.NewCustomerChatController(di.Constants, chatService, hub)
+	customerChatController := controller_v1_chat.NewCustomerChatController(di.Constants, chatService, jwtService, hub)
 
 	event := routerGroup.Group("/events/:eventID")
 	{
+		event.GET("/attendance", customerEventController.IsUserAttended)
 		event.GET("/tickets", customerEventController.GetAvailableEventTicketsList)
 		event.GET("/media", customerEventController.GetEventMedia)
 		event.POST("/reserve", customerEventController.ReserveTickets)

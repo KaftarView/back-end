@@ -22,7 +22,7 @@ type newsService struct {
 	categoryService   application_interfaces.CategoryService
 	commentRepository repository_database_interfaces.CommentRepository
 	newsRepository    repository_database_interfaces.NewsRepository
-	userRepository    repository_database_interfaces.UserRepository
+	userService       application_interfaces.UserService
 	db                *gorm.DB
 }
 
@@ -32,7 +32,7 @@ func NewNewsService(
 	categoryService application_interfaces.CategoryService,
 	commentRepository repository_database_interfaces.CommentRepository,
 	newsRepository repository_database_interfaces.NewsRepository,
-	userRepository repository_database_interfaces.UserRepository,
+	userService application_interfaces.UserService,
 	db *gorm.DB,
 ) *newsService {
 	return &newsService{
@@ -41,7 +41,7 @@ func NewNewsService(
 		categoryService:   categoryService,
 		commentRepository: commentRepository,
 		newsRepository:    newsRepository,
-		userRepository:    userRepository,
+		userService:       userService,
 		db:                db,
 	}
 }
@@ -188,7 +188,7 @@ func (newsService *newsService) GetNewsDetails(newsID uint) dto.NewsDetailsRespo
 		banner2URL = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.Banner2Path, 8*time.Hour)
 	}
 
-	author, _ := newsService.userRepository.FindByUserID(newsService.db, news.AuthorID)
+	author, _ := newsService.userService.FindByUserID(news.AuthorID)
 
 	categories := newsService.newsRepository.FindNewsCategoriesByNews(newsService.db, news)
 	categoryNames := make([]string, len(categories))
@@ -223,7 +223,7 @@ func (newsService *newsService) GetNewsList(page, pageSize int) []dto.NewsDetail
 			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 		}
 
-		author, _ := newsService.userRepository.FindByUserID(newsService.db, news.AuthorID)
+		author, _ := newsService.userService.FindByUserID(news.AuthorID)
 
 		categories := newsService.newsRepository.FindNewsCategoriesByNews(newsService.db, news)
 		categoryNames := make([]string, len(categories))
@@ -261,7 +261,7 @@ func (newsService *newsService) SearchNews(query string, page, pageSize int) []d
 			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 		}
 
-		author, _ := newsService.userRepository.FindByUserID(newsService.db, news.AuthorID)
+		author, _ := newsService.userService.FindByUserID(news.AuthorID)
 
 		categories := newsService.newsRepository.FindNewsCategoriesByNews(newsService.db, news)
 		categoryNames := make([]string, len(categories))
@@ -297,7 +297,7 @@ func (newsService *newsService) FilterNewsByCategory(categories []string, page, 
 		if news.BannerPath != "" {
 			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
 		}
-		author, _ := newsService.userRepository.FindByUserID(newsService.db, news.AuthorID)
+		author, _ := newsService.userService.FindByUserID(news.AuthorID)
 		categories := make([]string, len(news.Categories))
 		for i, category := range news.Categories {
 			categories[i] = category.Name
