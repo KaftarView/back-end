@@ -70,7 +70,7 @@ func (repo *newsRepository) DeleteNews(db *gorm.DB, newsID uint) error {
 
 func (repo *newsRepository) FindAllNews(db *gorm.DB, offset, pageSize int) ([]*entities.News, bool) {
 	var news []*entities.News
-	result := db.Offset(offset).Limit(pageSize).Find(&news)
+	result := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&news)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -89,6 +89,7 @@ func (repo *newsRepository) FindNewsByCategoryName(db *gorm.DB, categories []str
 		Joins("JOIN news_categories ON news.id = news_categories.news_id").
 		Joins("JOIN categories ON categories.id = news_categories.category_id").
 		Where("categories.name IN ?", categories).
+		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&news)
@@ -104,7 +105,7 @@ func (repo *newsRepository) FindNewsByCategoryName(db *gorm.DB, categories []str
 }
 
 func (repo *newsRepository) FindNewsCategoriesByNews(db *gorm.DB, news *entities.News) []entities.Category {
-	if err := db.Model(news).Association("Categories").Find(&news.Categories); err != nil {
+	if err := db.Model(news).Order("created_at DESC").Association("Categories").Find(&news.Categories); err != nil {
 		panic(err)
 	}
 	return news.Categories
@@ -118,6 +119,7 @@ func (repo *newsRepository) FullTextSearch(db *gorm.DB, query string, offset, pa
 
 	result := db.Model(&entities.News{}).
 		Where("MATCH(title, description, content, content2) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&news)

@@ -39,7 +39,7 @@ func (repo *journalRepository) FindJournalByName(db *gorm.DB, name string) (*ent
 
 func (repo *journalRepository) FindAllJournals(db *gorm.DB, offset, pageSize int) ([]*entities.Journal, bool) {
 	var journals []*entities.Journal
-	result := db.Offset(offset).Limit(pageSize).Find(&journals)
+	result := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&journals)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -70,6 +70,7 @@ func (repo *journalRepository) FullTextSearch(db *gorm.DB, query string, offset,
 
 	result := db.Model(&entities.Journal{}).
 		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&journals)

@@ -40,6 +40,7 @@ func (repo *podcastRepository) FindAllPodcasts(db *gorm.DB, offset, pageSize int
 	var podcasts []*entities.Podcast
 	result := db.
 		Preload("Subscribers").
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&podcasts)
@@ -158,7 +159,7 @@ func (repo *podcastRepository) FindPodcastEpisodeByName(db *gorm.DB, name string
 
 func (repo *podcastRepository) FindAllEpisodes(db *gorm.DB, offset, pageSize int) ([]*entities.Episode, bool) {
 	var podcasts []*entities.Episode
-	result := db.Offset(offset).Limit(pageSize).Find(&podcasts)
+	result := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&podcasts)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -189,6 +190,7 @@ func (repo *podcastRepository) FullTextSearch(db *gorm.DB, query string, offset,
 
 	result := db.Model(&entities.Podcast{}).
 		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&podcasts)
@@ -210,6 +212,7 @@ func (repo *podcastRepository) FindPodcastsByCategoryName(db *gorm.DB, categorie
 		Joins("JOIN podcast_categories ON podcasts.id = podcast_categories.podcast_id").
 		Joins("JOIN categories ON categories.id = podcast_categories.category_id").
 		Where("categories.name IN ?", categories).
+		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&podcasts)

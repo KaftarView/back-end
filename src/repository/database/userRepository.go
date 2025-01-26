@@ -311,7 +311,7 @@ func (repo *userRepository) FindCouncilorByUserIDAndPromotedYear(db *gorm.DB, us
 
 func (repo *userRepository) FindAllCouncilorsByPromotedYear(db *gorm.DB, promotedYear int) []*entities.Councilor {
 	var councilors []*entities.Councilor
-	result := db.Where("promoted_year  = ?", promotedYear).Find(&councilors)
+	result := db.Where("promoted_year  = ?", promotedYear).Order("created_at DESC").Find(&councilors)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil
