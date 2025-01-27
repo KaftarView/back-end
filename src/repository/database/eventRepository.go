@@ -81,6 +81,7 @@ func (repo *eventRepository) FindAvailableTicketsByEventID(db *gorm.DB, eventID 
 		IsAvailable: true,
 	}).Where("available_from <= ?", now).
 		Where("available_until >= ?", now).
+		Order("created_at DESC").
 		Find(&tickets)
 
 	if result.Error != nil {
@@ -94,7 +95,7 @@ func (repo *eventRepository) FindAvailableTicketsByEventID(db *gorm.DB, eventID 
 
 func (repo *eventRepository) FindAllTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool) {
 	var tickets []*entities.Ticket
-	result := db.Where(queryByEventID, eventID).Find(&tickets)
+	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Find(&tickets)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -107,7 +108,7 @@ func (repo *eventRepository) FindAllTicketsByEventID(db *gorm.DB, eventID uint) 
 
 func (repo *eventRepository) FindDiscountsByEventID(db *gorm.DB, eventID uint) ([]*entities.Discount, bool) {
 	var discounts []*entities.Discount
-	result := db.Where(queryByEventID, eventID).Find(&discounts)
+	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Order("created_at DESC").Find(&discounts)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -181,7 +182,7 @@ func (repo *eventRepository) FindEventMediaByName(db *gorm.DB, mediaName string,
 
 func (repo *eventRepository) FindAllEventMedia(db *gorm.DB, eventID uint) ([]*entities.Media, bool) {
 	var media []*entities.Media
-	result := db.Where(queryByEventID, eventID).Find(&media)
+	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Find(&media)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -194,7 +195,7 @@ func (repo *eventRepository) FindAllEventMedia(db *gorm.DB, eventID uint) ([]*en
 
 func (repo *eventRepository) FindAllEventOrganizers(db *gorm.DB, eventID uint) ([]*entities.Organizer, bool) {
 	var organizers []*entities.Organizer
-	result := db.Where(queryByEventID, eventID).Find(&organizers)
+	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Find(&organizers)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -277,7 +278,7 @@ func (repo *eventRepository) CreateOrganizer(db *gorm.DB, organizer *entities.Or
 
 func (repo *eventRepository) FindEventsByStatus(db *gorm.DB, allowedStatus []enums.EventStatus, offset, pageSize int) ([]*entities.Event, bool) {
 	var events []*entities.Event
-	result := db.Where(queryByStatusIn, allowedStatus).Offset(offset).Limit(pageSize).Find(&events)
+	result := db.Where(queryByStatusIn, allowedStatus).Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false
@@ -384,6 +385,7 @@ func (repo *eventRepository) FullTextSearch(db *gorm.DB, query string, allowedSt
 	result := db.Model(&entities.Event{}).
 		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
 		Where(queryByStatusIn, allowedStatus).
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&events)
@@ -406,6 +408,7 @@ func (repo *eventRepository) FindEventsByCategoryName(db *gorm.DB, categories []
 		Joins("JOIN categories ON categories.id = event_categories.category_id").
 		Where("categories.name IN ?", categories).
 		Where(queryByStatusIn, allowedStatus).
+		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&events)
