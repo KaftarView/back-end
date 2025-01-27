@@ -45,6 +45,10 @@ func getRoomDetails(room *entities.ChatRoom) dto.RoomDetailsResponse {
 		ID:     room.ID,
 		Tag:    room.Tag.String(),
 		Admins: admins,
+		Member: dto.UserDetailsResponse{
+			Name:  room.Member.Name,
+			Email: room.Member.Email,
+		},
 	}
 }
 
