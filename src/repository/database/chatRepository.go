@@ -49,7 +49,7 @@ func (repo *chatRepository) GetMessagesByRoomID(db *gorm.DB, roomID uint) []*ent
 	var messages []*entities.ChatMessage
 
 	result := db.Where("room_id = ?", roomID).
-		Order("created_at desc").
+		Order("created_at").
 		Preload("Sender").
 		Find(&messages)
 
