@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/websocket"
 )
 
 const errorFormatKey = "errors.%s"
@@ -28,9 +29,17 @@ func NewRecovery(constants *bootstrap.Context) *RecoveryMiddleware {
 func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 	defer func() {
 		if rec := recover(); rec != nil {
-			if err, ok := rec.(error); ok {
-				recovery.handleRecoveredError(c, err)
-				c.Abort()
+			if _, ok := c.Request.Header["Upgrade"]; ok {
+				if conn, ok := c.Get(recovery.constants.WebsocketConnection); ok {
+					if wsConn, valid := conn.(*websocket.Conn); valid {
+						wsConn.Close()
+					}
+				}
+			} else {
+				if err, ok := rec.(error); ok {
+					recovery.handleRecoveredError(c, err)
+					c.Abort()
+				}
 			}
 		}
 	}()
