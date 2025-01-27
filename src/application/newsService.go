@@ -295,7 +295,7 @@ func (newsService *newsService) FilterNewsByCategory(categories []string, page, 
 	for i, news := range newsList {
 		banner := ""
 		if news.BannerPath != "" {
-			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 8*time.Hour)
+			banner = newsService.awsS3Service.GetPresignedURL(enums.NewsBucket, news.BannerPath, 30*time.Minute)
 		}
 		author, _ := newsService.userService.FindByUserID(news.AuthorID)
 		categories := make([]string, len(news.Categories))
