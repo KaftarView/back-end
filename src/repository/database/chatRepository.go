@@ -30,6 +30,7 @@ func (repo *chatRepository) GetRoomByUserID(db *gorm.DB, userID uint) []*entitie
 	result := db.Joins("LEFT JOIN chat_room_admins ON chat_room_admins.chat_room_id = chat_rooms.id").
 		Where("chat_rooms.member_id = ? OR chat_room_admins.user_id = ?", userID, userID).
 		Preload("Admins").
+		Preload("Member").
 		Distinct().
 		Find(&rooms)
 	if result.Error != nil {
