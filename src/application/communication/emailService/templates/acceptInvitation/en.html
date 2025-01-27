@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+        }
+        .footer {
+            background-color: #f1f1f1;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to the Event Organizer Team!</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{.Name}},</p>
+            <p>We are thrilled to welcome you to our event organizer community for event {{.EventName}}. Together, we will create memorable events and unforgettable experiences.</p>
+            <p>If you have any questions or need assistance, feel free to contact us at any time.</p>
+            <p>Looking forward to a fantastic journey together!</p>
+            <p>Best regards,</p>
+            <p>The Team</p>
+        </div>
+        <div class="footer">
+            &copy; 2024 Event Organizer Team. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

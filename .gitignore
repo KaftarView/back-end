@@ -1,3 +1,4 @@
 .env
 first\-project
 first\-project.exe
+*.pem

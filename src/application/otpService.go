@@ -2,30 +2,23 @@ package application
 
 import (
 	"crypto/rand"
-	"first-project/src/bootstrap"
+	"first-project/src/entities"
 	"first-project/src/exceptions"
-	"first-project/src/repository"
 	"io"
 	"time"
 )
 
-type OTPService struct {
-	constants      *bootstrap.Constants
-	userRepository *repository.UserRepository
-}
+type OTPService struct{}
 
-func NewOTPService(constants *bootstrap.Constants, userRepository *repository.UserRepository) *OTPService {
-	return &OTPService{
-		constants:      constants,
-		userRepository: userRepository,
-	}
+func NewOTPService() *OTPService {
+	return &OTPService{}
 }
 
 const otpLength = 6
 
 var table = []byte("123456789")
 
-func GenerateOTP() string {
+func (o *OTPService) GenerateOTP() string {
 	otp := make([]byte, otpLength)
 	n, err := io.ReadAtLeast(rand.Reader, otp, otpLength)
 	if n != otpLength {
@@ -37,20 +30,20 @@ func GenerateOTP() string {
 	return string(otp)
 }
 
-func (otpService *OTPService) VerifyOTP(inputOTP string, email string) {
+func (o *OTPService) VerifyOTP(
+	user *entities.User, inputOTP, otpFieldError, expiredTokenTagError, invalidTokenTagError string) {
 	var registrationError exceptions.UserRegistrationError
-	otp, lastSentOtp := otpService.userRepository.GetOTPByEmail(email)
 
-	if time.Since(lastSentOtp) > 5*time.Minute {
+	if time.Since(user.UpdatedAt) > 2*time.Minute {
 		registrationError.AppendError(
-			otpService.constants.ErrorField.OTP,
-			otpService.constants.ErrorTag.OTPExpired)
+			otpFieldError,
+			expiredTokenTagError)
 		panic(registrationError)
 	}
-	if inputOTP != otp {
+	if inputOTP != user.Token {
 		registrationError.AppendError(
-			otpService.constants.ErrorField.OTP,
-			otpService.constants.ErrorTag.InvalidOTP)
+			otpFieldError,
+			invalidTokenTagError)
 		panic(registrationError)
 	}
 }

@@ -1,0 +1,7 @@
+.vscode
+.dockerignore
+.env.example
+.gitignore
+docker-compose.yaml
+Readme.md
+todo.md

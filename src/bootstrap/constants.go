@@ -5,23 +5,49 @@ import (
 )
 
 type Constants struct {
-	Context    Context
-	ErrorField ErrorField
-	ErrorTag   ErrorTag
-	Redis      Redis
+	Context     Context
+	ErrorField  ErrorField
+	ErrorTag    ErrorTag
+	Redis       Redis
+	S3Service   S3Service
+	JWTKeysPath string
 }
 
 type Context struct {
-	Translator                    string
-	IsLoadedValidationTranslator  string
-	IsLoadedCustomValidationError string
+	Translator                   string
+	IsLoadedValidationTranslator string
+	IsLoadedJWTKeys              string
+	AccessToken                  string
+	RefreshToken                 string
+	UserID                       string
+	WebsocketConnection          string
 }
 
 type ErrorField struct {
-	Username string
-	Password string
-	Email    string
-	OTP      string
+	Username    string
+	Password    string
+	Email       string
+	OTP         string
+	Tittle      string
+	Role        string
+	Permission  string
+	Location    string
+	Event       string
+	Ticket      string
+	Discount    string
+	EventStatus string
+	Media       string
+	Organizer   string
+	Token       string
+	User        string
+	Post        string
+	Comment     string
+	Podcast     string
+	Episode     string
+	News        string
+	Journal     string
+	Reservation string
+	Room        string
 }
 
 type ErrorTag struct {
@@ -32,45 +58,129 @@ type ErrorTag struct {
 	ContainsNumber          string
 	ContainsSpecialChar     string
 	NotMatchConfirmPAssword string
-	InvalidToken            string
 	AlreadyVerified         string
-	OTPExpired              string
-	InvalidOTP              string
+	ExpiredToken            string
+	InvalidToken            string
+	LoginFailed             string
+	EmailNotExist           string
+	Required                string
+	LocationAlreadyTaken    string
+	AlreadySubscribed       string
+	NotSubscribe            string
+	NotAvailable            string
+	PurchaseFailed          string
+	AlreadyPurchased        string
 }
 
 type Redis struct {
 }
 
+type S3Service struct {
+}
+
 func NewConstants() *Constants {
 	return &Constants{
 		Context: Context{
-			Translator:                    "translator",
-			IsLoadedValidationTranslator:  "isLoadedValidationTranslator",
-			IsLoadedCustomValidationError: "isLoadedCustomValidationError",
+			Translator:                   "translator",
+			IsLoadedValidationTranslator: "isLoadedValidationTranslator",
+			IsLoadedJWTKeys:              "isLoadedJWTKeys",
+			AccessToken:                  "access_token",
+			RefreshToken:                 "refresh_token",
+			UserID:                       "userID",
+			WebsocketConnection:          "wsConnection",
 		},
 		ErrorField: ErrorField{
-			Username: "username",
-			Password: "password",
-			Email:    "email",
-			OTP:      "OTP",
+			Username:    "username",
+			Password:    "password",
+			Email:       "email",
+			OTP:         "OTP",
+			Tittle:      "tittle",
+			Role:        "role",
+			Permission:  "permission",
+			Location:    "location",
+			Event:       "event",
+			Ticket:      "ticket",
+			Discount:    "discount",
+			EventStatus: "event status",
+			Media:       "media",
+			Organizer:   "organizer",
+			Token:       "token",
+			User:        "user",
+			Post:        "post",
+			Comment:     "comment",
+			Podcast:     "podcast",
+			Episode:     "episode",
+			News:        "news",
+			Journal:     "journal",
+			Reservation: "reservation",
+			Room:        "room",
 		},
 		ErrorTag: ErrorTag{
 			AlreadyExist:            "alreadyExist",
-			ContainsLowercase:       "containsLowercase",
 			MinimumLength:           "minimumLength",
+			ContainsLowercase:       "containsLowercase",
 			ContainsUppercase:       "containsUppercase",
 			ContainsNumber:          "containsNumber",
 			ContainsSpecialChar:     "containsSpecialChar",
 			NotMatchConfirmPAssword: "notMatchConfirmPAssword",
-			InvalidToken:            "invalidToken",
 			AlreadyVerified:         "alreadyVerified",
-			OTPExpired:              "expiredOTP",
-			InvalidOTP:              "invalidOTP",
+			ExpiredToken:            "expiredToken",
+			InvalidToken:            "invalidToken",
+			LoginFailed:             "loginFailed",
+			EmailNotExist:           "emailNotExist",
+			Required:                "required",
+			LocationAlreadyTaken:    "locationAlreadyTaken",
+			AlreadySubscribed:       "alreadySubscribed",
+			NotSubscribe:            "notSubscribed",
+			NotAvailable:            "notAvailable",
+			PurchaseFailed:          "purchaseFailed",
+			AlreadyPurchased:        "alreadyPurchased",
 		},
-		Redis: Redis{},
+		Redis:       Redis{},
+		JWTKeysPath: "./src/jwtKeys",
 	}
 }
 
 func (r *Redis) GetUserID(userID int) string {
 	return fmt.Sprintf("user:%d", userID)
+}
+
+func (s *S3Service) GetEventBannerKey(eventID uint, bannerFilename string) string {
+	return fmt.Sprintf("events/%d/banner/%s", eventID, bannerFilename)
+}
+
+func (s *S3Service) GetEventSessionKey(eventID, sessionID uint, sessionFilename string) string {
+	return fmt.Sprintf("events/%d/sessions/%d/%s", eventID, sessionID, sessionFilename)
+}
+
+func (s *S3Service) GetPodcastBannerKey(podcastID uint, bannerFilename string) string {
+	return fmt.Sprintf("podcasts/%d/banner/%s", podcastID, bannerFilename)
+}
+
+func (s *S3Service) GetPodcastEpisodeBannerKey(podcastID, episodeID uint, bannerFileName string) string {
+	return fmt.Sprintf("podcasts/%d/episodes/%d/banner/%s", podcastID, episodeID, bannerFileName)
+}
+
+func (s *S3Service) GetPodcastEpisodeKey(podcastID, episodeID uint, filename string) string {
+	return fmt.Sprintf("podcasts/%d/episodes/%d/content/%s", podcastID, episodeID, filename)
+}
+
+func (s *S3Service) GetNewsBannerKey(newsID uint, bannerFilename string) string {
+	return fmt.Sprintf("news/%d/banners/%s", newsID, bannerFilename)
+}
+
+func (s *S3Service) GetJournalBannerKey(journalID uint, bannerFilename string) string {
+	return fmt.Sprintf("journals/%d/banner/%s", journalID, bannerFilename)
+}
+
+func (s *S3Service) GetJournalFileKey(journalID uint, pdfFilename string) string {
+	return fmt.Sprintf("journals/%d/content/%s", journalID, pdfFilename)
+}
+
+func (s *S3Service) GetOrganizerProfileKey(organizerID uint, profileName string) string {
+	return fmt.Sprintf("organizers/%d/profile/%s", organizerID, profileName)
+}
+
+func (s *S3Service) GetCouncilorProfileKey(councilorID uint, profileName string) string {
+	return fmt.Sprintf("councilors/%d/profile/%s", councilorID, profileName)
 }

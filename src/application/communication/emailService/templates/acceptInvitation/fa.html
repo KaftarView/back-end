@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ایمیل خوش آمدگویی</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+            direction: rtl;
+            text-align: right;
+        }
+        .footer {
+            background-color: #f1f1f1;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Persian Section -->
+        <div class="header">
+            <h1>به تیم برگزارکنندگان رویداد خوش آمدید!</h1>
+        </div>
+        <div class="content">
+            <p>دوست عزیز {{.Name}},</p>
+            <p>ما از حضور شما در جامعه برگزارکنندگان رویداد {{.EventName}} بسیار خوشحالیم. با هم رویدادهای به‌یادماندنی و تجربه‌های فراموش‌نشدنی خلق خواهیم کرد.</p>
+            <p>اگر سوالی دارید یا نیاز به راهنمایی دارید، لطفاً در هر زمان با ما تماس بگیرید.</p>
+            <p>مشتاقانه منتظر یک سفر فوق‌العاده با شما هستیم!</p>
+            <p>با احترام،</p>
+            <p>تیم</p>
+        </div>
+        <div class="footer">
+            &copy; 2024 تیم برگزارکنندگان رویداد. تمامی حقوق محفوظ است.
+        </div>
+    </div>
+</body>
+</html>
