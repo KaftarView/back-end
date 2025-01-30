@@ -7,16 +7,12 @@ import (
 )
 
 type Env struct {
-	PRIMARY_DB     Database
-	PrimaryRedis   RedisDB
-	EventsBucket   Bucket
-	PodcastsBucket Bucket
-	NewsBucket     Bucket
-	JournalsBucket Bucket
-	ProfilesBucket Bucket
-	Applications   AppInfo
-	Email          EmailInfo
-	SuperAdmin     AdminCredentials
+	PRIMARY_DB   Database
+	PrimaryRedis RedisDB
+	Storage      S3
+	Applications AppInfo
+	Email        EmailInfo
+	SuperAdmin   AdminCredentials
 }
 
 type Database struct {
@@ -34,12 +30,20 @@ type RedisDB struct {
 	DB       string
 }
 
-type Bucket struct {
-	Name      string
+type S3 struct {
+	Buckets   BucketName
 	Region    string
 	AccessKey string
 	SecretKey string
 	Endpoint  string
+}
+
+type BucketName struct {
+	EventsBucket   string
+	PodcastsBucket string
+	JournalsBucket string
+	ProfilesBucket string
+	NewsBucket     string
 }
 
 type AppInfo struct {
@@ -77,40 +81,18 @@ func NewEnvironments() *Env {
 			Password: os.Getenv("REDIS_PASSWORD"),
 			DB:       os.Getenv("REDIS_DB"),
 		},
-		EventsBucket: Bucket{
-			Name:      os.Getenv("EVENTS_BUCKET_NAME"),
+		Storage: S3{
+			Buckets: BucketName{
+				EventsBucket:   os.Getenv("EVENTS_BUCKET_NAME"),
+				PodcastsBucket: os.Getenv("PODCASTS_BUCKET_NAME"),
+				JournalsBucket: os.Getenv("JOURNALS_BUCKET_NAME"),
+				ProfilesBucket: os.Getenv("PROFILES_BUCKET_NAME"),
+				NewsBucket:     os.Getenv("NEWS_BUCKET_NAME"),
+			},
 			Region:    os.Getenv("EVENTS_BUCKET_REGION"),
 			AccessKey: os.Getenv("EVENTS_BUCKET_ACCESS_key"),
 			SecretKey: os.Getenv("EVENTS_BUCKET_SECRET_key"),
 			Endpoint:  os.Getenv("EVENTS_BUCKET_ENDPOINT"),
-		},
-		PodcastsBucket: Bucket{
-			Name:      os.Getenv("PODCASTS_BUCKET_NAME"),
-			Region:    os.Getenv("PODCASTS_BUCKET_REGION"),
-			AccessKey: os.Getenv("PODCASTS_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("PODCASTS_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("PODCASTS_BUCKET_ENDPOINT"),
-		},
-		NewsBucket: Bucket{
-			Name:      os.Getenv("NEWS_BUCKET_NAME"),
-			Region:    os.Getenv("NEWS_BUCKET_REGION"),
-			AccessKey: os.Getenv("NEWS_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("NEWS_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("NEWS_BUCKET_ENDPOINT"),
-		},
-		JournalsBucket: Bucket{
-			Name:      os.Getenv("JOURNALS_BUCKET_NAME"),
-			Region:    os.Getenv("JOURNALS_BUCKET_REGION"),
-			AccessKey: os.Getenv("JOURNALS_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("JOURNALS_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("JOURNALS_BUCKET_ENDPOINT"),
-		},
-		ProfilesBucket: Bucket{
-			Name:      os.Getenv("PROFILES_BUCKET_NAME"),
-			Region:    os.Getenv("PROFILES_BUCKET_REGION"),
-			AccessKey: os.Getenv("PROFILES_BUCKET_ACCESS_key"),
-			SecretKey: os.Getenv("PROFILES_BUCKET_SECRET_key"),
-			Endpoint:  os.Getenv("PROFILES_BUCKET_ENDPOINT"),
 		},
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),

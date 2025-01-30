@@ -21,7 +21,7 @@ import (
 func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
 	localizationMiddleware := middleware_i18n.NewLocalization(&di.Constants.Context)
 	recoveryMiddleware := middleware_exceptions.NewRecovery(&di.Constants.Context)
-	rateLimitMiddleware := middleware_rate_limit.NewRateLimit(5, 10)
+	rateLimitMiddleware := middleware_rate_limit.NewRateLimit()
 
 	ginEngine.Use(localizationMiddleware.Localization)
 	ginEngine.Use(recoveryMiddleware.Recovery)

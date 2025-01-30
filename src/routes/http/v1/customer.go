@@ -24,17 +24,13 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	userRepository := repository_database.NewUserRepository()
 	categoryRepository := repository_database.NewCategoryRepository()
 	eventRepository := repository_database.NewEventRepository()
-	commentRepository := repository_database.NewCommentRepository(db)
+	commentRepository := repository_database.NewCommentRepository()
 	podcastRepository := repository_database.NewPodcastRepository()
 	purchaseRepository := repository_database.NewPurchaseRepository()
 	chatRepository := repository_database.NewChatRepository()
 
 	emailService := application_communication.NewEmailService(&di.Env.Email)
-	awsService := application_aws.NewS3Service(
-		di.Constants, &di.Env.EventsBucket,
-		&di.Env.PodcastsBucket, &di.Env.NewsBucket,
-		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
-	)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.Storage)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
 	otpService := application.NewOTPService()
 	jwtService := application_jwt.NewJWTToken()

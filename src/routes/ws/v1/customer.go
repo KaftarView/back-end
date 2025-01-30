@@ -18,11 +18,7 @@ func SetupCustomerRoutes(ws *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb
 	chatRepository := repository_database.NewChatRepository()
 	userRepository := repository_database.NewUserRepository()
 
-	awsService := application_aws.NewS3Service(
-		di.Constants, &di.Env.EventsBucket,
-		&di.Env.PodcastsBucket, &di.Env.NewsBucket,
-		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
-	)
+	awsService := application_aws.NewS3Service(di.Constants, &di.Env.Storage)
 	otpService := application.NewOTPService()
 	jwtService := application_jwt.NewJWTToken()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)

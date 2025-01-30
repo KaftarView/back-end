@@ -12,10 +12,10 @@ type RateLimitMiddleware struct {
 	burst int
 }
 
-func NewRateLimit(limit rate.Limit, burst int) *RateLimitMiddleware {
+func NewRateLimit() *RateLimitMiddleware {
 	return &RateLimitMiddleware{
-		limit: limit,
-		burst: burst,
+		limit: 5,
+		burst: 10,
 	}
 }
 

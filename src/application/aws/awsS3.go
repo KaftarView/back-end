@@ -18,30 +18,26 @@ import (
 
 type S3service struct {
 	constants *bootstrap.Constants
-	buckets   map[enums.BucketType]*bootstrap.Bucket
-	clients   map[enums.BucketType]*s3.S3
-	uploader  map[enums.BucketType]*s3manager.Uploader
+	storage   *bootstrap.S3
+	clients   *s3.S3
+	uploader  *s3manager.Uploader
+	buckets   map[enums.BucketType]string
 }
 
 func NewS3Service(
 	constants *bootstrap.Constants,
-	eventsBucket *bootstrap.Bucket,
-	podcastsBucket *bootstrap.Bucket,
-	newsBucket *bootstrap.Bucket,
-	journalsBucket *bootstrap.Bucket,
-	profilesBucket *bootstrap.Bucket,
+	storage *bootstrap.S3,
 ) *S3service {
-	buckets := make(map[enums.BucketType]*bootstrap.Bucket)
-	buckets[enums.EventsBucket] = eventsBucket
-	buckets[enums.PodcastsBucket] = podcastsBucket
-	buckets[enums.NewsBucket] = newsBucket
-	buckets[enums.JournalsBucket] = journalsBucket
-	buckets[enums.ProfilesBucket] = profilesBucket
+	buckets := make(map[enums.BucketType]string)
+	buckets[enums.EventsBucket] = storage.Buckets.EventsBucket
+	buckets[enums.PodcastsBucket] = storage.Buckets.PodcastsBucket
+	buckets[enums.NewsBucket] = storage.Buckets.NewsBucket
+	buckets[enums.JournalsBucket] = storage.Buckets.JournalsBucket
+	buckets[enums.ProfilesBucket] = storage.Buckets.ProfilesBucket
 	return &S3service{
 		constants: constants,
+		storage:   storage,
 		buckets:   buckets,
-		clients:   make(map[enums.BucketType]*s3.S3),
-		uploader:  make(map[enums.BucketType]*s3manager.Uploader),
 	}
 }
 
@@ -50,21 +46,21 @@ func (s3Service *S3service) setS3Client(bucketType enums.BucketType) {
 	if !slices.Contains(bucketTypes, bucketType) {
 		panic(fmt.Errorf("bucket not exist"))
 	}
-	if s3Service.uploader[bucketType] != nil && s3Service.clients[bucketType] != nil {
+	if s3Service.uploader != nil && s3Service.clients != nil {
 		return
 	}
 	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3Service.buckets[bucketType].AccessKey, s3Service.buckets[bucketType].SecretKey, ""),
-		Region:      aws.String(s3Service.buckets[bucketType].Region),
-		Endpoint:    aws.String(s3Service.buckets[bucketType].Endpoint),
+		Credentials: credentials.NewStaticCredentials(s3Service.storage.AccessKey, s3Service.storage.SecretKey, ""),
+		Region:      aws.String(s3Service.storage.Region),
+		Endpoint:    aws.String(s3Service.storage.Endpoint),
 	})
 
 	if err != nil {
 		panic(fmt.Errorf("unable to create AWS session, %w", err))
 	}
 
-	s3Service.uploader[bucketType] = s3manager.NewUploader(sess)
-	s3Service.clients[bucketType] = s3.New(sess)
+	s3Service.uploader = s3manager.NewUploader(sess)
+	s3Service.clients = s3.New(sess)
 }
 
 func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string, file *multipart.FileHeader) {
@@ -77,37 +73,37 @@ func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string
 	}
 	defer fileReader.Close()
 
-	_, err = s3Service.clients[bucketType].HeadBucket(&s3.HeadBucketInput{
-		Bucket: aws.String(bucket.Name),
+	_, err = s3Service.clients.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(bucket),
 	})
 
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok && (aerr.Code() == s3.ErrCodeNoSuchBucket || aerr.Code() == "NotFound") {
-			_, err = s3Service.clients[bucketType].CreateBucket(&s3.CreateBucketInput{
-				Bucket: aws.String(bucket.Name),
+			_, err = s3Service.clients.CreateBucket(&s3.CreateBucketInput{
+				Bucket: aws.String(bucket),
 			})
 			if err != nil {
-				panic(fmt.Errorf("unable to create bucket %q, %w", bucket.Name, err))
+				panic(fmt.Errorf("unable to create bucket %q, %w", bucket, err))
 			}
 
-			err = s3Service.clients[bucketType].WaitUntilBucketExists(&s3.HeadBucketInput{
-				Bucket: aws.String(bucket.Name),
+			err = s3Service.clients.WaitUntilBucketExists(&s3.HeadBucketInput{
+				Bucket: aws.String(bucket),
 			})
 			if err != nil {
-				panic(fmt.Errorf("unable to confirm bucket %q exists, %w", bucket.Name, err))
+				panic(fmt.Errorf("unable to confirm bucket %q exists, %w", bucket, err))
 			}
 		} else {
-			panic(fmt.Errorf("unable to check bucket %q, %w", bucket.Name, err))
+			panic(fmt.Errorf("unable to check bucket %q, %w", bucket, err))
 		}
 	}
 
-	_, err = s3Service.uploader[bucketType].Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket.Name),
+	_, err = s3Service.uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 		Body:   fileReader,
 	})
 	if err != nil {
-		panic(fmt.Errorf("unable to upload %q to %q, %w", file.Filename, bucket.Name, err))
+		panic(fmt.Errorf("unable to upload %q to %q, %w", file.Filename, bucket, err))
 	}
 }
 
@@ -115,16 +111,16 @@ func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 
-	_, err := s3Service.clients[bucketType].DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(bucket.Name),
+	_, err := s3Service.clients.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return fmt.Errorf("unable to upload %q to %q, %w", key, bucket.Name, err)
+		return fmt.Errorf("unable to upload %q to %q, %w", key, bucket, err)
 	}
 
-	err = s3Service.clients[bucketType].WaitUntilObjectNotExists(&s3.HeadObjectInput{
-		Bucket: aws.String(bucket.Name),
+	err = s3Service.clients.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
@@ -137,8 +133,8 @@ func (s3Service *S3service) GetPresignedURL(bucketType enums.BucketType, objectK
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 
-	req, _ := s3Service.clients[bucketType].GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucket.Name),
+	req, _ := s3Service.clients.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
 	})
 

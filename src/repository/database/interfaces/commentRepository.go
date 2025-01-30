@@ -7,11 +7,11 @@ import (
 )
 
 type CommentRepository interface {
-	CreateNewComment(authorID uint, commentableID uint, content string) *entities.Comment
+	CreateNewComment(db *gorm.DB, authorID uint, commentableID uint, content string) *entities.Comment
 	CreateNewCommentable(db *gorm.DB) *entities.Commentable
-	DeleteCommentContent(comment *entities.Comment)
-	FindCommentByID(commentID uint) (*entities.Comment, bool)
-	FindCommentableByID(commentableID uint) (*entities.Commentable, bool)
-	GetCommentsByEventID(eventID uint) []*entities.Comment
-	UpdateCommentContent(comment *entities.Comment, newContent string)
+	DeleteCommentContent(db *gorm.DB, comment *entities.Comment)
+	FindCommentByID(db *gorm.DB, commentID uint) (*entities.Comment, bool)
+	FindCommentableByID(db *gorm.DB, commentableID uint) (*entities.Commentable, bool)
+	GetCommentsByEventID(db *gorm.DB, eventID uint) []*entities.Comment
+	UpdateCommentContent(db *gorm.DB, comment *entities.Comment, newContent string)
 }
