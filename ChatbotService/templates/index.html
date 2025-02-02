@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gRPC Chat</title>
+</head>
+<body>
+    <h1>gRPC Chat</h1>
+    <form method="post">
+        <label for="message">Your Message:</label>
+        <input type="text" id="message" name="message" required>
+        <button type="submit">Send</button>
+    </form>
+    {% if user_message %}
+        <h2>Your Message:</h2>
+        <p>{{ user_message }}</p>
+        <h2>Bot Reply:</h2>
+        <p>{{ bot_reply }}</p>
+    {% endif %}
+</body>
+</html>
