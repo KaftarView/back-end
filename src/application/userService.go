@@ -1,7 +1,7 @@
 package application
 
 import (
-	application_aws "first-project/src/application/aws"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
 	"first-project/src/entities"
@@ -20,16 +20,16 @@ import (
 type UserService struct {
 	constants      *bootstrap.Constants
 	userRepository repository_database_interfaces.UserRepository
-	otpService     *OTPService
-	awsS3Service   *application_aws.S3Service
+	otpService     application_interfaces.OTPService
+	awsS3Service   application_interfaces.S3Service
 	db             *gorm.DB
 }
 
 func NewUserService(
 	constants *bootstrap.Constants,
 	userRepository repository_database_interfaces.UserRepository,
-	otpService *OTPService,
-	awsS3Service *application_aws.S3Service,
+	otpService application_interfaces.OTPService,
+	awsS3Service application_interfaces.S3Service,
 	db *gorm.DB,
 ) *UserService {
 	return &UserService{

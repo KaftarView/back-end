@@ -6,9 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_category "first-project/src/controller/v1/category"
 	controller_v1_comment "first-project/src/controller/v1/comment"
@@ -33,10 +31,10 @@ func SetupGeneralRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm
 	purchaseRepository := repository_database.NewPurchaseRepository()
 	userCache := repository_cache.NewUserCache(db, di.Constants, rdb, userRepository)
 
-	jwtService := application_jwt.NewJWTToken()
+	jwtService := application.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	otpService := application.NewOTPService()
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.Storage)
+	awsService := application.NewS3Service(di.Constants, &di.Env.Storage)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)

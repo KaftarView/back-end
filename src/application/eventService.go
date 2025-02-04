@@ -1,7 +1,6 @@
 package application
 
 import (
-	application_aws "first-project/src/application/aws"
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
@@ -19,7 +18,7 @@ import (
 
 type EventService struct {
 	constants          *bootstrap.Constants
-	awsS3Service       *application_aws.S3Service
+	awsS3Service       application_interfaces.S3Service
 	categoryService    application_interfaces.CategoryService
 	eventRepository    repository_database_interfaces.EventRepository
 	commentRepository  repository_database_interfaces.CommentRepository
@@ -29,7 +28,7 @@ type EventService struct {
 
 func NewEventService(
 	constants *bootstrap.Constants,
-	awsService *application_aws.S3Service,
+	awsService application_interfaces.S3Service,
 	categoryService application_interfaces.CategoryService,
 	eventRepository repository_database_interfaces.EventRepository,
 	commentRepository repository_database_interfaces.CommentRepository,

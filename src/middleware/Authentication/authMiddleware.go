@@ -1,7 +1,7 @@
 package middleware_authentication
 
 import (
-	application_jwt "first-project/src/application/jwt"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
 	"first-project/src/enums"
@@ -17,14 +17,14 @@ import (
 type AuthMiddleware struct {
 	constants      *bootstrap.Constants
 	userRepository repository_database_interfaces.UserRepository
-	jwtService     *application_jwt.JWTToken
+	jwtService     application_interfaces.JWTToken
 	db             *gorm.DB
 }
 
 func NewAuthMiddleware(
 	constants *bootstrap.Constants,
 	userRepository repository_database_interfaces.UserRepository,
-	jwtService *application_jwt.JWTToken,
+	jwtService application_interfaces.JWTToken,
 	db *gorm.DB,
 ) *AuthMiddleware {
 	return &AuthMiddleware{

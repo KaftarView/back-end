@@ -2,8 +2,6 @@ package routes_websocket_v1
 
 import (
 	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_chat "first-project/src/controller/v1/chat"
 	repository_database "first-project/src/repository/database"
@@ -18,9 +16,9 @@ func SetupCustomerRoutes(ws *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb
 	chatRepository := repository_database.NewChatRepository()
 	userRepository := repository_database.NewUserRepository()
 
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.Storage)
+	awsService := application.NewS3Service(di.Constants, &di.Env.Storage)
 	otpService := application.NewOTPService()
-	jwtService := application_jwt.NewJWTToken()
+	jwtService := application.NewJWTToken()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
 	chatService := application.NewChatService(di.Constants, userService, chatRepository, db)
 

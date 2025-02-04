@@ -1,4 +1,4 @@
-package application_aws
+package application
 
 import (
 	"first-project/src/bootstrap"

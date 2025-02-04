@@ -2,9 +2,7 @@ package routes_http_v1
 
 import (
 	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_comment "first-project/src/controller/v1/comment"
 	controller_v1_event "first-project/src/controller/v1/event"
@@ -31,10 +29,10 @@ func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.D
 	journalRepository := repository_database.NewJournalRepository()
 	purchaseRepository := repository_database.NewPurchaseRepository()
 
-	jwtService := application_jwt.NewJWTToken()
+	jwtService := application.NewJWTToken()
 	emailService := application_communication.NewEmailService(&di.Env.Email)
 	otpService := application.NewOTPService()
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.Storage)
+	awsService := application.NewS3Service(di.Constants, &di.Env.Storage)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)

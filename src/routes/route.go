@@ -1,7 +1,7 @@
 package routes
 
 import (
-	application_jwt "first-project/src/application/jwt"
+	"first-project/src/application"
 	"first-project/src/bootstrap"
 	middleware_authentication "first-project/src/middleware/Authentication"
 	middleware_exceptions "first-project/src/middleware/exceptions"
@@ -40,7 +40,7 @@ func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, r
 
 func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
 	userRepository := repository_database.NewUserRepository()
-	jwtService := application_jwt.NewJWTToken()
+	jwtService := application.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
 	wsMiddleware := middleware_websocket.NewWebsocketMiddleware(di.Constants)
 
@@ -55,7 +55,7 @@ func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, 
 
 func registerAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
 	userRepository := repository_database.NewUserRepository()
-	jwtService := application_jwt.NewJWTToken()
+	jwtService := application.NewJWTToken()
 	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
 
 	adminGroup := v1.Group("/admin")

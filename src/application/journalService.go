@@ -1,7 +1,6 @@
 package application
 
 import (
-	application_aws "first-project/src/application/aws"
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
@@ -18,7 +17,7 @@ import (
 
 type JournalService struct {
 	constants         *bootstrap.Constants
-	awsS3Service      *application_aws.S3Service
+	awsS3Service      application_interfaces.S3Service
 	userService       application_interfaces.UserService
 	journalRepository repository_database_interfaces.JournalRepository
 	db                *gorm.DB
@@ -26,7 +25,7 @@ type JournalService struct {
 
 func NewJournalService(
 	constants *bootstrap.Constants,
-	awsS3Service *application_aws.S3Service,
+	awsS3Service application_interfaces.S3Service,
 	userService application_interfaces.UserService,
 	journalRepository repository_database_interfaces.JournalRepository,
 	db *gorm.DB,

@@ -2,9 +2,7 @@ package routes_http_v1
 
 import (
 	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
 	application_communication "first-project/src/application/communication/emailService"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	controller_v1_chat "first-project/src/controller/v1/chat"
 	controller_v1_comment "first-project/src/controller/v1/comment"
@@ -30,10 +28,10 @@ func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gor
 	chatRepository := repository_database.NewChatRepository()
 
 	emailService := application_communication.NewEmailService(&di.Env.Email)
-	awsService := application_aws.NewS3Service(di.Constants, &di.Env.Storage)
+	awsService := application.NewS3Service(di.Constants, &di.Env.Storage)
 	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
 	otpService := application.NewOTPService()
-	jwtService := application_jwt.NewJWTToken()
+	jwtService := application.NewJWTToken()
 	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
 	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
 	commentService := application.NewCommentService(di.Constants, commentRepository, userService, db)
