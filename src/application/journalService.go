@@ -16,9 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type journalService struct {
+type JournalService struct {
 	constants         *bootstrap.Constants
-	awsS3Service      *application_aws.S3service
+	awsS3Service      *application_aws.S3Service
 	userService       application_interfaces.UserService
 	journalRepository repository_database_interfaces.JournalRepository
 	db                *gorm.DB
@@ -26,12 +26,12 @@ type journalService struct {
 
 func NewJournalService(
 	constants *bootstrap.Constants,
-	awsS3Service *application_aws.S3service,
+	awsS3Service *application_aws.S3Service,
 	userService application_interfaces.UserService,
 	journalRepository repository_database_interfaces.JournalRepository,
 	db *gorm.DB,
-) *journalService {
-	return &journalService{
+) *JournalService {
+	return &JournalService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		userService:       userService,
@@ -40,7 +40,7 @@ func NewJournalService(
 	}
 }
 
-func (journalService *journalService) fetchJournalByID(journalID uint) *entities.Journal {
+func (journalService *JournalService) fetchJournalByID(journalID uint) *entities.Journal {
 	var notFoundError exceptions.NotFoundError
 	journal, journalExist := journalService.journalRepository.FindJournalByID(journalService.db, journalID)
 	if !journalExist {
@@ -50,7 +50,7 @@ func (journalService *journalService) fetchJournalByID(journalID uint) *entities
 	return journal
 }
 
-func (journalService *journalService) validateUniqueJournalName(name string) {
+func (journalService *JournalService) validateUniqueJournalName(name string) {
 	var conflictError exceptions.ConflictError
 	_, journalExist := journalService.journalRepository.FindJournalByName(journalService.db, name)
 	if journalExist {
@@ -61,19 +61,19 @@ func (journalService *journalService) validateUniqueJournalName(name string) {
 	}
 }
 
-func (journalService *journalService) setJournalBannerPath(journal *entities.Journal, banner *multipart.FileHeader) {
+func (journalService *JournalService) setJournalBannerPath(journal *entities.Journal, banner *multipart.FileHeader) {
 	bannerPath := journalService.constants.S3Service.GetJournalBannerKey(journal.ID, banner.Filename)
 	journalService.awsS3Service.UploadObject(enums.JournalsBucket, bannerPath, banner)
 	journal.BannerPath = bannerPath
 }
 
-func (journalService *journalService) setJournalFilePath(journal *entities.Journal, file *multipart.FileHeader) {
+func (journalService *JournalService) setJournalFilePath(journal *entities.Journal, file *multipart.FileHeader) {
 	filePath := journalService.constants.S3Service.GetJournalFileKey(journal.ID, file.Filename)
 	journalService.awsS3Service.UploadObject(enums.JournalsBucket, filePath, file)
 	journal.JournalFilePath = filePath
 }
 
-func (journalService *journalService) GetJournalsList(page, pageSize int) []dto.JournalDetailsResponse {
+func (journalService *JournalService) GetJournalsList(page, pageSize int) []dto.JournalDetailsResponse {
 	offset := (page - 1) * pageSize
 	journalsList, _ := journalService.journalRepository.FindAllJournals(journalService.db, offset, pageSize)
 
@@ -102,7 +102,7 @@ func (journalService *journalService) GetJournalsList(page, pageSize int) []dto.
 	return journalsDetails
 }
 
-func (journalService *journalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
+func (journalService *JournalService) CreateJournal(name, description string, banner, journalFile *multipart.FileHeader, authorID uint) *entities.Journal {
 	journalService.validateUniqueJournalName(name)
 
 	journal := &entities.Journal{
@@ -131,7 +131,7 @@ func (journalService *journalService) CreateJournal(name, description string, ba
 	return journal
 }
 
-func (journalService *journalService) UpdateJournal(journalID uint, name, description *string, banner, journalFile *multipart.FileHeader) {
+func (journalService *JournalService) UpdateJournal(journalID uint, name, description *string, banner, journalFile *multipart.FileHeader) {
 	journal := journalService.fetchJournalByID(journalID)
 
 	err := repository_database.ExecuteInTransaction(journalService.db, func(tx *gorm.DB) error {
@@ -165,7 +165,7 @@ func (journalService *journalService) UpdateJournal(journalID uint, name, descri
 	}
 }
 
-func (journalService *journalService) DeleteJournal(journalID uint) {
+func (journalService *JournalService) DeleteJournal(journalID uint) {
 	journal := journalService.fetchJournalByID(journalID)
 
 	if err := journalService.journalRepository.DeleteJournal(journalService.db, journalID); err != nil {
@@ -179,7 +179,7 @@ func (journalService *journalService) DeleteJournal(journalID uint) {
 	}
 }
 
-func (journalService *journalService) SearchJournals(query string, page, pageSize int) []dto.JournalDetailsResponse {
+func (journalService *JournalService) SearchJournals(query string, page, pageSize int) []dto.JournalDetailsResponse {
 	var journalsList []*entities.Journal
 	offset := (page - 1) * pageSize
 	if query != "" {

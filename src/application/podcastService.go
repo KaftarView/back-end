@@ -16,9 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type podcastService struct {
+type PodcastService struct {
 	constants         *bootstrap.Constants
-	awsS3Service      *application_aws.S3service
+	awsS3Service      *application_aws.S3Service
 	categoryService   application_interfaces.CategoryService
 	podcastRepository repository_database_interfaces.PodcastRepository
 	commentRepository repository_database_interfaces.CommentRepository
@@ -28,15 +28,15 @@ type podcastService struct {
 
 func NewPodcastService(
 	constants *bootstrap.Constants,
-	awsS3Service *application_aws.S3service,
+	awsS3Service *application_aws.S3Service,
 	categoryService application_interfaces.CategoryService,
 	podcastRepository repository_database_interfaces.PodcastRepository,
 	commentRepository repository_database_interfaces.CommentRepository,
 	userService application_interfaces.UserService,
 	db *gorm.DB,
 
-) *podcastService {
-	return &podcastService{
+) *PodcastService {
+	return &PodcastService{
 		constants:         constants,
 		awsS3Service:      awsS3Service,
 		categoryService:   categoryService,
@@ -47,7 +47,7 @@ func NewPodcastService(
 	}
 }
 
-func (podcastService *podcastService) fetchPodcastByID(podcastID uint) *entities.Podcast {
+func (podcastService *PodcastService) fetchPodcastByID(podcastID uint) *entities.Podcast {
 	var notFoundError exceptions.NotFoundError
 	podcast, podcastExist := podcastService.podcastRepository.FindPodcastByID(podcastService.db, podcastID)
 	if !podcastExist {
@@ -57,7 +57,7 @@ func (podcastService *podcastService) fetchPodcastByID(podcastID uint) *entities
 	return podcast
 }
 
-func (podcastService *podcastService) validateUniquePodcastName(name string) {
+func (podcastService *PodcastService) validateUniquePodcastName(name string) {
 	var conflictError exceptions.ConflictError
 	_, podcastExist := podcastService.podcastRepository.FindPodcastByName(podcastService.db, name)
 	if podcastExist {
@@ -68,13 +68,13 @@ func (podcastService *podcastService) validateUniquePodcastName(name string) {
 	}
 }
 
-func (podcastService *podcastService) setPodcastBannerPath(podcast *entities.Podcast, banner *multipart.FileHeader) {
+func (podcastService *PodcastService) setPodcastBannerPath(podcast *entities.Podcast, banner *multipart.FileHeader) {
 	bannerPath := podcastService.constants.S3Service.GetPodcastBannerKey(podcast.ID, banner.Filename)
 	podcastService.awsS3Service.UploadObject(enums.PodcastsBucket, bannerPath, banner)
 	podcast.BannerPath = bannerPath
 }
 
-func (podcastService *podcastService) GetPodcastList(page, pageSize int) []dto.PodcastDetailsResponse {
+func (podcastService *PodcastService) GetPodcastList(page, pageSize int) []dto.PodcastDetailsResponse {
 	offset := (page - 1) * pageSize
 	podcasts, _ := podcastService.podcastRepository.FindAllPodcasts(podcastService.db, offset, pageSize)
 	podcastsDetails := make([]dto.PodcastDetailsResponse, len(podcasts))
@@ -97,7 +97,7 @@ func (podcastService *podcastService) GetPodcastList(page, pageSize int) []dto.P
 	return podcastsDetails
 }
 
-func (podcastService *podcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
+func (podcastService *PodcastService) GetPodcastDetails(podcastID uint) dto.PodcastDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 
 	podcast, podcastExist := podcastService.podcastRepository.FindDetailedPodcastByID(podcastService.db, podcastID)
@@ -132,7 +132,7 @@ func (podcastService *podcastService) GetPodcastDetails(podcastID uint) dto.Podc
 	return podcastDetails
 }
 
-func (podcastService *podcastService) CreatePodcast(
+func (podcastService *PodcastService) CreatePodcast(
 	name, description string,
 	categoryNames []string,
 	banner *multipart.FileHeader,
@@ -172,7 +172,7 @@ func (podcastService *podcastService) CreatePodcast(
 	return podcast
 }
 
-func (podcastService *podcastService) UpdatePodcast(podcastID uint, name, description *string, categories *[]string, banner *multipart.FileHeader) {
+func (podcastService *PodcastService) UpdatePodcast(podcastID uint, name, description *string, categories *[]string, banner *multipart.FileHeader) {
 	podcast := podcastService.fetchPodcastByID(podcastID)
 
 	err := repository_database.ExecuteInTransaction(podcastService.db, func(tx *gorm.DB) error {
@@ -204,7 +204,7 @@ func (podcastService *podcastService) UpdatePodcast(podcastID uint, name, descri
 	}
 }
 
-func (podcastService *podcastService) DeletePodcast(podcastID uint) {
+func (podcastService *PodcastService) DeletePodcast(podcastID uint) {
 	podcast := podcastService.fetchPodcastByID(podcastID)
 
 	err := repository_database.ExecuteInTransaction(podcastService.db, func(tx *gorm.DB) error {
@@ -224,7 +224,7 @@ func (podcastService *podcastService) DeletePodcast(podcastID uint) {
 	}
 }
 
-func (podcastService *podcastService) SubscribePodcast(podcastID, userID uint) {
+func (podcastService *PodcastService) SubscribePodcast(podcastID, userID uint) {
 	var conflictError exceptions.ConflictError
 	var notFoundError exceptions.NotFoundError
 
@@ -246,7 +246,7 @@ func (podcastService *podcastService) SubscribePodcast(podcastID, userID uint) {
 	podcastService.podcastRepository.SubscribePodcast(podcastService.db, podcast, user)
 }
 
-func (podcastService *podcastService) UnSubscribePodcast(podcastID, userID uint) {
+func (podcastService *PodcastService) UnSubscribePodcast(podcastID, userID uint) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 
@@ -268,7 +268,7 @@ func (podcastService *podcastService) UnSubscribePodcast(podcastID, userID uint)
 	podcastService.podcastRepository.UnSubscribePodcast(podcastService.db, podcast, user)
 }
 
-func (podcastService *podcastService) IsUserSubscribedPodcast(podcastID, userID uint) bool {
+func (podcastService *PodcastService) IsUserSubscribedPodcast(podcastID, userID uint) bool {
 	var notFoundError exceptions.NotFoundError
 
 	podcast := podcastService.fetchPodcastByID(podcastID)
@@ -282,7 +282,7 @@ func (podcastService *podcastService) IsUserSubscribedPodcast(podcastID, userID 
 	return podcastService.podcastRepository.ExistSubscriberByID(podcastService.db, podcast, userID)
 }
 
-func (podcastService *podcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
+func (podcastService *PodcastService) GetEpisodesList(page, pageSize int) []dto.EpisodeDetailsResponse {
 	offset := (page - 1) * pageSize
 	episodes, _ := podcastService.podcastRepository.FindAllEpisodes(podcastService.db, offset, pageSize)
 	episodesDetails := make([]dto.EpisodeDetailsResponse, len(episodes))
@@ -309,7 +309,7 @@ func (podcastService *podcastService) GetEpisodesList(page, pageSize int) []dto.
 	return episodesDetails
 }
 
-func (podcastService *podcastService) GetEpisodeDetails(episodeID uint) dto.EpisodeDetailsResponse {
+func (podcastService *PodcastService) GetEpisodeDetails(episodeID uint) dto.EpisodeDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(podcastService.db, episodeID)
 	if !episodeExist {
@@ -338,7 +338,7 @@ func (podcastService *podcastService) GetEpisodeDetails(episodeID uint) dto.Epis
 	return episodeDetails
 }
 
-func (podcastService *podcastService) fetchEpisodeByID(episodeID uint) *entities.Episode {
+func (podcastService *PodcastService) fetchEpisodeByID(episodeID uint) *entities.Episode {
 	var notFoundError exceptions.NotFoundError
 	episode, episodeExist := podcastService.podcastRepository.FindEpisodeByID(podcastService.db, episodeID)
 	if !episodeExist {
@@ -348,7 +348,7 @@ func (podcastService *podcastService) fetchEpisodeByID(episodeID uint) *entities
 	return episode
 }
 
-func (podcastService *podcastService) validateUniqueEpisodeName(name string, podcastID uint) {
+func (podcastService *PodcastService) validateUniqueEpisodeName(name string, podcastID uint) {
 	var conflictError exceptions.ConflictError
 	_, episodeExist := podcastService.podcastRepository.FindPodcastEpisodeByName(podcastService.db, name, podcastID)
 	if episodeExist {
@@ -359,19 +359,19 @@ func (podcastService *podcastService) validateUniqueEpisodeName(name string, pod
 	}
 }
 
-func (podcastService *podcastService) setEpisodeBannerPath(podcastID uint, episode *entities.Episode, banner *multipart.FileHeader) {
+func (podcastService *PodcastService) setEpisodeBannerPath(podcastID uint, episode *entities.Episode, banner *multipart.FileHeader) {
 	bannerPath := podcastService.constants.S3Service.GetPodcastEpisodeBannerKey(podcastID, episode.ID, banner.Filename)
 	podcastService.awsS3Service.UploadObject(enums.PodcastsBucket, bannerPath, banner)
 	episode.BannerPath = bannerPath
 }
 
-func (podcastService *podcastService) setEpisodeAudioPath(podcastID uint, episode *entities.Episode, audio *multipart.FileHeader) {
+func (podcastService *PodcastService) setEpisodeAudioPath(podcastID uint, episode *entities.Episode, audio *multipart.FileHeader) {
 	audioPath := podcastService.constants.S3Service.GetPodcastEpisodeKey(podcastID, episode.ID, audio.Filename)
 	podcastService.awsS3Service.UploadObject(enums.PodcastsBucket, audioPath, audio)
 	episode.AudioPath = audioPath
 }
 
-func (podcastService *podcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {
+func (podcastService *PodcastService) CreateEpisode(name, description string, banner, audio *multipart.FileHeader, podcastID, publisherID uint) *entities.Episode {
 	podcastService.fetchPodcastByID(podcastID)
 	podcastService.validateUniqueEpisodeName(name, podcastID)
 
@@ -406,7 +406,7 @@ func (podcastService *podcastService) CreateEpisode(name, description string, ba
 	return episode
 }
 
-func (podcastService *podcastService) UpdateEpisode(episodeID uint, name, description *string, banner, audio *multipart.FileHeader) {
+func (podcastService *PodcastService) UpdateEpisode(episodeID uint, name, description *string, banner, audio *multipart.FileHeader) {
 	episode := podcastService.fetchEpisodeByID(episodeID)
 
 	err := repository_database.ExecuteInTransaction(podcastService.db, func(tx *gorm.DB) error {
@@ -443,7 +443,7 @@ func (podcastService *podcastService) UpdateEpisode(episodeID uint, name, descri
 	}
 }
 
-func (podcastService *podcastService) DeleteEpisode(episodeID uint) {
+func (podcastService *PodcastService) DeleteEpisode(episodeID uint) {
 	episode := podcastService.fetchEpisodeByID(episodeID)
 
 	err := repository_database.ExecuteInTransaction(podcastService.db, func(tx *gorm.DB) error {
@@ -464,7 +464,7 @@ func (podcastService *podcastService) DeleteEpisode(episodeID uint) {
 	}
 }
 
-func (podcastService *podcastService) SearchEvents(query string, page, pageSize int) []dto.PodcastDetailsResponse {
+func (podcastService *PodcastService) SearchEvents(query string, page, pageSize int) []dto.PodcastDetailsResponse {
 	var podcasts []*entities.Podcast
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -493,7 +493,7 @@ func (podcastService *podcastService) SearchEvents(query string, page, pageSize 
 	return podcastsDetails
 }
 
-func (podcastService *podcastService) FilterPodcastsByCategory(categories []string, page, pageSize int) []dto.PodcastDetailsResponse {
+func (podcastService *PodcastService) FilterPodcastsByCategory(categories []string, page, pageSize int) []dto.PodcastDetailsResponse {
 	var podcasts []*entities.Podcast
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {

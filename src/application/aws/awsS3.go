@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type S3service struct {
+type S3Service struct {
 	constants *bootstrap.Constants
 	storage   *bootstrap.S3
 	clients   *s3.S3
@@ -27,21 +27,21 @@ type S3service struct {
 func NewS3Service(
 	constants *bootstrap.Constants,
 	storage *bootstrap.S3,
-) *S3service {
+) *S3Service {
 	buckets := make(map[enums.BucketType]string)
 	buckets[enums.EventsBucket] = storage.Buckets.EventsBucket
 	buckets[enums.PodcastsBucket] = storage.Buckets.PodcastsBucket
 	buckets[enums.NewsBucket] = storage.Buckets.NewsBucket
 	buckets[enums.JournalsBucket] = storage.Buckets.JournalsBucket
 	buckets[enums.ProfilesBucket] = storage.Buckets.ProfilesBucket
-	return &S3service{
+	return &S3Service{
 		constants: constants,
 		storage:   storage,
 		buckets:   buckets,
 	}
 }
 
-func (s3Service *S3service) setS3Client(bucketType enums.BucketType) {
+func (s3Service *S3Service) setS3Client(bucketType enums.BucketType) {
 	bucketTypes := enums.GetAllBucketTypes()
 	if !slices.Contains(bucketTypes, bucketType) {
 		panic(fmt.Errorf("bucket not exist"))
@@ -63,7 +63,7 @@ func (s3Service *S3service) setS3Client(bucketType enums.BucketType) {
 	s3Service.clients = s3.New(sess)
 }
 
-func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string, file *multipart.FileHeader) {
+func (s3Service *S3Service) UploadObject(bucketType enums.BucketType, key string, file *multipart.FileHeader) {
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 
@@ -107,7 +107,7 @@ func (s3Service *S3service) UploadObject(bucketType enums.BucketType, key string
 	}
 }
 
-func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string) error {
+func (s3Service *S3Service) DeleteObject(bucketType enums.BucketType, key string) error {
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 
@@ -129,7 +129,7 @@ func (s3Service *S3service) DeleteObject(bucketType enums.BucketType, key string
 	return nil
 }
 
-func (s3Service *S3service) GetPresignedURL(bucketType enums.BucketType, objectKey string, expiration time.Duration) string {
+func (s3Service *S3Service) GetPresignedURL(bucketType enums.BucketType, objectKey string, expiration time.Duration) string {
 	s3Service.setS3Client(bucketType)
 	bucket := s3Service.buckets[bucketType]
 

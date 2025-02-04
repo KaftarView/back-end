@@ -21,7 +21,7 @@ type UserService struct {
 	constants      *bootstrap.Constants
 	userRepository repository_database_interfaces.UserRepository
 	otpService     *OTPService
-	awsS3Service   *application_aws.S3service
+	awsS3Service   *application_aws.S3Service
 	db             *gorm.DB
 }
 
@@ -29,7 +29,7 @@ func NewUserService(
 	constants *bootstrap.Constants,
 	userRepository repository_database_interfaces.UserRepository,
 	otpService *OTPService,
-	awsS3Service *application_aws.S3service,
+	awsS3Service *application_aws.S3Service,
 	db *gorm.DB,
 ) *UserService {
 	return &UserService{
