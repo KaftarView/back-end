@@ -1,10 +1,7 @@
 package localization
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/go-playground/locales/en_US"
 	"github.com/go-playground/locales/fa_IR"
@@ -32,49 +29,32 @@ func createUniversalTranslator() *ut.UniversalTranslator {
 }
 
 func loadAndAddTranslations(universalTranslator *ut.UniversalTranslator) {
-	addTranslations("fa_IR", "src/localization/fa.json", universalTranslator)
-	addTranslations("en_US", "src/localization/en.json", universalTranslator)
+	addTranslations("fa_IR", Persian, universalTranslator)
+	addTranslations("en_US", English, universalTranslator)
 }
 
-func addTranslations(locale, filePath string, universalTranslator *ut.UniversalTranslator) {
+func addTranslations(locale string, translations map[string]interface{}, universalTranslator *ut.UniversalTranslator) {
 	translator, found := universalTranslator.GetTranslator(locale)
 	if !found {
 		panic(fmt.Sprintf("translator for locale %s not found", locale))
 	}
 
-	translations := loadTranslations(filePath)
+	flattenedTranslations := loadTranslations(locale, translations)
 
-	for key, translation := range translations {
+	for key, translation := range flattenedTranslations {
 		translator.Add(key, translation, true)
 	}
 }
 
-func loadTranslations(filePath string) map[string]string {
-	if translations, ok := translationMap[filePath]; ok {
+func loadTranslations(locale string, translations map[string]interface{}) map[string]string {
+	if translations, ok := translationMap[locale]; ok {
 		return translations
 	}
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		panic(err)
-	}
-
-	var jsonData map[string]interface{}
-	err = json.Unmarshal(bytes, &jsonData)
-	if err != nil {
-		panic(err)
-	}
-
 	flattenedTranslations := make(map[string]string)
-	flattenMap("", jsonData, flattenedTranslations)
+	flattenMap("", translations, flattenedTranslations)
 
-	translationMap[filePath] = flattenedTranslations
+	translationMap[locale] = flattenedTranslations
 
 	return flattenedTranslations
 }
