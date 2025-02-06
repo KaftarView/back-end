@@ -9,6 +9,7 @@ package wire
 import (
 	"first-project/src/application"
 	"first-project/src/application/communication/emailService"
+	"first-project/src/application/cron"
 	"first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller/v1/category"
@@ -27,6 +28,7 @@ import (
 	"first-project/src/repository/database"
 	"first-project/src/repository/database/interfaces"
 	"first-project/src/repository/redis"
+	"first-project/src/seed"
 	"first-project/src/websocket"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
@@ -115,11 +117,22 @@ func InitializeApplication(container *bootstrap.Di, db *gorm.DB, rdb *redis.Clie
 		RateLimit:    rateLimitMiddleware,
 		Websocket:    websocketMiddleware,
 	}
+	cronJob := application_cron.NewCronJob(constants, userRepository, purchaseRepository, eventRepository, emailService, db)
+	cronJobs := &CronJobs{
+		CronJob: cronJob,
+	}
+	adminCredentials := ProvideSuperAdminInfo(container)
+	roleSeeder := seed.NewRoleSeeder(db, userRepository, adminCredentials)
+	seeders := &Seeders{
+		RoleSeeder: roleSeeder,
+	}
 	wireApplication := &Application{
 		AdminControllers:    adminControllers,
 		CustomerControllers: customerControllers,
 		GeneralControllers:  generalControllers,
 		Middlewares:         middlewares,
+		CronJobs:            cronJobs,
+		Seeders:             seeders,
 	}
 	return wireApplication, nil
 }
@@ -141,6 +154,10 @@ var GeneralControllerProviderSet = wire.NewSet(controller_v1_category.NewGeneral
 
 var MiddlewareProviderSet = wire.NewSet(middleware_authentication.NewAuthMiddleware, middleware_exceptions.NewRecovery, middleware_i18n.NewLocalization, middleware_rate_limit.NewRateLimit, middleware_websocket.NewWebsocketMiddleware, wire.Struct(new(Middlewares), "*"))
 
+var SeederCronJobSet = wire.NewSet(application_cron.NewCronJob, wire.Struct(new(CronJobs), "*"))
+
+var SeederProviderSet = wire.NewSet(seed.NewRoleSeeder, wire.Struct(new(Seeders), "*"))
+
 func ProvideConstants(container *bootstrap.Di) *bootstrap.Constants {
 	return container.Constants
 }
@@ -153,6 +170,10 @@ func ProvideStorage(container *bootstrap.Di) *bootstrap.S3 {
 	return &container.Env.Storage
 }
 
+func ProvideSuperAdminInfo(container *bootstrap.Di) *bootstrap.AdminCredentials {
+	return &container.Env.SuperAdmin
+}
+
 var ProviderSet = wire.NewSet(
 	DatabaseProviderSet,
 	RedisProviderSet,
@@ -161,6 +182,8 @@ var ProviderSet = wire.NewSet(
 	CustomerControllerProviderSet,
 	GeneralControllerProviderSet,
 	MiddlewareProviderSet,
+	SeederCronJobSet,
+	SeederProviderSet,
 )
 
 type AdminControllers struct {
@@ -198,9 +221,19 @@ type Middlewares struct {
 	Websocket    *middleware_websocket.WebsocketMiddleware
 }
 
+type CronJobs struct {
+	CronJob *application_cron.CronJob
+}
+
+type Seeders struct {
+	RoleSeeder *seed.RoleSeeder
+}
+
 type Application struct {
 	AdminControllers    *AdminControllers
 	CustomerControllers *CustomerControllers
 	GeneralControllers  *GeneralControllers
 	Middlewares         *Middlewares
+	CronJobs            *CronJobs
+	Seeders             *Seeders
 }
