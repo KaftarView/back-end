@@ -1,23 +1,14 @@
 package routes
 
 import (
-	"first-project/src/bootstrap"
 	routes_http_v1 "first-project/src/routes/http/v1"
 	routes_websocket_v1 "first-project/src/routes/ws/v1"
-	"first-project/src/websocket"
 	"first-project/src/wire"
 
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
-func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
-	app, err := wire.InitializeApplication(di, db, rdb, hub)
-	if err != nil {
-		panic(err)
-	}
-
+func Run(ginEngine *gin.Engine, app *wire.Application) {
 	ginEngine.Use(app.Middlewares.Localization.Localization)
 	ginEngine.Use(app.Middlewares.Recovery.Recovery)
 	ginEngine.Use(app.Middlewares.RateLimit.RateLimit)
