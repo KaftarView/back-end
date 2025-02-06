@@ -17,10 +17,10 @@ import (
 const errorFormatKey = "errors.%s"
 
 type RecoveryMiddleware struct {
-	constants *bootstrap.Context
+	constants *bootstrap.Constants
 }
 
-func NewRecovery(constants *bootstrap.Context) *RecoveryMiddleware {
+func NewRecovery(constants *bootstrap.Constants) *RecoveryMiddleware {
 	return &RecoveryMiddleware{
 		constants: constants,
 	}
@@ -30,7 +30,7 @@ func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			if _, ok := c.Request.Header["Upgrade"]; ok {
-				if conn, ok := c.Get(recovery.constants.WebsocketConnection); ok {
+				if conn, ok := c.Get(recovery.constants.Context.WebsocketConnection); ok {
 					if wsConn, valid := conn.(*websocket.Conn); valid {
 						wsConn.Close()
 					}
@@ -49,27 +49,27 @@ func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 
 func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err error) {
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
-		handleValidationError(c, validationErrors, recovery.constants.Translator)
+		handleValidationError(c, validationErrors, recovery.constants.Context.Translator)
 	} else if bindingError, ok := err.(exceptions.BindingError); ok {
-		handleBindingError(c, bindingError, recovery.constants.Translator)
+		handleBindingError(c, bindingError, recovery.constants.Context.Translator)
 	} else if appErrors, ok := err.(*exceptions.AppError); ok {
-		handleAppError(c, appErrors, recovery.constants.Translator)
+		handleAppError(c, appErrors, recovery.constants.Context.Translator)
 	} else if registrationErrors, ok := err.(exceptions.UserRegistrationError); ok {
-		handleRegistrationError(c, registrationErrors, recovery.constants.Translator)
+		handleRegistrationError(c, registrationErrors, recovery.constants.Context.Translator)
 	} else if conflictErrors, ok := err.(exceptions.ConflictError); ok {
-		handleConflictError(c, conflictErrors, recovery.constants.Translator)
+		handleConflictError(c, conflictErrors, recovery.constants.Context.Translator)
 	} else if _, ok := err.(exceptions.LoginError); ok {
-		handleLoginError(c, recovery.constants.Translator)
+		handleLoginError(c, recovery.constants.Context.Translator)
 	} else if _, ok := err.(exceptions.ForbiddenError); ok {
-		handleForbiddenError(c, recovery.constants.Translator)
+		handleForbiddenError(c, recovery.constants.Context.Translator)
 	} else if _, ok := err.(exceptions.UnauthorizedError); ok {
-		handleUnauthorizedError(c, recovery.constants.Translator)
+		handleUnauthorizedError(c, recovery.constants.Context.Translator)
 	} else if _, ok := err.(exceptions.RateLimitError); ok {
-		handleRateLimitError(c, recovery.constants.Translator)
+		handleRateLimitError(c, recovery.constants.Context.Translator)
 	} else if notFoundError, ok := err.(exceptions.NotFoundError); ok {
-		handleNotFoundError(c, notFoundError, recovery.constants.Translator)
+		handleNotFoundError(c, notFoundError, recovery.constants.Context.Translator)
 	} else {
-		unhandledErrors(c, err, recovery.constants.Translator)
+		unhandledErrors(c, err, recovery.constants.Context.Translator)
 	}
 }
 

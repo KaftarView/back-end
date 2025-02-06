@@ -1,205 +1,163 @@
 package routes_http_v1
 
 import (
-	"first-project/src/application"
-	application_communication "first-project/src/application/communication/emailService"
-	"first-project/src/bootstrap"
-	controller_v1_comment "first-project/src/controller/v1/comment"
-	controller_v1_event "first-project/src/controller/v1/event"
-	controller_v1_journal "first-project/src/controller/v1/journal"
-	controller_v1_news "first-project/src/controller/v1/news"
-	controller_v1_podcast "first-project/src/controller/v1/podcast"
-	controller_v1_user "first-project/src/controller/v1/user"
 	"first-project/src/enums"
-	middleware_authentication "first-project/src/middleware/Authentication"
-	repository_database "first-project/src/repository/database"
+	"first-project/src/wire"
 
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
-func SetupAdminRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
-	userRepository := repository_database.NewUserRepository()
-	categoryRepository := repository_database.NewCategoryRepository()
-	eventRepository := repository_database.NewEventRepository()
-	commentRepository := repository_database.NewCommentRepository()
-	podcastRepository := repository_database.NewPodcastRepository()
-	newsRepository := repository_database.NewNewsRepository()
-	journalRepository := repository_database.NewJournalRepository()
-	purchaseRepository := repository_database.NewPurchaseRepository()
-
-	jwtService := application.NewJWTToken()
-	emailService := application_communication.NewEmailService(&di.Env.Email)
-	otpService := application.NewOTPService()
-	awsService := application.NewS3Service(di.Constants, &di.Env.Storage)
-	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userService, db)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userService, db)
-	newsService := application.NewNewsService(di.Constants, awsService, categoryService, commentRepository, newsRepository, userService, db)
-	journalService := application.NewJournalService(di.Constants, awsService, userService, journalRepository, db)
-
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
-
-	adminEventController := controller_v1_event.NewAdminEventController(di.Constants, eventService, emailService)
-	adminCommentController := controller_v1_comment.NewAdminCommentController(di.Constants, commentService)
-	adminPodcastController := controller_v1_podcast.NewAdminPodcastController(di.Constants, podcastService)
-	adminUserController := controller_v1_user.NewAdminUserController(di.Constants, userService)
-	adminNewsController := controller_v1_news.NewAdminNewsController(di.Constants, newsService)
-	adminJournalController := controller_v1_journal.NewAdminJournalController(di.Constants, journalService)
-
+func SetupAdminRoutes(routerGroup *gin.RouterGroup, app *wire.Application) {
 	events := routerGroup.Group("/events")
 	{
 		readGroup := events.Group("")
-		readGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.ManageEvent, enums.ReviewEvent}))
+		readGroup.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.ManageEvent, enums.ReviewEvent}))
 		{
-			readGroup.GET("", adminEventController.GetEventsList)
-			readGroup.GET("/search", adminEventController.SearchEvents)
-			readGroup.GET("/filter", adminEventController.FilterEvents)
+			readGroup.GET("", app.AdminControllers.EventController.GetEventsList)
+			readGroup.GET("/search", app.AdminControllers.EventController.SearchEvents)
+			readGroup.GET("/filter", app.AdminControllers.EventController.FilterEvents)
 
-			readGroup.GET("ticket/:ticketID", adminEventController.GetTicketDetails)
-			readGroup.GET("discount/:discountID", adminEventController.GetDiscountDetails)
-			readGroup.GET("media/:mediaID", adminEventController.GetMediaDetails)
+			readGroup.GET("ticket/:ticketID", app.AdminControllers.EventController.GetTicketDetails)
+			readGroup.GET("discount/:discountID", app.AdminControllers.EventController.GetDiscountDetails)
+			readGroup.GET("media/:mediaID", app.AdminControllers.EventController.GetMediaDetails)
 
 			readSingleEventGroup := readGroup.Group("/:eventID")
 			{
-				readSingleEventGroup.GET("", adminEventController.GetEventDetails)
-				readSingleEventGroup.GET("/tickets", adminEventController.GetAllTicketDetails)
-				readSingleEventGroup.GET("/discounts", adminEventController.GetAllDiscountDetails)
-				readSingleEventGroup.GET("/media", adminEventController.GetEventMedia)
-				readSingleEventGroup.GET("/attendees", adminEventController.GetEventAttendees)
+				readSingleEventGroup.GET("", app.AdminControllers.EventController.GetEventDetails)
+				readSingleEventGroup.GET("/tickets", app.AdminControllers.EventController.GetAllTicketDetails)
+				readSingleEventGroup.GET("/discounts", app.AdminControllers.EventController.GetAllDiscountDetails)
+				readSingleEventGroup.GET("/media", app.AdminControllers.EventController.GetEventMedia)
+				readSingleEventGroup.GET("/attendees", app.AdminControllers.EventController.GetEventAttendees)
 			}
 		}
 
 		createGroup := events.Group("")
-		createGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
+		createGroup.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.CreateEvent}))
 		{
-			createGroup.POST("/create", adminEventController.CreateEvent)
-			createGroup.POST("/add-ticket/:eventID", adminEventController.AddEventTicket)
-			createGroup.POST("/add-discount/:eventID", adminEventController.AddEventDiscount)
-			createGroup.POST("/add-organizer/:eventID", adminEventController.AddEventOrganizer)
+			createGroup.POST("/create", app.AdminControllers.EventController.CreateEvent)
+			createGroup.POST("/add-ticket/:eventID", app.AdminControllers.EventController.AddEventTicket)
+			createGroup.POST("/add-discount/:eventID", app.AdminControllers.EventController.AddEventDiscount)
+			createGroup.POST("/add-organizer/:eventID", app.AdminControllers.EventController.AddEventOrganizer)
 		}
 
 		manageEventsGroup := events.Group("")
-		manageEventsGroup.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.ManageEvent}))
+		manageEventsGroup.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.CreateEvent, enums.ManageEvent}))
 		{
 			eventSubGroup := events.Group("/:eventID")
 			{
-				eventSubGroup.PUT("", adminEventController.UpdateEvent)
-				eventSubGroup.POST("/publish", adminEventController.PublishEvent)
-				eventSubGroup.POST("/unpublish", adminEventController.UnpublishEvent)
-				eventSubGroup.DELETE("", adminEventController.DeleteEvent)
-				eventSubGroup.POST("/media", adminEventController.UploadEventMedia)
+				eventSubGroup.PUT("", app.AdminControllers.EventController.UpdateEvent)
+				eventSubGroup.POST("/publish", app.AdminControllers.EventController.PublishEvent)
+				eventSubGroup.POST("/unpublish", app.AdminControllers.EventController.UnpublishEvent)
+				eventSubGroup.DELETE("", app.AdminControllers.EventController.DeleteEvent)
+				eventSubGroup.POST("/media", app.AdminControllers.EventController.UploadEventMedia)
 			}
 
 			ticketSubGroup := manageEventsGroup.Group("/ticket/:ticketID")
 			{
-				ticketSubGroup.PUT("", adminEventController.UpdateEventTicket)
-				ticketSubGroup.DELETE("", adminEventController.DeleteTicket)
+				ticketSubGroup.PUT("", app.AdminControllers.EventController.UpdateEventTicket)
+				ticketSubGroup.DELETE("", app.AdminControllers.EventController.DeleteTicket)
 			}
 
 			discountSubGroup := manageEventsGroup.Group("/discount/:discountID")
 			{
-				discountSubGroup.PUT("", adminEventController.UpdateEventDiscount)
-				discountSubGroup.DELETE("", adminEventController.DeleteDiscount)
+				discountSubGroup.PUT("", app.AdminControllers.EventController.UpdateEventDiscount)
+				discountSubGroup.DELETE("", app.AdminControllers.EventController.DeleteDiscount)
 			}
 
 			mediaSubGroup := manageEventsGroup.Group("/media/:mediaID")
 			{
-				mediaSubGroup.PUT("", adminEventController.UpdateEventMedia)
-				mediaSubGroup.DELETE("", adminEventController.DeleteEventMedia)
+				mediaSubGroup.PUT("", app.AdminControllers.EventController.UpdateEventMedia)
+				mediaSubGroup.DELETE("", app.AdminControllers.EventController.DeleteEventMedia)
 			}
 
-			manageEventsGroup.DELETE("/organizer/:organizerID", adminEventController.DeleteOrganizer)
+			manageEventsGroup.DELETE("/organizer/:organizerID", app.AdminControllers.EventController.DeleteOrganizer)
 		}
 	}
 
 	comments := routerGroup.Group("/comments")
-	comments.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ModerateComments}))
+	comments.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.ModerateComments}))
 	{
-		comments.DELETE("/:commentID", adminCommentController.DeleteComment)
+		comments.DELETE("/:commentID", app.AdminControllers.CommentController.DeleteComment)
 	}
 
 	podcasts := routerGroup.Group("/podcasts")
-	podcasts.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
+	podcasts.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
-		podcasts.POST("", adminPodcastController.CreatePodcast)
+		podcasts.POST("", app.AdminControllers.PodcastController.CreatePodcast)
 		podcastSubGroup := podcasts.Group("/:podcastID")
 		{
-			podcastSubGroup.PUT("", adminPodcastController.UpdatePodcast)
-			podcastSubGroup.DELETE("", adminPodcastController.DeletePodcast)
+			podcastSubGroup.PUT("", app.AdminControllers.PodcastController.UpdatePodcast)
+			podcastSubGroup.DELETE("", app.AdminControllers.PodcastController.DeletePodcast)
 
 			podcastEpisodesSubRouter := podcastSubGroup.Group("/episodes")
 			{
-				podcastEpisodesSubRouter.POST("", adminPodcastController.CreateEpisode)
+				podcastEpisodesSubRouter.POST("", app.AdminControllers.PodcastController.CreateEpisode)
 			}
 		}
 	}
 
 	podcastEpisodes := routerGroup.Group("/episodes")
-	podcastEpisodes.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
+	podcastEpisodes.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.ManagePodcasts}))
 	{
-		podcastEpisodes.PUT("/:episodeID", adminPodcastController.UpdateEpisode)
-		podcastEpisodes.DELETE("/:episodeID", adminPodcastController.DeleteEpisode)
+		podcastEpisodes.PUT("/:episodeID", app.AdminControllers.PodcastController.UpdateEpisode)
+		podcastEpisodes.DELETE("/:episodeID", app.AdminControllers.PodcastController.DeleteEpisode)
 	}
 
 	accessManagement := routerGroup.Group("")
-	accessManagement.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageUsers, enums.ManageRoles}))
+	accessManagement.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.ManageUsers, enums.ManageRoles}))
 	{
 		roles := accessManagement.Group("/roles")
 		{
-			roles.GET("", adminUserController.GetRolesList)
-			roles.POST("", adminUserController.CreateRole)
+			roles.GET("", app.AdminControllers.UserController.GetRolesList)
+			roles.POST("", app.AdminControllers.UserController.CreateRole)
 
 			roleSubGroup := roles.Group("/:roleID")
 			{
-				roleSubGroup.GET("/owners", adminUserController.GetRoleOwners)
-				roleSubGroup.DELETE("", adminUserController.DeleteRole)
+				roleSubGroup.GET("/owners", app.AdminControllers.UserController.GetRoleOwners)
+				roleSubGroup.DELETE("", app.AdminControllers.UserController.DeleteRole)
 
 				rolePermissions := roleSubGroup.Group("/permissions")
 				{
-					rolePermissions.PUT("", adminUserController.UpdateRole)
-					rolePermissions.DELETE("/:permissionID", adminUserController.DeleteRolePermission)
+					rolePermissions.PUT("", app.AdminControllers.UserController.UpdateRole)
+					rolePermissions.DELETE("/:permissionID", app.AdminControllers.UserController.DeleteRolePermission)
 				}
 			}
 		}
 
-		accessManagement.GET("/permissions", adminUserController.GetPermissionsList)
+		accessManagement.GET("/permissions", app.AdminControllers.UserController.GetPermissionsList)
 
 		userRoles := accessManagement.Group("/users/roles")
 		{
-			userRoles.PUT("", adminUserController.UpdateUserRoles)
-			userRoles.DELETE("/:roleID", adminUserController.DeleteUserRole)
+			userRoles.PUT("", app.AdminControllers.UserController.UpdateUserRoles)
+			userRoles.DELETE("/:roleID", app.AdminControllers.UserController.DeleteUserRole)
 		}
 
 		councilors := accessManagement.Group("/councilors")
 		{
-			councilors.POST("", adminUserController.CreateCouncilor)
-			councilors.DELETE("/:councilorID", adminUserController.DeleteCouncilor)
+			councilors.POST("", app.AdminControllers.UserController.CreateCouncilor)
+			councilors.DELETE("/:councilorID", app.AdminControllers.UserController.DeleteCouncilor)
 		}
 	}
 
 	news := routerGroup.Group("/news")
-	news.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageNews}))
+	news.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.ManageNews}))
 	{
-		news.POST("", adminNewsController.CreateNews)
+		news.POST("", app.AdminControllers.NewsController.CreateNews)
 		newsSubGroup := news.Group("/:newsID")
 		{
-			newsSubGroup.PUT("", adminNewsController.UpdateNews)
-			newsSubGroup.DELETE("", adminNewsController.DeleteNews)
+			newsSubGroup.PUT("", app.AdminControllers.NewsController.UpdateNews)
+			newsSubGroup.DELETE("", app.AdminControllers.NewsController.DeleteNews)
 		}
 	}
 
 	journals := routerGroup.Group("/journal")
-	journals.Use(authMiddleware.RequirePermission([]enums.PermissionType{enums.ManageJournal}))
+	journals.Use(app.Middlewares.Auth.RequirePermission([]enums.PermissionType{enums.ManageJournal}))
 	{
-		journals.POST("", adminJournalController.CreateJournal)
+		journals.POST("", app.AdminControllers.JournalController.CreateJournal)
 		journalSubGroup := journals.Group("/:journalID")
 		{
-			journalSubGroup.PUT("", adminJournalController.UpdateJournal)
-			journalSubGroup.DELETE("", adminJournalController.DeleteJournal)
+			journalSubGroup.PUT("", app.AdminControllers.JournalController.UpdateJournal)
+			journalSubGroup.DELETE("", app.AdminControllers.JournalController.DeleteJournal)
 		}
 	}
 }

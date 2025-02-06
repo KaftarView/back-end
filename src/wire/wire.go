@@ -1,3 +1,6 @@
+//go:build wireinject
+// +build wireinject
+
 package wire
 
 import (
@@ -17,11 +20,15 @@ import (
 	middleware_exceptions "first-project/src/middleware/exceptions"
 	middleware_i18n "first-project/src/middleware/i18n"
 	middleware_rate_limit "first-project/src/middleware/rateLimit"
+	middleware_websocket "first-project/src/middleware/websocket"
 	repository_database "first-project/src/repository/database"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	repository_cache "first-project/src/repository/redis"
+	"first-project/src/websocket"
 
 	"github.com/google/wire"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 var DatabaseProviderSet = wire.NewSet(
@@ -112,16 +119,8 @@ var MiddlewareProviderSet = wire.NewSet(
 	middleware_exceptions.NewRecovery,
 	middleware_i18n.NewLocalization,
 	middleware_rate_limit.NewRateLimit,
-)
-
-var ProviderSet = wire.NewSet(
-	DatabaseProviderSet,
-	RedisProviderSet,
-	ServiceProviderSet,
-	AdminControllerProviderSet,
-	CustomerControllerProviderSet,
-	GeneralControllerProviderSet,
-	MiddlewareProviderSet,
+	middleware_websocket.NewWebsocketMiddleware,
+	wire.Struct(new(Middlewares), "*"),
 )
 
 func ProvideConstants(container *bootstrap.Di) *bootstrap.Constants {
@@ -134,4 +133,67 @@ func ProvideEmailInfo(container *bootstrap.Di) *bootstrap.EmailInfo {
 
 func ProvideStorage(container *bootstrap.Di) *bootstrap.S3 {
 	return &container.Env.Storage
+}
+
+var ProviderSet = wire.NewSet(
+	DatabaseProviderSet,
+	RedisProviderSet,
+	ServiceProviderSet,
+	AdminControllerProviderSet,
+	CustomerControllerProviderSet,
+	GeneralControllerProviderSet,
+	MiddlewareProviderSet,
+)
+
+type AdminControllers struct {
+	CommentController *controller_v1_comment.AdminCommentController
+	EventController   *controller_v1_event.AdminEventController
+	JournalController *controller_v1_journal.AdminJournalController
+	NewsController    *controller_v1_news.AdminNewsController
+	PodcastController *controller_v1_podcast.AdminPodcastController
+	UserController    *controller_v1_user.AdminUserController
+}
+
+type CustomerControllers struct {
+	ChatController    *controller_v1_chat.CustomerChatController
+	CommentController *controller_v1_comment.CustomerCommentController
+	EventController   *controller_v1_event.CustomerEventController
+	PodcastController *controller_v1_podcast.CustomerPodcastController
+	UserController    *controller_v1_user.CustomerUserController
+}
+
+type GeneralControllers struct {
+	CategoryController *controller_v1_category.GeneralCategoryController
+	CommentController  *controller_v1_comment.GeneralCommentController
+	EventController    *controller_v1_event.GeneralEventController
+	JournalController  *controller_v1_journal.GeneralJournalController
+	NewsController     *controller_v1_news.GeneralNewsController
+	PodcastController  *controller_v1_podcast.GeneralPodcastController
+	UserController     *controller_v1_user.GeneralUserController
+}
+
+type Middlewares struct {
+	Auth         *middleware_authentication.AuthMiddleware
+	Recovery     *middleware_exceptions.RecoveryMiddleware
+	Localization *middleware_i18n.LocalizationMiddleware
+	RateLimit    *middleware_rate_limit.RateLimitMiddleware
+	Websocket    *middleware_websocket.WebsocketMiddleware
+}
+
+type Application struct {
+	AdminControllers    *AdminControllers
+	CustomerControllers *CustomerControllers
+	GeneralControllers  *GeneralControllers
+	Middlewares         *Middlewares
+}
+
+func InitializeApplication(container *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) (*Application, error) {
+	wire.Build(
+		ProvideConstants,
+		ProvideEmailInfo,
+		ProvideStorage,
+		ProviderSet,
+		wire.Struct(new(Application), "*"),
+	)
+	return &Application{}, nil
 }
