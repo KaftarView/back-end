@@ -9,6 +9,7 @@ package wire
 import (
 	"first-project/src/application"
 	"first-project/src/application/communication/emailService"
+	"first-project/src/application/cron"
 	"first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller/v1/category"
@@ -27,6 +28,7 @@ import (
 	"first-project/src/repository/database"
 	"first-project/src/repository/database/interfaces"
 	"first-project/src/repository/redis"
+	"first-project/src/seed"
 	"first-project/src/websocket"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
@@ -115,11 +117,22 @@ func InitializeApplication(container *bootstrap.Di, db *gorm.DB, rdb *redis.Clie
 		RateLimit:    rateLimitMiddleware,
 		Websocket:    websocketMiddleware,
 	}
+	cronJob := application_cron.NewCronJob(constants, userRepository, purchaseRepository, eventRepository, emailService, db)
+	cronJobs := &CronJobs{
+		CronJob: cronJob,
+	}
+	adminCredentials := ProvideSuperAdminInfo(container)
+	roleSeeder := seed.NewRoleSeeder(db, userRepository, adminCredentials)
+	seeders := &Seeders{
+		RoleSeeder: roleSeeder,
+	}
 	wireApplication := &Application{
 		AdminControllers:    adminControllers,
 		CustomerControllers: customerControllers,
 		GeneralControllers:  generalControllers,
 		Middlewares:         middlewares,
+		CronJobs:            cronJobs,
+		Seeders:             seeders,
 	}
 	return wireApplication, nil
 }
@@ -130,7 +143,6 @@ var DatabaseProviderSet = wire.NewSet(repository_database.NewCategoryRepository,
 
 var RedisProviderSet = wire.NewSet(repository_cache.NewUserCache)
 
-// no cron here!
 var ServiceProviderSet = wire.NewSet(application.NewS3Service, application.NewCategoryService, application.NewChatService, application.NewCommentService, application.NewEventService, application.NewJournalService, application.NewJWTToken, application.NewNewsService, application.NewOTPService, application.NewPodcastService, application.NewUserService, application_communication.NewEmailService, wire.Bind(new(application_interfaces.S3Service), new(*application.S3Service)), wire.Bind(new(application_interfaces.CategoryService), new(*application.CategoryService)), wire.Bind(new(application_interfaces.ChatService), new(*application.ChatService)), wire.Bind(new(application_interfaces.CommentService), new(*application.CommentService)), wire.Bind(new(application_interfaces.EventService), new(*application.EventService)), wire.Bind(new(application_interfaces.JournalService), new(*application.JournalService)), wire.Bind(new(application_interfaces.JWTToken), new(*application.JWTToken)), wire.Bind(new(application_interfaces.NewsService), new(*application.NewsService)), wire.Bind(new(application_interfaces.OTPService), new(*application.OTPService)), wire.Bind(new(application_interfaces.PodcastService), new(*application.PodcastService)), wire.Bind(new(application_interfaces.UserService), new(*application.UserService)), wire.Bind(new(application_interfaces.EmailService), new(*application_communication.EmailService)))
 
 var AdminControllerProviderSet = wire.NewSet(controller_v1_comment.NewAdminCommentController, controller_v1_event.NewAdminEventController, controller_v1_journal.NewAdminJournalController, controller_v1_news.NewAdminNewsController, controller_v1_podcast.NewAdminPodcastController, controller_v1_user.NewAdminUserController, wire.Struct(new(AdminControllers), "*"))
@@ -138,6 +150,10 @@ var AdminControllerProviderSet = wire.NewSet(controller_v1_comment.NewAdminComme
 var CustomerControllerProviderSet = wire.NewSet(controller_v1_chat.NewCustomerChatController, controller_v1_comment.NewCustomerCommentController, controller_v1_event.NewCustomerEventController, controller_v1_podcast.NewCustomerPodcastController, controller_v1_user.NewCustomerUserController, wire.Struct(new(CustomerControllers), "*"))
 
 var GeneralControllerProviderSet = wire.NewSet(controller_v1_category.NewGeneralCategoryController, controller_v1_comment.NewGeneralCommentController, controller_v1_event.NewGeneralEventController, controller_v1_journal.NewGeneralJournalController, controller_v1_news.NewGeneralNewsController, controller_v1_podcast.NewGeneralPodcastController, controller_v1_user.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
+
+var CronJobProviderSet = wire.NewSet(application_cron.NewCronJob, wire.Struct(new(CronJobs), "*"))
+
+var SeederProviderSet = wire.NewSet(seed.NewRoleSeeder, wire.Struct(new(Seeders), "*"))
 
 var MiddlewareProviderSet = wire.NewSet(middleware_authentication.NewAuthMiddleware, middleware_exceptions.NewRecovery, middleware_i18n.NewLocalization, middleware_rate_limit.NewRateLimit, middleware_websocket.NewWebsocketMiddleware, wire.Struct(new(Middlewares), "*"))
 
@@ -153,6 +169,10 @@ func ProvideStorage(container *bootstrap.Di) *bootstrap.S3 {
 	return &container.Env.Storage
 }
 
+func ProvideSuperAdminInfo(container *bootstrap.Di) *bootstrap.AdminCredentials {
+	return &container.Env.SuperAdmin
+}
+
 var ProviderSet = wire.NewSet(
 	DatabaseProviderSet,
 	RedisProviderSet,
@@ -161,6 +181,8 @@ var ProviderSet = wire.NewSet(
 	CustomerControllerProviderSet,
 	GeneralControllerProviderSet,
 	MiddlewareProviderSet,
+	CronJobProviderSet,
+	SeederProviderSet,
 )
 
 type AdminControllers struct {
@@ -198,9 +220,19 @@ type Middlewares struct {
 	Websocket    *middleware_websocket.WebsocketMiddleware
 }
 
+type CronJobs struct {
+	CronJob *application_cron.CronJob
+}
+
+type Seeders struct {
+	RoleSeeder *seed.RoleSeeder
+}
+
 type Application struct {
 	AdminControllers    *AdminControllers
 	CustomerControllers *CustomerControllers
 	GeneralControllers  *GeneralControllers
 	Middlewares         *Middlewares
+	CronJobs            *CronJobs
+	Seeders             *Seeders
 }

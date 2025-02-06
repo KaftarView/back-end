@@ -13,14 +13,11 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	application_communication "first-project/src/application/communication/emailService"
-	application_cron "first-project/src/application/cron"
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
-	repository "first-project/src/repository/database"
 	"first-project/src/routes"
-	"first-project/src/seed"
 	"first-project/src/websocket"
+	"first-project/src/wire"
 )
 
 func main() {
@@ -92,20 +89,19 @@ func main() {
 	hub := websocket.NewHub()
 	go hub.Run()
 
-	userRepository := repository.NewUserRepository()
-	roleSeeder := seed.NewRoleSeeder(db, userRepository, &di.Env.SuperAdmin)
-	roleSeeder.SeedRoles()
+	app, err := wire.InitializeApplication(di, db, rdb, hub)
+	if err != nil {
+		panic(err)
+	}
+
+	app.Seeders.RoleSeeder.SeedRoles()
 
 	backgroundEnabled, err := strconv.ParseBool(di.Env.Applications.BACKGROUND_SERVICE_ENABLED)
 	if err != nil {
 		log.Fatal("Error during checking background service enable")
 	}
 	if backgroundEnabled {
-		emailService := application_communication.NewEmailService(&di.Env.Email)
-		reservationRepository := repository.NewPurchaseRepository()
-		eventRepository := repository.NewEventRepository()
-		cronJob := application_cron.NewCronJob(di.Constants, userRepository, reservationRepository, eventRepository, emailService, db)
-		cronJob.RunCronJob()
+		app.CronJobs.CronJob.RunCronJob()
 	}
 
 	APIServiceEnabled, err := strconv.ParseBool(di.Env.Applications.API_SERVICE_ENABLED)
@@ -113,7 +109,7 @@ func main() {
 		log.Fatal("Error during checking API service enable")
 	}
 	if APIServiceEnabled {
-		routes.Run(ginEngine, di, db, rdb, hub)
+		routes.Run(ginEngine, app)
 	}
 
 	ginEngine.Run(":8080")

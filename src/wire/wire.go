@@ -6,6 +6,7 @@ package wire
 import (
 	"first-project/src/application"
 	application_communication "first-project/src/application/communication/emailService"
+	application_cron "first-project/src/application/cron"
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	controller_v1_category "first-project/src/controller/v1/category"
@@ -24,6 +25,7 @@ import (
 	repository_database "first-project/src/repository/database"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	repository_cache "first-project/src/repository/redis"
+	"first-project/src/seed"
 	"first-project/src/websocket"
 
 	"github.com/google/wire"
@@ -56,7 +58,6 @@ var RedisProviderSet = wire.NewSet(
 	repository_cache.NewUserCache,
 )
 
-// no cron here!
 var ServiceProviderSet = wire.NewSet(
 	application.NewS3Service,
 	application.NewCategoryService,
@@ -114,6 +115,16 @@ var GeneralControllerProviderSet = wire.NewSet(
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
+var CronJobProviderSet = wire.NewSet(
+	application_cron.NewCronJob,
+	wire.Struct(new(CronJobs), "*"),
+)
+
+var SeederProviderSet = wire.NewSet(
+	seed.NewRoleSeeder,
+	wire.Struct(new(Seeders), "*"),
+)
+
 var MiddlewareProviderSet = wire.NewSet(
 	middleware_authentication.NewAuthMiddleware,
 	middleware_exceptions.NewRecovery,
@@ -135,6 +146,10 @@ func ProvideStorage(container *bootstrap.Di) *bootstrap.S3 {
 	return &container.Env.Storage
 }
 
+func ProvideSuperAdminInfo(container *bootstrap.Di) *bootstrap.AdminCredentials {
+	return &container.Env.SuperAdmin
+}
+
 var ProviderSet = wire.NewSet(
 	DatabaseProviderSet,
 	RedisProviderSet,
@@ -143,6 +158,8 @@ var ProviderSet = wire.NewSet(
 	CustomerControllerProviderSet,
 	GeneralControllerProviderSet,
 	MiddlewareProviderSet,
+	CronJobProviderSet,
+	SeederProviderSet,
 )
 
 type AdminControllers struct {
@@ -180,11 +197,21 @@ type Middlewares struct {
 	Websocket    *middleware_websocket.WebsocketMiddleware
 }
 
+type CronJobs struct {
+	CronJob *application_cron.CronJob
+}
+
+type Seeders struct {
+	RoleSeeder *seed.RoleSeeder
+}
+
 type Application struct {
 	AdminControllers    *AdminControllers
 	CustomerControllers *CustomerControllers
 	GeneralControllers  *GeneralControllers
 	Middlewares         *Middlewares
+	CronJobs            *CronJobs
+	Seeders             *Seeders
 }
 
 func InitializeApplication(container *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) (*Application, error) {
@@ -192,6 +219,7 @@ func InitializeApplication(container *bootstrap.Di, db *gorm.DB, rdb *redis.Clie
 		ProvideConstants,
 		ProvideEmailInfo,
 		ProvideStorage,
+		ProvideSuperAdminInfo,
 		ProviderSet,
 		wire.Struct(new(Application), "*"),
 	)

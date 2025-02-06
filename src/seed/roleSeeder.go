@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type roleSeeder struct {
+type RoleSeeder struct {
 	db             *gorm.DB
 	userRepository repository_database_interfaces.UserRepository
 	superAdmin     *bootstrap.AdminCredentials
@@ -20,15 +20,15 @@ func NewRoleSeeder(
 	db *gorm.DB,
 	userRepository repository_database_interfaces.UserRepository,
 	superAdmin *bootstrap.AdminCredentials,
-) *roleSeeder {
-	return &roleSeeder{
+) *RoleSeeder {
+	return &RoleSeeder{
 		db:             db,
 		userRepository: userRepository,
 		superAdmin:     superAdmin,
 	}
 }
 
-func (roleSeeder *roleSeeder) SeedRoles() {
+func (roleSeeder *RoleSeeder) SeedRoles() {
 	permissionTypes := enums.GetAllPermissionTypes()
 	for _, permissionType := range permissionTypes {
 		_, permissionExist := roleSeeder.userRepository.FindPermissionByType(roleSeeder.db, permissionType)
