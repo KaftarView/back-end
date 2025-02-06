@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type commentService struct {
+type CommentService struct {
 	constants         *bootstrap.Constants
 	commentRepository repository_database_interfaces.CommentRepository
 	userService       application_interfaces.UserService
@@ -22,8 +22,8 @@ func NewCommentService(
 	commentRepository repository_database_interfaces.CommentRepository,
 	userService application_interfaces.UserService,
 	db *gorm.DB,
-) *commentService {
-	return &commentService{
+) *CommentService {
+	return &CommentService{
 		constants:         constants,
 		commentRepository: commentRepository,
 		userService:       userService,
@@ -31,8 +31,8 @@ func NewCommentService(
 	}
 }
 
-func (commentService *commentService) GetPostComments(commentableID uint) []dto.CommentDetailsResponse {
-	comments := commentService.commentRepository.GetCommentsByEventID(commentableID)
+func (commentService *CommentService) GetPostComments(commentableID uint) []dto.CommentDetailsResponse {
+	comments := commentService.commentRepository.GetCommentsByEventID(commentService.db, commentableID)
 	var commentsDetails []dto.CommentDetailsResponse
 	for _, comment := range comments {
 		commentsDetails = append(commentsDetails, dto.CommentDetailsResponse{
@@ -45,29 +45,29 @@ func (commentService *commentService) GetPostComments(commentableID uint) []dto.
 	return commentsDetails
 }
 
-func (commentService *commentService) CreateComment(authorID, commentableID uint, content string) {
+func (commentService *CommentService) CreateComment(authorID, commentableID uint, content string) {
 	var notFoundError exceptions.NotFoundError
 	_, authorExist := commentService.userService.FindByUserID(authorID)
 	if !authorExist {
 		notFoundError.ErrorField = commentService.constants.ErrorField.User
 		panic(notFoundError)
 	}
-	_, postExist := commentService.commentRepository.FindCommentableByID(commentableID)
+	_, postExist := commentService.commentRepository.FindCommentableByID(commentService.db, commentableID)
 	if !postExist {
 		notFoundError.ErrorField = commentService.constants.ErrorField.Post
 		panic(notFoundError)
 	}
-	commentService.commentRepository.CreateNewComment(authorID, commentableID, content)
+	commentService.commentRepository.CreateNewComment(commentService.db, authorID, commentableID, content)
 }
 
-func (commentService *commentService) EditComment(authorID, commentID uint, newContent string) {
+func (commentService *CommentService) EditComment(authorID, commentID uint, newContent string) {
 	var notFoundError exceptions.NotFoundError
 	_, authorExist := commentService.userService.FindByUserID(authorID)
 	if !authorExist {
 		notFoundError.ErrorField = commentService.constants.ErrorField.User
 		panic(notFoundError)
 	}
-	comment, commentExist := commentService.commentRepository.FindCommentByID(commentID)
+	comment, commentExist := commentService.commentRepository.FindCommentByID(commentService.db, commentID)
 	if !commentExist {
 		notFoundError.ErrorField = commentService.constants.ErrorField.Comment
 		panic(notFoundError)
@@ -76,17 +76,17 @@ func (commentService *commentService) EditComment(authorID, commentID uint, newC
 		authError := exceptions.NewForbiddenError()
 		panic(authError)
 	}
-	commentService.commentRepository.UpdateCommentContent(comment, newContent)
+	commentService.commentRepository.UpdateCommentContent(commentService.db, comment, newContent)
 }
 
-func (commentService *commentService) DeleteComment(authorID, commentID uint, canModerateComment bool) {
+func (commentService *CommentService) DeleteComment(authorID, commentID uint, canModerateComment bool) {
 	var notFoundError exceptions.NotFoundError
 	_, authorExist := commentService.userService.FindByUserID(authorID)
 	if !authorExist {
 		notFoundError.ErrorField = commentService.constants.ErrorField.User
 		panic(notFoundError)
 	}
-	comment, commentExist := commentService.commentRepository.FindCommentByID(commentID)
+	comment, commentExist := commentService.commentRepository.FindCommentByID(commentService.db, commentID)
 	if !commentExist {
 		notFoundError.ErrorField = commentService.constants.ErrorField.Comment
 		panic(notFoundError)
@@ -95,5 +95,5 @@ func (commentService *commentService) DeleteComment(authorID, commentID uint, ca
 		authError := exceptions.NewForbiddenError()
 		panic(authError)
 	}
-	commentService.commentRepository.DeleteCommentContent(comment)
+	commentService.commentRepository.DeleteCommentContent(commentService.db, comment)
 }

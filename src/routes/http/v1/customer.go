@@ -1,92 +1,49 @@
 package routes_http_v1
 
 import (
-	"first-project/src/application"
-	application_aws "first-project/src/application/aws"
-	application_communication "first-project/src/application/communication/emailService"
-	application_jwt "first-project/src/application/jwt"
-	"first-project/src/bootstrap"
-	controller_v1_chat "first-project/src/controller/v1/chat"
-	controller_v1_comment "first-project/src/controller/v1/comment"
-	controller_v1_event "first-project/src/controller/v1/event"
-	controller_v1_podcast "first-project/src/controller/v1/podcast"
-	controller_v1_user "first-project/src/controller/v1/user"
-	"first-project/src/websocket"
-
-	repository_database "first-project/src/repository/database"
+	"first-project/src/wire"
 
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
-func SetupCustomerRoutes(routerGroup *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
-	userRepository := repository_database.NewUserRepository()
-	categoryRepository := repository_database.NewCategoryRepository()
-	eventRepository := repository_database.NewEventRepository()
-	commentRepository := repository_database.NewCommentRepository(db)
-	podcastRepository := repository_database.NewPodcastRepository()
-	purchaseRepository := repository_database.NewPurchaseRepository()
-	chatRepository := repository_database.NewChatRepository()
-
-	emailService := application_communication.NewEmailService(&di.Env.Email)
-	awsService := application_aws.NewS3Service(
-		di.Constants, &di.Env.EventsBucket,
-		&di.Env.PodcastsBucket, &di.Env.NewsBucket,
-		&di.Env.JournalsBucket, &di.Env.ProfilesBucket,
-	)
-	categoryService := application.NewCategoryService(di.Constants, categoryRepository, db)
-	otpService := application.NewOTPService()
-	jwtService := application_jwt.NewJWTToken()
-	userService := application.NewUserService(di.Constants, userRepository, otpService, awsService, db)
-	eventService := application.NewEventService(di.Constants, awsService, categoryService, eventRepository, commentRepository, purchaseRepository, db)
-	commentService := application.NewCommentService(di.Constants, commentRepository, userService, db)
-	podcastService := application.NewPodcastService(di.Constants, awsService, categoryService, podcastRepository, commentRepository, userService, db)
-	chatService := application.NewChatService(di.Constants, userService, chatRepository, db)
-
-	customerEventController := controller_v1_event.NewCustomerEventController(di.Constants, eventService, emailService)
-	customerCommentController := controller_v1_comment.NewCustomerCommentController(di.Constants, commentService)
-	customerPodcastController := controller_v1_podcast.NewCustomerPodcastController(di.Constants, podcastService)
-	customerUserController := controller_v1_user.NewCustomerUserController(di.Constants, userService)
-	customerChatController := controller_v1_chat.NewCustomerChatController(di.Constants, chatService, jwtService, hub)
-
+func SetupCustomerRoutes(routerGroup *gin.RouterGroup, app *wire.Application) {
 	event := routerGroup.Group("/events/:eventID")
 	{
-		event.GET("/attendance", customerEventController.IsUserAttended)
-		event.GET("/tickets", customerEventController.GetAvailableEventTicketsList)
-		event.GET("/media", customerEventController.GetEventMedia)
-		event.POST("/reserve", customerEventController.ReserveTickets)
-		event.POST("/purchase/:reservationID", customerEventController.PurchaseTickets)
+		event.GET("/attendance", app.CustomerControllers.EventController.IsUserAttended)
+		event.GET("/tickets", app.CustomerControllers.EventController.GetAvailableEventTicketsList)
+		event.GET("/media", app.CustomerControllers.EventController.GetEventMedia)
+		event.POST("/reserve", app.CustomerControllers.EventController.ReserveTickets)
+		event.POST("/purchase/:reservationID", app.CustomerControllers.EventController.PurchaseTickets)
 	}
 
 	comments := routerGroup.Group("/comments")
 	{
-		comments.POST("/post/:postID", customerCommentController.CreateComment)
+		comments.POST("/post/:postID", app.CustomerControllers.CommentController.CreateComment)
 
 		commentSubGroup := comments.Group("/:commentID")
 		{
-			commentSubGroup.PUT("", customerCommentController.EditComment)
-			commentSubGroup.DELETE("", customerCommentController.DeleteComment)
+			commentSubGroup.PUT("", app.CustomerControllers.CommentController.EditComment)
+			commentSubGroup.DELETE("", app.CustomerControllers.CommentController.DeleteComment)
 		}
 	}
 
 	podcast := routerGroup.Group("/podcasts/:podcastID/subscribe")
 	{
-		podcast.POST("", customerPodcastController.SubscribePodcast)
-		podcast.DELETE("", customerPodcastController.UnSubscribePodcast)
-		podcast.GET("/status", customerPodcastController.SubscribeStatus)
+		podcast.POST("", app.CustomerControllers.PodcastController.SubscribePodcast)
+		podcast.DELETE("", app.CustomerControllers.PodcastController.UnSubscribePodcast)
+		podcast.GET("/status", app.CustomerControllers.PodcastController.SubscribeStatus)
 	}
 
 	profile := routerGroup.Group("/profile")
 	{
-		profile.PUT("/username", customerUserController.ChangeUsername)
-		profile.PUT("/reset-password", customerUserController.ResetPassword)
-		profile.GET("/events", customerEventController.GetAllUserJoinedEvents)
+		profile.PUT("/username", app.CustomerControllers.UserController.ChangeUsername)
+		profile.PUT("/reset-password", app.CustomerControllers.UserController.ResetPassword)
+		profile.GET("/events", app.CustomerControllers.EventController.GetAllUserJoinedEvents)
 	}
 
 	chat := routerGroup.Group("/chat")
 	{
-		chat.POST("/room", customerChatController.CreateOrGetRoom)
-		chat.GET("/room/:roomID/messages", customerChatController.GetMessages)
+		chat.POST("/room", app.CustomerControllers.ChatController.CreateOrGetRoom)
+		chat.GET("/room/:roomID/messages", app.CustomerControllers.ChatController.GetMessages)
 	}
 }

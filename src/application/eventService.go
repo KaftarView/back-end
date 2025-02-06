@@ -1,7 +1,6 @@
 package application
 
 import (
-	application_aws "first-project/src/application/aws"
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/dto"
@@ -17,9 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type eventService struct {
+type EventService struct {
 	constants          *bootstrap.Constants
-	awsS3Service       *application_aws.S3service
+	awsS3Service       application_interfaces.S3Service
 	categoryService    application_interfaces.CategoryService
 	eventRepository    repository_database_interfaces.EventRepository
 	commentRepository  repository_database_interfaces.CommentRepository
@@ -29,14 +28,14 @@ type eventService struct {
 
 func NewEventService(
 	constants *bootstrap.Constants,
-	awsService *application_aws.S3service,
+	awsService application_interfaces.S3Service,
 	categoryService application_interfaces.CategoryService,
 	eventRepository repository_database_interfaces.EventRepository,
 	commentRepository repository_database_interfaces.CommentRepository,
 	purchaseRepository repository_database_interfaces.PurchaseRepository,
 	db *gorm.DB,
-) *eventService {
-	return &eventService{
+) *EventService {
+	return &EventService{
 		constants:          constants,
 		awsS3Service:       awsService,
 		categoryService:    categoryService,
@@ -47,7 +46,7 @@ func NewEventService(
 	}
 }
 
-func (eventService *eventService) FetchEventByID(eventID uint) *entities.Event {
+func (eventService *EventService) FetchEventByID(eventID uint) *entities.Event {
 	var notFoundError exceptions.NotFoundError
 	event, eventExist := eventService.eventRepository.FindEventByID(eventService.db, eventID)
 	if !eventExist {
@@ -57,7 +56,7 @@ func (eventService *eventService) FetchEventByID(eventID uint) *entities.Event {
 	return event
 }
 
-func (eventService *eventService) fetchTicketByID(ticketID uint) *entities.Ticket {
+func (eventService *EventService) fetchTicketByID(ticketID uint) *entities.Ticket {
 	var notFoundError exceptions.NotFoundError
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByID(eventService.db, ticketID)
 	if !ticketExist {
@@ -67,7 +66,7 @@ func (eventService *eventService) fetchTicketByID(ticketID uint) *entities.Ticke
 	return ticket
 }
 
-func (eventService *eventService) fetchDiscountByID(discountID uint) *entities.Discount {
+func (eventService *EventService) fetchDiscountByID(discountID uint) *entities.Discount {
 	var notFoundError exceptions.NotFoundError
 	discount, eventExist := eventService.eventRepository.FindDiscountByDiscountID(eventService.db, discountID)
 	if !eventExist {
@@ -77,7 +76,7 @@ func (eventService *eventService) fetchDiscountByID(discountID uint) *entities.D
 	return discount
 }
 
-func (eventService *eventService) fetchMediaByID(mediaID uint) *entities.Media {
+func (eventService *EventService) fetchMediaByID(mediaID uint) *entities.Media {
 	var notFoundError exceptions.NotFoundError
 	media, mediaExist := eventService.eventRepository.FindMediaByID(eventService.db, mediaID)
 	if !mediaExist {
@@ -87,7 +86,7 @@ func (eventService *eventService) fetchMediaByID(mediaID uint) *entities.Media {
 	return media
 }
 
-func (eventService *eventService) validateUniqueTicketName(name string, eventID uint) {
+func (eventService *EventService) validateUniqueTicketName(name string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	_, ticketExist := eventService.eventRepository.FindEventTicketByName(eventService.db, name, eventID)
 	if ticketExist {
@@ -98,7 +97,7 @@ func (eventService *eventService) validateUniqueTicketName(name string, eventID 
 	}
 }
 
-func (eventService *eventService) validateUniqueDiscountCode(code string, eventID uint) {
+func (eventService *EventService) validateUniqueDiscountCode(code string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	_, discountExist := eventService.eventRepository.FindEventDiscountByCode(eventService.db, code, eventID)
 	if discountExist {
@@ -109,7 +108,7 @@ func (eventService *eventService) validateUniqueDiscountCode(code string, eventI
 	}
 }
 
-func (eventService *eventService) validateUniqueMediaName(name string, eventID uint) {
+func (eventService *EventService) validateUniqueMediaName(name string, eventID uint) {
 	var conflictError exceptions.ConflictError
 	_, mediaExist := eventService.eventRepository.FindEventMediaByName(eventService.db, name, eventID)
 	if mediaExist {
@@ -120,19 +119,19 @@ func (eventService *eventService) validateUniqueMediaName(name string, eventID u
 	}
 }
 
-func (eventService *eventService) setEventBannerPath(event *entities.Event, banner *multipart.FileHeader) {
+func (eventService *EventService) setEventBannerPath(event *entities.Event, banner *multipart.FileHeader) {
 	bannerPath := eventService.constants.S3Service.GetEventBannerKey(event.ID, banner.Filename)
 	eventService.awsS3Service.UploadObject(enums.EventsBucket, bannerPath, banner)
 	event.BannerPath = bannerPath
 }
 
-func (eventService *eventService) setMediaFilePath(media *entities.Media, file *multipart.FileHeader) {
+func (eventService *EventService) setMediaFilePath(media *entities.Media, file *multipart.FileHeader) {
 	mediaPath := eventService.constants.S3Service.GetEventSessionKey(media.EventID, media.ID, file.Filename)
 	eventService.awsS3Service.UploadObject(enums.EventsBucket, mediaPath, file)
 	media.Path = mediaPath
 }
 
-func (eventService *eventService) ValidateEventCreationDetails(
+func (eventService *EventService) ValidateEventCreationDetails(
 	name, venueType, location string, fromDate, toDate time.Time,
 ) {
 	var conflictError exceptions.ConflictError
@@ -145,7 +144,7 @@ func (eventService *eventService) ValidateEventCreationDetails(
 	}
 }
 
-func (eventService *eventService) CreateEvent(eventDetails dto.CreateEventRequest) *entities.Event {
+func (eventService *EventService) CreateEvent(eventDetails dto.CreateEventRequest) *entities.Event {
 	enumStatus := enums.Draft
 	eventStatuses := enums.GetAllEventStatus()
 	for _, eventStatus := range eventStatuses {
@@ -202,7 +201,7 @@ func (eventService *eventService) CreateEvent(eventDetails dto.CreateEventReques
 	return event
 }
 
-func (eventService *eventService) CreateEventTicket(ticketDetails dto.CreateTicketRequest) *entities.Ticket {
+func (eventService *EventService) CreateEventTicket(ticketDetails dto.CreateTicketRequest) *entities.Ticket {
 	eventService.FetchEventByID(ticketDetails.EventID)
 	eventService.validateUniqueTicketName(ticketDetails.Name, ticketDetails.EventID)
 
@@ -230,7 +229,7 @@ func (eventService *eventService) CreateEventTicket(ticketDetails dto.CreateTick
 	return ticket
 }
 
-func (eventService *eventService) UpdateEventTicket(ticketID uint, ticketDetails dto.CreateTicketRequest) {
+func (eventService *EventService) UpdateEventTicket(ticketID uint, ticketDetails dto.CreateTicketRequest) {
 	ticket := eventService.fetchTicketByID(ticketID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -257,7 +256,7 @@ func (eventService *eventService) UpdateEventTicket(ticketID uint, ticketDetails
 	}
 }
 
-func (eventService *eventService) CreateEventDiscount(discountDetails dto.CreateDiscountRequest) *entities.Discount {
+func (eventService *EventService) CreateEventDiscount(discountDetails dto.CreateDiscountRequest) *entities.Discount {
 	eventService.FetchEventByID(discountDetails.EventID)
 	eventService.validateUniqueDiscountCode(discountDetails.Code, discountDetails.EventID)
 
@@ -294,7 +293,7 @@ func (eventService *eventService) CreateEventDiscount(discountDetails dto.Create
 	return discount
 }
 
-func (eventService *eventService) UpdateEventDiscount(discountID uint, discountDetails dto.CreateDiscountRequest) {
+func (eventService *EventService) UpdateEventDiscount(discountID uint, discountDetails dto.CreateDiscountRequest) {
 	discount := eventService.fetchDiscountByID(discountID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -320,7 +319,7 @@ func (eventService *eventService) UpdateEventDiscount(discountID uint, discountD
 	}
 }
 
-func (eventService *eventService) UpdateEvent(updateDetails dto.UpdateEventRequest) {
+func (eventService *EventService) UpdateEvent(updateDetails dto.UpdateEventRequest) {
 	event := eventService.FetchEventByID(updateDetails.ID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -362,7 +361,7 @@ func (eventService *eventService) UpdateEvent(updateDetails dto.UpdateEventReque
 	}
 }
 
-func (eventService *eventService) CreateEventOrganizer(eventID uint, name, email, description string, profile *multipart.FileHeader) {
+func (eventService *EventService) CreateEventOrganizer(eventID uint, name, email, description string, profile *multipart.FileHeader) {
 	var conflictError exceptions.ConflictError
 	eventService.FetchEventByID(eventID)
 
@@ -401,7 +400,7 @@ func (eventService *eventService) CreateEventOrganizer(eventID uint, name, email
 	}
 }
 
-func (eventService *eventService) GetEventsList(allowedStatus []enums.EventStatus, page, pageSize int) []dto.EventDetailsResponse {
+func (eventService *EventService) GetEventsList(allowedStatus []enums.EventStatus, page, pageSize int) []dto.EventDetailsResponse {
 	offset := (page - 1) * pageSize
 	events, _ := eventService.eventRepository.FindEventsByStatus(eventService.db, allowedStatus, offset, pageSize)
 	eventsDetails := make([]dto.EventDetailsResponse, len(events))
@@ -429,7 +428,7 @@ func (eventService *eventService) GetEventsList(allowedStatus []enums.EventStatu
 	return eventsDetails
 }
 
-func (eventService *eventService) GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse {
+func (eventService *EventService) GetEventDetails(allowedStatus []enums.EventStatus, eventID uint) dto.EventDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	event, eventExist := eventService.eventRepository.FindEventByID(eventService.db, eventID)
 	if !eventExist {
@@ -473,7 +472,7 @@ func (eventService *eventService) GetEventDetails(allowedStatus []enums.EventSta
 	return eventDetails
 }
 
-func (eventService *eventService) GetAvailableEventTickets(eventID uint) []dto.TicketDetailsResponse {
+func (eventService *EventService) GetAvailableEventTickets(eventID uint) []dto.TicketDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
 	tickets, ticketExist := eventService.eventRepository.FindAvailableTicketsByEventID(eventService.db, eventID)
@@ -501,7 +500,7 @@ func (eventService *eventService) GetAvailableEventTickets(eventID uint) []dto.T
 	return ticketsDetails
 }
 
-func (eventService *eventService) GetAllEventTickets(eventID uint) []dto.TicketDetailsResponse {
+func (eventService *EventService) GetAllEventTickets(eventID uint) []dto.TicketDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
 	tickets, ticketExist := eventService.eventRepository.FindAllTicketsByEventID(eventService.db, eventID)
@@ -526,7 +525,7 @@ func (eventService *eventService) GetAllEventTickets(eventID uint) []dto.TicketD
 	return ticketsDetails
 }
 
-func (eventService *eventService) GetTicketDetails(ticketID uint) dto.TicketDetailsResponse {
+func (eventService *EventService) GetTicketDetails(ticketID uint) dto.TicketDetailsResponse {
 	ticket, ticketExist := eventService.eventRepository.FindEventTicketByID(eventService.db, ticketID)
 	if !ticketExist {
 		return dto.TicketDetailsResponse{}
@@ -547,7 +546,7 @@ func (eventService *eventService) GetTicketDetails(ticketID uint) dto.TicketDeta
 	return ticketDetails
 }
 
-func (eventService *eventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
+func (eventService *EventService) GetEventDiscounts(eventID uint) []dto.DiscountDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
 	discounts, discountExist := eventService.eventRepository.FindDiscountsByEventID(eventService.db, eventID)
@@ -572,7 +571,7 @@ func (eventService *eventService) GetEventDiscounts(eventID uint) []dto.Discount
 	return discountsDetails
 }
 
-func (eventService *eventService) GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse {
+func (eventService *EventService) GetDiscountDetails(discountID uint) dto.DiscountDetailsResponse {
 	discount := eventService.fetchDiscountByID(discountID)
 
 	discountDetails := dto.DiscountDetailsResponse{
@@ -591,7 +590,7 @@ func (eventService *eventService) GetDiscountDetails(discountID uint) dto.Discou
 	return discountDetails
 }
 
-func (eventService *eventService) GetEventAttendees(eventID uint) []dto.EventAttendeesResponse {
+func (eventService *EventService) GetEventAttendees(eventID uint) []dto.EventAttendeesResponse {
 	eventService.FetchEventByID(eventID)
 	orders := eventService.eventRepository.FindOrdersEventID(eventService.db, eventID)
 	var attendees []dto.EventAttendeesResponse
@@ -610,7 +609,7 @@ func (eventService *eventService) GetEventAttendees(eventID uint) []dto.EventAtt
 	return attendees
 }
 
-func (eventService *eventService) DeleteEvent(eventID uint) {
+func (eventService *EventService) DeleteEvent(eventID uint) {
 	event := eventService.FetchEventByID(eventID)
 
 	eventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventService.db, eventID)
@@ -634,7 +633,7 @@ func (eventService *eventService) DeleteEvent(eventID uint) {
 	}
 }
 
-func (eventService *eventService) DeleteTicket(ticketID uint) {
+func (eventService *EventService) DeleteTicket(ticketID uint) {
 	eventService.fetchTicketByID(ticketID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -649,7 +648,7 @@ func (eventService *eventService) DeleteTicket(ticketID uint) {
 	}
 }
 
-func (eventService *eventService) DeleteDiscount(discountID uint) {
+func (eventService *EventService) DeleteDiscount(discountID uint) {
 	eventService.fetchDiscountByID(discountID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -664,7 +663,7 @@ func (eventService *eventService) DeleteDiscount(discountID uint) {
 	}
 }
 
-func (eventService *eventService) DeleteOrganizer(organizerID uint) {
+func (eventService *EventService) DeleteOrganizer(organizerID uint) {
 	var notFoundError exceptions.NotFoundError
 	organizer, organizerExist := eventService.eventRepository.FindOrganizerByID(eventService.db, organizerID)
 	if !organizerExist {
@@ -685,7 +684,7 @@ func (eventService *eventService) DeleteOrganizer(organizerID uint) {
 	}
 }
 
-func (eventService *eventService) GetEventMediaDetails(mediaID uint) dto.MediaDetailsResponse {
+func (eventService *EventService) GetEventMediaDetails(mediaID uint) dto.MediaDetailsResponse {
 	media := eventService.fetchMediaByID(mediaID)
 
 	mediaPath := eventService.awsS3Service.GetPresignedURL(enums.EventsBucket, media.Path, 8*time.Hour)
@@ -701,7 +700,7 @@ func (eventService *eventService) GetEventMediaDetails(mediaID uint) dto.MediaDe
 	return mediaDetails
 }
 
-func (eventService *eventService) GetEventOrganizers(eventID uint) []dto.OrganizerDetailsResponse {
+func (eventService *EventService) GetEventOrganizers(eventID uint) []dto.OrganizerDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
 	allEventOrganizers, _ := eventService.eventRepository.FindAllEventOrganizers(eventService.db, eventID)
@@ -718,7 +717,7 @@ func (eventService *eventService) GetEventOrganizers(eventID uint) []dto.Organiz
 	return organizersDetails
 }
 
-func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDetailsResponse {
+func (eventService *EventService) GetListEventMedia(eventID uint) []dto.MediaDetailsResponse {
 	eventService.FetchEventByID(eventID)
 
 	allEventMedia, _ := eventService.eventRepository.FindAllEventMedia(eventService.db, eventID)
@@ -737,12 +736,12 @@ func (eventService *eventService) GetListEventMedia(eventID uint) []dto.MediaDet
 	return allMediaDetails
 }
 
-func (eventService *eventService) IsUserAttended(eventID, userID uint) bool {
+func (eventService *EventService) IsUserAttended(eventID, userID uint) bool {
 	eventService.FetchEventByID(eventID)
 	return eventService.eventRepository.IsUserAttendingEvent(eventService.db, userID, eventID)
 }
 
-func (eventService *eventService) GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse {
+func (eventService *EventService) GetAttendantEventMedia(eventID, userID uint) []dto.MediaDetailsResponse {
 	eventService.FetchEventByID(eventID)
 	if !eventService.IsUserAttended(eventID, userID) {
 		panic(exceptions.NewForbiddenError())
@@ -763,7 +762,7 @@ func (eventService *eventService) GetAttendantEventMedia(eventID, userID uint) [
 	return allMediaDetails
 }
 
-func (eventService *eventService) UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader) {
+func (eventService *EventService) UpdateEventMedia(mediaID uint, name *string, file *multipart.FileHeader) {
 	media := eventService.fetchMediaByID(mediaID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -787,7 +786,7 @@ func (eventService *eventService) UpdateEventMedia(mediaID uint, name *string, f
 	}
 }
 
-func (eventService *eventService) DeleteEventMedia(mediaID uint) {
+func (eventService *EventService) DeleteEventMedia(mediaID uint) {
 	media := eventService.fetchMediaByID(mediaID)
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
@@ -803,7 +802,7 @@ func (eventService *eventService) DeleteEventMedia(mediaID uint) {
 	}
 }
 
-func (eventService *eventService) ChangeEventStatus(eventID uint, newStatus string) {
+func (eventService *EventService) ChangeEventStatus(eventID uint, newStatus string) {
 	event := eventService.FetchEventByID(eventID)
 	event.Status = updateEnumField(event.Status, &newStatus, enums.GetAllEventStatus)
 	if err := eventService.eventRepository.UpdateEvent(eventService.db, event); err != nil {
@@ -811,7 +810,7 @@ func (eventService *eventService) ChangeEventStatus(eventID uint, newStatus stri
 	}
 }
 
-func (eventService *eventService) CreateEventMedia(eventID uint, mediaName string, mediaFile *multipart.FileHeader) {
+func (eventService *EventService) CreateEventMedia(eventID uint, mediaName string, mediaFile *multipart.FileHeader) {
 	eventService.FetchEventByID(eventID)
 	eventService.validateUniqueMediaName(mediaName, eventID)
 
@@ -840,7 +839,7 @@ func (eventService *eventService) CreateEventMedia(eventID uint, mediaName strin
 	}
 }
 
-func (eventService *eventService) SearchEvents(query string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+func (eventService *EventService) SearchEvents(query string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	var events []*entities.Event
 	offset := (page - 1) * pageSize
 	if query != "" {
@@ -873,7 +872,7 @@ func (eventService *eventService) SearchEvents(query string, page, pageSize int,
 	return eventsDetails
 }
 
-func (eventService *eventService) FilterEventsByCategories(categories []string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
+func (eventService *EventService) FilterEventsByCategories(categories []string, page, pageSize int, allowedStatus []enums.EventStatus) []dto.EventDetailsResponse {
 	var eventsList []*entities.Event
 	offset := (page - 1) * pageSize
 	if len(categories) == 0 {
@@ -911,7 +910,7 @@ func (eventService *eventService) FilterEventsByCategories(categories []string, 
 	return eventsDetails
 }
 
-func (eventService *eventService) validateTicketAvailability(
+func (eventService *EventService) validateTicketAvailability(
 	ticket *entities.Ticket, ticketExist bool, inputTicket dto.ReserveTicketRequest) error {
 	var notFoundError exceptions.NotFoundError
 	if !ticketExist {
@@ -930,7 +929,7 @@ func (eventService *eventService) validateTicketAvailability(
 	return nil
 }
 
-func (eventService *eventService) validateDiscountAvailability(
+func (eventService *EventService) validateDiscountAvailability(
 	discount *entities.Discount, discountExist bool, totalRequestedTickets uint) error {
 	var notFoundError exceptions.NotFoundError
 	if !discountExist {
@@ -949,67 +948,80 @@ func (eventService *eventService) validateDiscountAvailability(
 	return nil
 }
 
-func applyDiscount(totalPrice float64, discount *entities.Discount) float64 {
-	if discount == nil {
-		return totalPrice
+func (eventService *EventService) buyTickets(tx *gorm.DB, tickets []dto.ReserveTicketRequest) ([]*entities.ReservationItem, float64, uint, error) {
+	var totalRequestedTickets uint
+	var totalPrice float64
+	reservationItems := make([]*entities.ReservationItem, len(tickets))
+
+	for i, inputTicket := range tickets {
+		ticket, ticketExist := eventService.eventRepository.FindEventTicketByIDForUpdate(tx, inputTicket.ID)
+		if err := eventService.validateTicketAvailability(ticket, ticketExist, inputTicket); err != nil {
+			return nil, 0, 0, err
+		}
+
+		reservationItems[i] = &entities.ReservationItem{
+			TicketID:       ticket.ID,
+			TicketName:     ticket.Name,
+			TicketPrice:    ticket.Price,
+			TicketQuantity: inputTicket.Quantity,
+		}
+		totalPrice += float64(inputTicket.Quantity) * ticket.Price
+		totalRequestedTickets += inputTicket.Quantity
+		ticket.SoldCount += inputTicket.Quantity
+		if err := eventService.eventRepository.UpdateEventTicket(tx, ticket); err != nil {
+			return nil, 0, 0, nil
+		}
 	}
 
-	var totalPriceAfterDiscount float64
-	switch discount.Type {
-	case enums.Percentage:
-		totalPriceAfterDiscount = totalPrice * (1 - discount.Value/100)
-	case enums.Fixed:
-		totalPriceAfterDiscount = totalPrice - discount.Value
-	default:
-		totalPriceAfterDiscount = totalPrice
-	}
-
-	if totalPriceAfterDiscount < 0 {
-		totalPriceAfterDiscount = 0
-	}
-
-	return totalPriceAfterDiscount
+	return reservationItems, totalPrice, totalRequestedTickets, nil
 }
 
-func (eventService *eventService) ReserveEventTicket(
+func (eventService *EventService) applyDiscountIfAvailable(tx *gorm.DB, discountCode *string, eventID, totalRequestedTickets uint, totalPrice *float64) (*uint, *enums.DiscountType, *float64, error) {
+	if discountCode == nil {
+		return nil, nil, nil, nil
+	}
+
+	discount, discountExist := eventService.eventRepository.FindEventDiscountByCodeForUpdate(tx, *discountCode, eventID)
+	if err := eventService.validateDiscountAvailability(discount, discountExist, totalRequestedTickets); err != nil {
+		return nil, nil, nil, err
+	}
+
+	discount.UsedCount++
+	discountID := &discount.ID
+	discountType := &discount.Type
+	discountValue := &discount.Value
+
+	switch discount.Type {
+	case enums.Percentage:
+		*totalPrice = *totalPrice * (1 - discount.Value/100)
+	case enums.Fixed:
+		*totalPrice = *totalPrice - discount.Value
+	}
+
+	if *totalPrice < 0 {
+		*totalPrice = 0
+	}
+
+	if err := eventService.eventRepository.UpdateEventDiscount(tx, discount); err != nil {
+		return nil, nil, nil, err
+	}
+
+	return discountID, discountType, discountValue, nil
+}
+
+func (eventService *EventService) ReserveEventTicket(
 	userID, eventID uint, discountCode *string, tickets []dto.ReserveTicketRequest) dto.ReserveTicketResponse {
-	var totalRequestedTickets uint = 0
-	var totalPrice float64 = 0
-	var discountID *uint
-	var discountType *enums.DiscountType
-	var discountValue *float64
 	var reservation *entities.Reservation
 
 	err := repository_database.ExecuteInTransaction(eventService.db, func(tx *gorm.DB) error {
-		reservationItems := make([]*entities.ReservationItem, len(tickets))
-		for i, inputTicket := range tickets {
-			ticket, ticketExist := eventService.eventRepository.FindEventTicketByIDForUpdate(tx, inputTicket.ID)
-			if err := eventService.validateTicketAvailability(ticket, ticketExist, inputTicket); err != nil {
-				panic(err)
-			}
-			reservationItems[i] = &entities.ReservationItem{
-				TicketID:       ticket.ID,
-				TicketName:     ticket.Name,
-				TicketPrice:    ticket.Price,
-				TicketQuantity: inputTicket.Quantity,
-			}
-			totalPrice += (float64(inputTicket.Quantity) * ticket.Price)
-			totalRequestedTickets += inputTicket.Quantity
-			ticket.SoldCount += inputTicket.Quantity
-			eventService.eventRepository.UpdateEventTicket(tx, ticket)
+		reservationItems, totalPrice, totalRequestedTickets, err := eventService.buyTickets(tx, tickets)
+		if err != nil {
+			panic(err)
 		}
 
-		if discountCode != nil {
-			discount, discountExist := eventService.eventRepository.FindEventDiscountByCodeForUpdate(tx, *discountCode, eventID)
-			if err := eventService.validateDiscountAvailability(discount, discountExist, totalRequestedTickets); err != nil {
-				panic(err)
-			}
-			discount.UsedCount++
-			discountID = &discount.ID
-			discountType = &discount.Type
-			discountValue = &discount.Value
-			totalPrice = applyDiscount(totalPrice, discount)
-			eventService.eventRepository.UpdateEventDiscount(tx, discount)
+		discountID, discountType, discountValue, err := eventService.applyDiscountIfAvailable(tx, discountCode, eventID, totalRequestedTickets, &totalPrice)
+		if err != nil {
+			panic(err)
 		}
 
 		reservation = &entities.Reservation{
@@ -1039,7 +1051,7 @@ func (eventService *eventService) ReserveEventTicket(
 	return reserveTicket
 }
 
-func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservationID uint) {
+func (eventService *EventService) PurchaseEventTicket(userID, eventID, reservationID uint) {
 	var notFoundError exceptions.NotFoundError
 	var conflictError exceptions.ConflictError
 	eventService.FetchEventByID(eventID)
@@ -1115,7 +1127,7 @@ func (eventService *eventService) PurchaseEventTicket(userID, eventID, reservati
 	}
 }
 
-func (eventService *eventService) GetAllUserJoinedEvents(userID uint) []dto.EventDetailsResponse {
+func (eventService *EventService) GetAllUserJoinedEvents(userID uint) []dto.EventDetailsResponse {
 	orders := eventService.purchaseRepository.GetUserOrders(eventService.db, userID)
 	eventsDetails := make([]dto.EventDetailsResponse, len(orders))
 	for i, order := range orders {

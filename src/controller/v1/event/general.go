@@ -1,7 +1,6 @@
 package controller_v1_event
 
 import (
-	application_communication "first-project/src/application/communication/emailService"
 	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
@@ -13,13 +12,13 @@ import (
 type GeneralEventController struct {
 	constants    *bootstrap.Constants
 	eventService application_interfaces.EventService
-	emailService *application_communication.EmailService
+	emailService application_interfaces.EmailService
 }
 
 func NewGeneralEventController(
 	constants *bootstrap.Constants,
 	eventService application_interfaces.EventService,
-	emailService *application_communication.EmailService,
+	emailService application_interfaces.EmailService,
 ) *GeneralEventController {
 	return &GeneralEventController{
 		constants:    constants,

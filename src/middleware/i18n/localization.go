@@ -9,10 +9,10 @@ import (
 )
 
 type LocalizationMiddleware struct {
-	constants *bootstrap.Context
+	constants *bootstrap.Constants
 }
 
-func NewLocalization(constants *bootstrap.Context) *LocalizationMiddleware {
+func NewLocalization(constants *bootstrap.Constants) *LocalizationMiddleware {
 	return &LocalizationMiddleware{
 		constants: constants,
 	}
@@ -20,7 +20,7 @@ func NewLocalization(constants *bootstrap.Context) *LocalizationMiddleware {
 
 func (lm LocalizationMiddleware) Localization(c *gin.Context) {
 	locale := getLocale(c.Request)
-	c.Set(lm.constants.Translator, localization.GetTranslator(locale))
+	c.Set(lm.constants.Context.Translator, localization.GetTranslator(locale))
 
 	c.Next()
 }

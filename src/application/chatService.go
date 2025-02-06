@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type chatService struct {
+type ChatService struct {
 	constants      *bootstrap.Constants
 	userService    application_interfaces.UserService
 	chatRepository repository_database_interfaces.ChatRepository
@@ -24,8 +24,8 @@ func NewChatService(
 	userService application_interfaces.UserService,
 	chatRepository repository_database_interfaces.ChatRepository,
 	db *gorm.DB,
-) *chatService {
-	return &chatService{
+) *ChatService {
+	return &ChatService{
 		constants:      constants,
 		userService:    userService,
 		chatRepository: chatRepository,
@@ -52,7 +52,7 @@ func getRoomDetails(room *entities.ChatRoom) dto.RoomDetailsResponse {
 	}
 }
 
-func (chatService *chatService) CreateOrGetRoom(userID uint) []dto.RoomDetailsResponse {
+func (chatService *ChatService) CreateOrGetRoom(userID uint) []dto.RoomDetailsResponse {
 	var roomsDetails []dto.RoomDetailsResponse
 	rooms := chatService.chatRepository.GetRoomByUserID(chatService.db, userID)
 
@@ -73,7 +73,7 @@ func (chatService *chatService) CreateOrGetRoom(userID uint) []dto.RoomDetailsRe
 	return roomsDetails
 }
 
-func (chatService *chatService) GetRoomMessages(roomID uint) []dto.MessageDetailsResponse {
+func (chatService *ChatService) GetRoomMessages(roomID uint) []dto.MessageDetailsResponse {
 	var notFoundError exceptions.NotFoundError
 	_, roomExist := chatService.chatRepository.GetRoomByID(chatService.db, roomID)
 	if !roomExist {
@@ -95,7 +95,7 @@ func (chatService *chatService) GetRoomMessages(roomID uint) []dto.MessageDetail
 	return messagesDetails
 }
 
-func (chatService *chatService) SaveMessage(roomID, senderID uint, content string) {
+func (chatService *ChatService) SaveMessage(roomID, senderID uint, content string) {
 	var notFoundError exceptions.NotFoundError
 	room, roomExist := chatService.chatRepository.GetRoomByID(chatService.db, roomID)
 	if !roomExist {

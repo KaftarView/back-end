@@ -2,7 +2,6 @@ package controller_v1_chat
 
 import (
 	application_interfaces "first-project/src/application/interfaces"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
@@ -14,14 +13,14 @@ import (
 type CustomerChatController struct {
 	constants   *bootstrap.Constants
 	chatService application_interfaces.ChatService
-	jwtService  *application_jwt.JWTToken
+	jwtService  application_interfaces.JWTToken
 	hub         *websocket.Hub
 }
 
 func NewCustomerChatController(
 	constants *bootstrap.Constants,
 	chatService application_interfaces.ChatService,
-	jwtService *application_jwt.JWTToken,
+	jwtService application_interfaces.JWTToken,
 	hub *websocket.Hub,
 ) *CustomerChatController {
 	return &CustomerChatController{

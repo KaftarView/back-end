@@ -1,10 +1,7 @@
 package controller_v1_user
 
 import (
-	"first-project/src/application"
-	application_communication "first-project/src/application/communication/emailService"
 	application_interfaces "first-project/src/application/interfaces"
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
@@ -16,19 +13,19 @@ import (
 type GeneralUserController struct {
 	constants    *bootstrap.Constants
 	userService  application_interfaces.UserService
-	emailService *application_communication.EmailService
+	emailService application_interfaces.EmailService
 	userCache    *repository_cache.UserCache
-	otpService   *application.OTPService
-	jwtService   *application_jwt.JWTToken
+	otpService   application_interfaces.OTPService
+	jwtService   application_interfaces.JWTToken
 }
 
 func NewGeneralUserController(
 	constants *bootstrap.Constants,
 	userService application_interfaces.UserService,
-	emailService *application_communication.EmailService,
+	emailService application_interfaces.EmailService,
 	userCache *repository_cache.UserCache,
-	otpService *application.OTPService,
-	jwtService *application_jwt.JWTToken,
+	otpService application_interfaces.OTPService,
+	jwtService application_interfaces.JWTToken,
 ) *GeneralUserController {
 	return &GeneralUserController{
 		constants:    constants,

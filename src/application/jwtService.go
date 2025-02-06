@@ -1,4 +1,4 @@
-package application_jwt
+package application
 
 import (
 	"first-project/src/exceptions"

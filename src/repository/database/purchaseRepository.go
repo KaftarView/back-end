@@ -8,13 +8,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type purchaseRepository struct{}
+type PurchaseRepository struct{}
 
-func NewPurchaseRepository() *purchaseRepository {
-	return &purchaseRepository{}
+func NewPurchaseRepository() *PurchaseRepository {
+	return &PurchaseRepository{}
 }
 
-func (repo *purchaseRepository) GetExpiredReservations(db *gorm.DB) ([]*entities.Reservation, error) {
+func (repo *PurchaseRepository) GetExpiredReservations(db *gorm.DB) ([]*entities.Reservation, error) {
 	var expiredReservations []*entities.Reservation
 	err := db.
 		Preload("Items").
@@ -24,7 +24,7 @@ func (repo *purchaseRepository) GetExpiredReservations(db *gorm.DB) ([]*entities
 	return expiredReservations, err
 }
 
-func (repo *purchaseRepository) GetReservationByID(db *gorm.DB, reservationID uint) (*entities.Reservation, bool) {
+func (repo *PurchaseRepository) GetReservationByID(db *gorm.DB, reservationID uint) (*entities.Reservation, bool) {
 	var reservation entities.Reservation
 	result := db.Preload("Items").First(&reservation, "id = ?", reservationID)
 
@@ -37,23 +37,23 @@ func (repo *purchaseRepository) GetReservationByID(db *gorm.DB, reservationID ui
 	return &reservation, true
 }
 
-func (repo *purchaseRepository) CreateReservation(db *gorm.DB, reservation *entities.Reservation) error {
+func (repo *PurchaseRepository) CreateReservation(db *gorm.DB, reservation *entities.Reservation) error {
 	return db.Create(reservation).Error
 }
 
-func (purchaseRepository *purchaseRepository) UpdateReservation(db *gorm.DB, reservation *entities.Reservation) error {
+func (purchaseRepository *PurchaseRepository) UpdateReservation(db *gorm.DB, reservation *entities.Reservation) error {
 	return db.Save(reservation).Error
 }
 
-func (repo *purchaseRepository) CreateTransaction(db *gorm.DB, transaction *entities.Transaction) error {
+func (repo *PurchaseRepository) CreateTransaction(db *gorm.DB, transaction *entities.Transaction) error {
 	return db.Create(transaction).Error
 }
 
-func (repo *purchaseRepository) CreateOrder(db *gorm.DB, order *entities.Order) error {
+func (repo *PurchaseRepository) CreateOrder(db *gorm.DB, order *entities.Order) error {
 	return db.Create(order).Error
 }
 
-func (repo *purchaseRepository) GetUserOrders(db *gorm.DB, userID uint) []*entities.Order {
+func (repo *PurchaseRepository) GetUserOrders(db *gorm.DB, userID uint) []*entities.Order {
 	var orders []*entities.Order
 
 	result := db.Where("user_id = ?", userID).Order("created_at DESC").Find(&orders)

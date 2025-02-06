@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type categoryService struct {
+type CategoryService struct {
 	constants          *bootstrap.Constants
 	categoryRepository repository_database_interfaces.CategoryRepository
 	db                 *gorm.DB
@@ -18,19 +18,19 @@ func NewCategoryService(
 	constants *bootstrap.Constants,
 	categoryRepository repository_database_interfaces.CategoryRepository,
 	db *gorm.DB,
-) *categoryService {
-	return &categoryService{
+) *CategoryService {
+	return &CategoryService{
 		constants:          constants,
 		categoryRepository: categoryRepository,
 		db:                 db,
 	}
 }
 
-func (categoryService *categoryService) GetListCategoryNames() []string {
+func (categoryService *CategoryService) GetListCategoryNames() []string {
 	return categoryService.categoryRepository.FindAllCategories(categoryService.db)
 }
 
-func (categoryService *categoryService) GetCategoriesByName(categoryNames []string) []entities.Category {
+func (categoryService *CategoryService) GetCategoriesByName(categoryNames []string) []entities.Category {
 	var categories []entities.Category
 	for _, name := range categoryNames {
 		category := categoryService.categoryRepository.CreateOrGetCategoryByName(categoryService.db, name)

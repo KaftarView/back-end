@@ -1,17 +1,11 @@
 package routes
 
 import (
-	application_jwt "first-project/src/application/jwt"
 	"first-project/src/bootstrap"
-	middleware_authentication "first-project/src/middleware/Authentication"
-	middleware_exceptions "first-project/src/middleware/exceptions"
-	middleware_i18n "first-project/src/middleware/i18n"
-	middleware_rate_limit "first-project/src/middleware/rateLimit"
-	middleware_websocket "first-project/src/middleware/websocket"
-	repository_database "first-project/src/repository/database"
 	routes_http_v1 "first-project/src/routes/http/v1"
 	routes_websocket_v1 "first-project/src/routes/ws/v1"
 	"first-project/src/websocket"
+	"first-project/src/wire"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -19,46 +13,38 @@ import (
 )
 
 func Run(ginEngine *gin.Engine, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
-	localizationMiddleware := middleware_i18n.NewLocalization(&di.Constants.Context)
-	recoveryMiddleware := middleware_exceptions.NewRecovery(&di.Constants.Context)
-	rateLimitMiddleware := middleware_rate_limit.NewRateLimit(5, 10)
+	app, err := wire.InitializeApplication(di, db, rdb, hub)
+	if err != nil {
+		panic(err)
+	}
 
-	ginEngine.Use(localizationMiddleware.Localization)
-	ginEngine.Use(recoveryMiddleware.Recovery)
-	ginEngine.Use(rateLimitMiddleware.RateLimit)
+	ginEngine.Use(app.Middlewares.Localization.Localization)
+	ginEngine.Use(app.Middlewares.Recovery.Recovery)
+	ginEngine.Use(app.Middlewares.RateLimit.RateLimit)
 
 	v1 := ginEngine.Group("/v1")
 
-	registerGeneralRoutes(v1, di, db, rdb)
-	registerCustomerRoutes(v1, di, db, rdb, hub)
-	registerAdminRoutes(v1, di, db, rdb)
+	registerGeneralRoutes(v1, app)
+	registerCustomerRoutes(v1, app)
+	registerAdminRoutes(v1, app)
 }
 
-func registerGeneralRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
-	routes_http_v1.SetupGeneralRoutes(v1, di, db, rdb)
+func registerGeneralRoutes(v1 *gin.RouterGroup, app *wire.Application) {
+	routes_http_v1.SetupGeneralRoutes(v1, app)
 }
 
-func registerCustomerRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client, hub *websocket.Hub) {
-	userRepository := repository_database.NewUserRepository()
-	jwtService := application_jwt.NewJWTToken()
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
-	wsMiddleware := middleware_websocket.NewWebsocketMiddleware(di.Constants)
-
+func registerCustomerRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	customerGroup := v1.Group("")
-	customerGroup.Use(authMiddleware.AuthRequired)
-	routes_http_v1.SetupCustomerRoutes(customerGroup, di, db, rdb, hub)
+	customerGroup.Use(app.Middlewares.Auth.AuthRequired)
+	routes_http_v1.SetupCustomerRoutes(customerGroup, app)
 
 	ws := v1.Group("/ws")
-	ws.Use(wsMiddleware.UpgradeToWebSocket)
-	routes_websocket_v1.SetupCustomerRoutes(ws, di, db, rdb, hub)
+	ws.Use(app.Middlewares.Websocket.UpgradeToWebSocket)
+	routes_websocket_v1.SetupCustomerRoutes(ws, app)
 }
 
-func registerAdminRoutes(v1 *gin.RouterGroup, di *bootstrap.Di, db *gorm.DB, rdb *redis.Client) {
-	userRepository := repository_database.NewUserRepository()
-	jwtService := application_jwt.NewJWTToken()
-	authMiddleware := middleware_authentication.NewAuthMiddleware(di.Constants, userRepository, jwtService, db)
-
+func registerAdminRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	adminGroup := v1.Group("/admin")
-	adminGroup.Use(authMiddleware.AuthRequired)
-	routes_http_v1.SetupAdminRoutes(adminGroup, di, db, rdb)
+	adminGroup.Use(app.Middlewares.Auth.AuthRequired)
+	routes_http_v1.SetupAdminRoutes(adminGroup, app)
 }

@@ -1,4 +1,8 @@
 {
+  "gopls":
+  {
+    "buildFlags": ["-tags=wireinject"]
+  },
   "cSpell.words": [
     "aerr",
     "awserr",

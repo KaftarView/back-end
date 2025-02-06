@@ -2,6 +2,7 @@ package application_cron
 
 import (
 	application_communication "first-project/src/application/communication/emailService"
+	application_interfaces "first-project/src/application/interfaces"
 	"first-project/src/bootstrap"
 	repository_database_interfaces "first-project/src/repository/database/interfaces"
 	"time"
@@ -15,7 +16,7 @@ type CronJob struct {
 	userRepository     repository_database_interfaces.UserRepository
 	purchaseRepository repository_database_interfaces.PurchaseRepository
 	eventRepository    repository_database_interfaces.EventRepository
-	emailService       *application_communication.EmailService
+	emailService       application_interfaces.EmailService
 	db                 *gorm.DB
 }
 
