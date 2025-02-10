@@ -29,12 +29,8 @@ func NewRecovery(constants *bootstrap.Constants) *RecoveryMiddleware {
 func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 	defer func() {
 		if rec := recover(); rec != nil {
-			if _, ok := c.Request.Header["Upgrade"]; ok {
-				if conn, ok := c.Get(recovery.constants.Context.WebsocketConnection); ok {
-					if wsConn, valid := conn.(*websocket.Conn); valid {
-						wsConn.Close()
-					}
-				}
+			if isWebSocketRequest(c) {
+				recovery.handleWebsocketError(c)
 			} else {
 				if err, ok := rec.(error); ok {
 					recovery.handleRecoveredError(c, err)
@@ -45,6 +41,19 @@ func (recovery RecoveryMiddleware) Recovery(c *gin.Context) {
 	}()
 
 	c.Next()
+}
+
+func isWebSocketRequest(c *gin.Context) bool {
+	_, exists := c.Request.Header["Upgrade"]
+	return exists
+}
+
+func (recovery RecoveryMiddleware) handleWebsocketError(c *gin.Context) {
+	if conn, ok := c.Get(recovery.constants.Context.WebsocketConnection); ok {
+		if wsConn, valid := conn.(*websocket.Conn); valid {
+			wsConn.Close()
+		}
+	}
 }
 
 func (recovery RecoveryMiddleware) handleRecoveredError(c *gin.Context, err error) {

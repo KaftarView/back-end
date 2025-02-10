@@ -56,7 +56,7 @@ func (repo *PurchaseRepository) CreateOrder(db *gorm.DB, order *entities.Order) 
 func (repo *PurchaseRepository) GetUserOrders(db *gorm.DB, userID uint) []*entities.Order {
 	var orders []*entities.Order
 
-	result := db.Where("user_id = ?", userID).Order("created_at DESC").Find(&orders)
+	result := OrderByCreatedAtDesc(db).Where("user_id = ?", userID).Find(&orders)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

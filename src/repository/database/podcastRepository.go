@@ -38,9 +38,8 @@ func (repo *PodcastRepository) UpdatePodcast(db *gorm.DB, podcast *entities.Podc
 
 func (repo *PodcastRepository) FindAllPodcasts(db *gorm.DB, offset, pageSize int) ([]*entities.Podcast, bool) {
 	var podcasts []*entities.Podcast
-	result := db.
+	result := OrderByCreatedAtDesc(db).
 		Preload("Subscribers").
-		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&podcasts)
@@ -159,7 +158,7 @@ func (repo *PodcastRepository) FindPodcastEpisodeByName(db *gorm.DB, name string
 
 func (repo *PodcastRepository) FindAllEpisodes(db *gorm.DB, offset, pageSize int) ([]*entities.Episode, bool) {
 	var podcasts []*entities.Episode
-	result := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&podcasts)
+	result := OrderByCreatedAtDesc(db).Offset(offset).Limit(pageSize).Find(&podcasts)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -188,9 +187,9 @@ func (repo *PodcastRepository) FullTextSearch(db *gorm.DB, query string, offset,
 	db.Exec(`ALTER TABLE podcasts ADD FULLTEXT INDEX idx_name_description (name, description)`)
 	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
 
-	result := db.Model(&entities.Podcast{}).
+	result := OrderByCreatedAtDesc(db).
+		Model(&entities.Podcast{}).
 		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
-		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&podcasts)
@@ -206,17 +205,14 @@ func (repo *PodcastRepository) FullTextSearch(db *gorm.DB, query string, offset,
 
 func (repo *PodcastRepository) FindPodcastsByCategoryName(db *gorm.DB, categories []string, offset, pageSize int) []*entities.Podcast {
 	var podcasts []*entities.Podcast
-
-	result := db.
+	result := OrderByCreatedAtDesc(db).
 		Distinct("podcasts.*").
 		Joins("JOIN podcast_categories ON podcasts.id = podcast_categories.podcast_id").
 		Joins("JOIN categories ON categories.id = podcast_categories.category_id").
 		Where("categories.name IN ?", categories).
-		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&podcasts)
-
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil
