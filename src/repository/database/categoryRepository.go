@@ -14,7 +14,7 @@ func NewCategoryRepository() *CategoryRepository {
 
 func (repo *CategoryRepository) FindAllCategories(db *gorm.DB) []string {
 	var categoryNames []string
-	result := db.Model(&entities.Category{}).Order("created_at DESC").Pluck("name", &categoryNames)
+	result := OrderByCreatedAtDesc(db).Model(&entities.Category{}).Pluck("name", &categoryNames)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return []string{}

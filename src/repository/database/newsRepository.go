@@ -70,7 +70,7 @@ func (repo *NewsRepository) DeleteNews(db *gorm.DB, newsID uint) error {
 
 func (repo *NewsRepository) FindAllNews(db *gorm.DB, offset, pageSize int) ([]*entities.News, bool) {
 	var news []*entities.News
-	result := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&news)
+	result := OrderByCreatedAtDesc(db).Offset(offset).Limit(pageSize).Find(&news)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -84,12 +84,11 @@ func (repo *NewsRepository) FindAllNews(db *gorm.DB, offset, pageSize int) ([]*e
 func (repo *NewsRepository) FindNewsByCategoryName(db *gorm.DB, categories []string, offset, pageSize int) []*entities.News {
 	var news []*entities.News
 
-	result := db.
+	result := OrderByCreatedAtDesc(db).
 		Distinct("news.*").
 		Joins("JOIN news_categories ON news.id = news_categories.news_id").
 		Joins("JOIN categories ON categories.id = news_categories.category_id").
 		Where("categories.name IN ?", categories).
-		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&news)
@@ -105,7 +104,7 @@ func (repo *NewsRepository) FindNewsByCategoryName(db *gorm.DB, categories []str
 }
 
 func (repo *NewsRepository) FindNewsCategoriesByNews(db *gorm.DB, news *entities.News) []entities.Category {
-	if err := db.Model(news).Order("created_at DESC").Association("Categories").Find(&news.Categories); err != nil {
+	if err := OrderByCreatedAtDesc(db).Model(news).Association("Categories").Find(&news.Categories); err != nil {
 		panic(err)
 	}
 	return news.Categories
@@ -117,9 +116,9 @@ func (repo *NewsRepository) FullTextSearch(db *gorm.DB, query string, offset, pa
 	db.Exec(`ALTER TABLE news ADD FULLTEXT INDEX idx_title_description_content_content2 (title, description, content, content2)`)
 	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
 
-	result := db.Model(&entities.News{}).
+	result := OrderByCreatedAtDesc(db).
+		Model(&entities.News{}).
 		Where("MATCH(title, description, content, content2) AGAINST(? IN BOOLEAN MODE)", searchQuery).
-		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&news)

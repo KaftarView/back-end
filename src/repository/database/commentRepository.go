@@ -15,7 +15,7 @@ func NewCommentRepository() *CommentRepository {
 func (repo *CommentRepository) GetCommentsByEventID(db *gorm.DB, eventID uint) []*entities.Comment {
 	var comments []*entities.Comment
 
-	result := db.Where("commentable_id = ?", eventID).Preload("Author").Order("created_at DESC").Find(&comments)
+	result := OrderByCreatedAtDesc(db).Where("commentable_id = ?", eventID).Preload("Author").Find(&comments)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil

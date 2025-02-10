@@ -76,12 +76,12 @@ func (repo *EventRepository) FindAvailableTicketsByEventID(db *gorm.DB, eventID 
 	var tickets []*entities.Ticket
 	now := time.Now()
 
-	result := db.Where(&entities.Ticket{
-		EventID:     eventID,
-		IsAvailable: true,
-	}).Where("available_from <= ?", now).
+	result := OrderByCreatedAtDesc(db).
+		Where(&entities.Ticket{
+			EventID:     eventID,
+			IsAvailable: true,
+		}).Where("available_from <= ?", now).
 		Where("available_until >= ?", now).
-		Order("created_at DESC").
 		Find(&tickets)
 
 	if result.Error != nil {
@@ -95,7 +95,7 @@ func (repo *EventRepository) FindAvailableTicketsByEventID(db *gorm.DB, eventID 
 
 func (repo *EventRepository) FindAllTicketsByEventID(db *gorm.DB, eventID uint) ([]*entities.Ticket, bool) {
 	var tickets []*entities.Ticket
-	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Find(&tickets)
+	result := OrderByCreatedAtDesc(db).Where(queryByEventID, eventID).Find(&tickets)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -108,7 +108,7 @@ func (repo *EventRepository) FindAllTicketsByEventID(db *gorm.DB, eventID uint) 
 
 func (repo *EventRepository) FindDiscountsByEventID(db *gorm.DB, eventID uint) ([]*entities.Discount, bool) {
 	var discounts []*entities.Discount
-	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Order("created_at DESC").Find(&discounts)
+	result := OrderByCreatedAtDesc(db).Where(queryByEventID, eventID).Find(&discounts)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -182,7 +182,7 @@ func (repo *EventRepository) FindEventMediaByName(db *gorm.DB, mediaName string,
 
 func (repo *EventRepository) FindAllEventMedia(db *gorm.DB, eventID uint) ([]*entities.Media, bool) {
 	var media []*entities.Media
-	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Find(&media)
+	result := OrderByCreatedAtDesc(db).Where(queryByEventID, eventID).Find(&media)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -195,7 +195,7 @@ func (repo *EventRepository) FindAllEventMedia(db *gorm.DB, eventID uint) ([]*en
 
 func (repo *EventRepository) FindAllEventOrganizers(db *gorm.DB, eventID uint) ([]*entities.Organizer, bool) {
 	var organizers []*entities.Organizer
-	result := db.Where(queryByEventID, eventID).Order("created_at DESC").Find(&organizers)
+	result := OrderByCreatedAtDesc(db).Where(queryByEventID, eventID).Find(&organizers)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -278,7 +278,7 @@ func (repo *EventRepository) CreateOrganizer(db *gorm.DB, organizer *entities.Or
 
 func (repo *EventRepository) FindEventsByStatus(db *gorm.DB, allowedStatus []enums.EventStatus, offset, pageSize int) ([]*entities.Event, bool) {
 	var events []*entities.Event
-	result := db.Where(queryByStatusIn, allowedStatus).Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&events)
+	result := OrderByCreatedAtDesc(db).Where(queryByStatusIn, allowedStatus).Offset(offset).Limit(pageSize).Find(&events)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, false
@@ -382,10 +382,10 @@ func (repo *EventRepository) FullTextSearch(db *gorm.DB, query string, allowedSt
 	db.Exec(`ALTER TABLE events ADD FULLTEXT INDEX idx_name_description (name, description)`)
 	searchQuery := "+" + strings.Join(strings.Fields(query), "* +") + "*"
 
-	result := db.Model(&entities.Event{}).
+	result := OrderByCreatedAtDesc(db).
+		Model(&entities.Event{}).
 		Where("MATCH(name, description) AGAINST(? IN BOOLEAN MODE)", searchQuery).
 		Where(queryByStatusIn, allowedStatus).
-		Order("created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&events)
@@ -402,13 +402,12 @@ func (repo *EventRepository) FullTextSearch(db *gorm.DB, query string, allowedSt
 func (repo *EventRepository) FindEventsByCategoryName(db *gorm.DB, categories []string, offset, pageSize int, allowedStatus []enums.EventStatus) []*entities.Event {
 	var events []*entities.Event
 
-	result := db.
+	result := OrderByCreatedAtDesc(db).
 		Distinct("events.*").
 		Joins("JOIN event_categories ON events.id = event_categories.event_id").
 		Joins("JOIN categories ON categories.id = event_categories.category_id").
 		Where("categories.name IN ?", categories).
 		Where(queryByStatusIn, allowedStatus).
-		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&events)
