@@ -10,11 +10,13 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
 	"first-project/src/bootstrap"
 	"first-project/src/entities"
+	"first-project/src/logger"
 	"first-project/src/routes"
 	"first-project/src/websocket"
 	"first-project/src/wire"
@@ -22,7 +24,7 @@ import (
 
 func main() {
 	gin.DisableConsoleColor()
-	ginEngine := gin.Default()
+	ginEngine := gin.New()
 	config := cors.Config{
 		AllowOrigins:     []string{"http://localhost:5174", "http://localhost:5173", "https://cesaiust.ir", "http://cesaiust.ir"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
@@ -35,6 +37,22 @@ func main() {
 
 	var di = bootstrap.Run()
 
+	consoleOutput, err := strconv.ParseBool(di.Env.LoggerConfig.ConsoleOutput)
+	if err != nil {
+		consoleOutput = true
+	}
+	logConfig := logger.Config{
+		LogLevel:      di.Env.LoggerConfig.LogLevel,
+		LogFile:       di.Env.LoggerConfig.LogFile,
+		ConsoleOutput: consoleOutput,
+	}
+
+	logger, err := logger.NewLogger(logConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer logger.Close()
+
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		di.Env.PRIMARY_DB.DB_USER,
@@ -45,7 +63,7 @@ func main() {
 	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Error connecting to database:", err)
+		logger.Fatal("Error connecting to database:", zap.Any("error", err))
 	}
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(
 		&entities.Category{},
@@ -83,7 +101,7 @@ func main() {
 	})
 	_, err = rdb.Ping(context.Background()).Result()
 	if err != nil {
-		log.Fatal("Error connecting to Redis:", err)
+		logger.Fatal("Error connecting to Redis:", zap.Any("error", err))
 	}
 
 	hub := websocket.NewHub()
@@ -98,7 +116,8 @@ func main() {
 
 	backgroundEnabled, err := strconv.ParseBool(di.Env.Applications.BACKGROUND_SERVICE_ENABLED)
 	if err != nil {
-		log.Fatal("Error during checking background service enable")
+		backgroundEnabled = true
+		logger.Error("Error during checking background service enable")
 	}
 	if backgroundEnabled {
 		app.CronJobs.CronJob.RunCronJob()
@@ -106,7 +125,8 @@ func main() {
 
 	APIServiceEnabled, err := strconv.ParseBool(di.Env.Applications.API_SERVICE_ENABLED)
 	if err != nil {
-		log.Fatal("Error during checking API service enable")
+		APIServiceEnabled = true
+		logger.Error("Error during checking API service enable")
 	}
 	if APIServiceEnabled {
 		routes.Run(ginEngine, app)

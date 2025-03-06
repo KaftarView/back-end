@@ -4,14 +4,15 @@ import (
 	"first-project/src/bootstrap"
 	"first-project/src/controller"
 	"first-project/src/exceptions"
+	"first-project/src/logger"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 const errorFormatKey = "errors.%s"
@@ -179,7 +180,7 @@ func handleNotFoundError(c *gin.Context, notFoundError exceptions.NotFoundError,
 }
 
 func unhandledErrors(c *gin.Context, err error, transKey string) {
-	log.Println(err.Error())
+	logger.GetLogger().Error("Unhandled server error:", zap.String("error", err.Error()))
 	trans := controller.GetTranslator(c, transKey)
 	errorMessage, _ := trans.T("errors.generic")
 

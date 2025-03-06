@@ -1,9 +1,11 @@
 package bootstrap
 
 import (
+	"first-project/src/logger"
 	"os"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 type Env struct {
@@ -11,6 +13,7 @@ type Env struct {
 	PrimaryRedis RedisDB
 	Storage      S3
 	Applications AppInfo
+	LoggerConfig Logger
 	Email        EmailInfo
 	SuperAdmin   AdminCredentials
 }
@@ -51,6 +54,12 @@ type AppInfo struct {
 	API_SERVICE_ENABLED        string
 }
 
+type Logger struct {
+	LogLevel      string
+	LogFile       string
+	ConsoleOutput string
+}
+
 type EmailInfo struct {
 	EmailFrom     string
 	EmailPassword string
@@ -65,7 +74,10 @@ type AdminCredentials struct {
 }
 
 func NewEnvironments() *Env {
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		logger.GetLogger().Warn("Cannot read .env file", zap.String("error", err.Error()))
+	}
 
 	return &Env{
 		PRIMARY_DB: Database{
@@ -97,6 +109,11 @@ func NewEnvironments() *Env {
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),
 			API_SERVICE_ENABLED:        os.Getenv("API_SERVICE_ENABLED"),
+		},
+		LoggerConfig: Logger{
+			LogLevel:      os.Getenv("LOG_LEVEL"),
+			LogFile:       os.Getenv("LOG_FILE"),
+			ConsoleOutput: os.Getenv("CONSOLE_OUTPUT"),
 		},
 		Email: EmailInfo{
 			EmailFrom:     os.Getenv("EMAIL_FROM"),
