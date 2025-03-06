@@ -20,6 +20,7 @@ import (
 	middleware_authentication "first-project/src/middleware/Authentication"
 	middleware_exceptions "first-project/src/middleware/exceptions"
 	middleware_i18n "first-project/src/middleware/i18n"
+	middleware_logger "first-project/src/middleware/logger"
 	middleware_rate_limit "first-project/src/middleware/rateLimit"
 	middleware_websocket "first-project/src/middleware/websocket"
 	repository_database "first-project/src/repository/database"
@@ -131,6 +132,7 @@ var MiddlewareProviderSet = wire.NewSet(
 	middleware_i18n.NewLocalization,
 	middleware_rate_limit.NewRateLimit,
 	middleware_websocket.NewWebsocketMiddleware,
+	middleware_logger.NewLoggerMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -193,6 +195,7 @@ type Middlewares struct {
 	Auth         *middleware_authentication.AuthMiddleware
 	Recovery     *middleware_exceptions.RecoveryMiddleware
 	Localization *middleware_i18n.LocalizationMiddleware
+	Logger       *middleware_logger.LoggerMiddleware
 	RateLimit    *middleware_rate_limit.RateLimitMiddleware
 	Websocket    *middleware_websocket.WebsocketMiddleware
 }

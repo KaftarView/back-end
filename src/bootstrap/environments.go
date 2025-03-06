@@ -11,6 +11,7 @@ type Env struct {
 	PrimaryRedis RedisDB
 	Storage      S3
 	Applications AppInfo
+	LoggerConfig LoggerConfig
 	Email        EmailInfo
 	SuperAdmin   AdminCredentials
 }
@@ -49,6 +50,12 @@ type BucketName struct {
 type AppInfo struct {
 	BACKGROUND_SERVICE_ENABLED string
 	API_SERVICE_ENABLED        string
+}
+
+type LoggerConfig struct {
+	LogLevel      string
+	LogFile       string
+	ConsoleOutput string
 }
 
 type EmailInfo struct {
@@ -97,6 +104,11 @@ func NewEnvironments() *Env {
 		Applications: AppInfo{
 			BACKGROUND_SERVICE_ENABLED: os.Getenv("BACKGROUND_SERVICE_ENABLED"),
 			API_SERVICE_ENABLED:        os.Getenv("API_SERVICE_ENABLED"),
+		},
+		LoggerConfig: LoggerConfig{
+			LogLevel:      os.Getenv("LOG_LEVEL"),
+			LogFile:       os.Getenv("LOG_FILE"),
+			ConsoleOutput: os.Getenv("CONSOLE_OUTPUT"),
 		},
 		Email: EmailInfo{
 			EmailFrom:     os.Getenv("EMAIL_FROM"),
