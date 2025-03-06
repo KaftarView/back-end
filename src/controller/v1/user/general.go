@@ -6,7 +6,6 @@ import (
 	"first-project/src/controller"
 	jwt_keys "first-project/src/jwtKeys"
 	repository_cache "first-project/src/repository/redis"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -89,7 +88,6 @@ func (generalUserController *GeneralUserController) Login(c *gin.Context) {
 	jwt_keys.SetupJWTKeys(c,
 		generalUserController.constants.Context.IsLoadedJWTKeys,
 		generalUserController.constants.JWTKeysPath)
-	panic(fmt.Errorf("some random shit"))
 	accessToken, refreshToken := generalUserController.jwtService.GenerateJWT(user.ID)
 	generalUserController.userCache.SetUser(user.ID, user.Name, user.Email)
 	roles, permissions := generalUserController.userService.FindUserRolesAndPermissions(user.ID)

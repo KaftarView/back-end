@@ -37,17 +37,7 @@ func main() {
 
 	var di = bootstrap.Run()
 
-	consoleOutput, err := strconv.ParseBool(di.Env.LoggerConfig.ConsoleOutput)
-	if err != nil {
-		consoleOutput = true
-	}
-	logConfig := logger.Config{
-		LogLevel:      di.Env.LoggerConfig.LogLevel,
-		LogFile:       di.Env.LoggerConfig.LogFile,
-		ConsoleOutput: consoleOutput,
-	}
-
-	logger, err := logger.NewLogger(logConfig)
+	logger, err := logger.NewLogger(di.Env.LoggerConfig)
 	if err != nil {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}

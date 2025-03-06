@@ -23,6 +23,7 @@ import (
 	"first-project/src/middleware/Authentication"
 	"first-project/src/middleware/exceptions"
 	"first-project/src/middleware/i18n"
+	"first-project/src/middleware/logger"
 	"first-project/src/middleware/rateLimit"
 	"first-project/src/middleware/websocket"
 	"first-project/src/repository/database"
@@ -108,12 +109,14 @@ func InitializeApplication(container *bootstrap.Di, db *gorm.DB, rdb *redis.Clie
 	authMiddleware := middleware_authentication.NewAuthMiddleware(constants, userRepository, jwtToken, db)
 	recoveryMiddleware := middleware_exceptions.NewRecovery(constants)
 	localizationMiddleware := middleware_i18n.NewLocalization(constants)
+	loggerMiddleware := middleware_logger.NewLoggerMiddleware()
 	rateLimitMiddleware := middleware_rate_limit.NewRateLimit()
 	websocketMiddleware := middleware_websocket.NewWebsocketMiddleware(constants)
 	middlewares := &Middlewares{
 		Auth:         authMiddleware,
 		Recovery:     recoveryMiddleware,
 		Localization: localizationMiddleware,
+		Logger:       loggerMiddleware,
 		RateLimit:    rateLimitMiddleware,
 		Websocket:    websocketMiddleware,
 	}
@@ -155,7 +158,7 @@ var CronJobProviderSet = wire.NewSet(application_cron.NewCronJob, wire.Struct(ne
 
 var SeederProviderSet = wire.NewSet(seed.NewRoleSeeder, wire.Struct(new(Seeders), "*"))
 
-var MiddlewareProviderSet = wire.NewSet(middleware_authentication.NewAuthMiddleware, middleware_exceptions.NewRecovery, middleware_i18n.NewLocalization, middleware_rate_limit.NewRateLimit, middleware_websocket.NewWebsocketMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewareProviderSet = wire.NewSet(middleware_authentication.NewAuthMiddleware, middleware_exceptions.NewRecovery, middleware_i18n.NewLocalization, middleware_rate_limit.NewRateLimit, middleware_websocket.NewWebsocketMiddleware, middleware_logger.NewLoggerMiddleware, wire.Struct(new(Middlewares), "*"))
 
 func ProvideConstants(container *bootstrap.Di) *bootstrap.Constants {
 	return container.Constants
@@ -216,6 +219,7 @@ type Middlewares struct {
 	Auth         *middleware_authentication.AuthMiddleware
 	Recovery     *middleware_exceptions.RecoveryMiddleware
 	Localization *middleware_i18n.LocalizationMiddleware
+	Logger       *middleware_logger.LoggerMiddleware
 	RateLimit    *middleware_rate_limit.RateLimitMiddleware
 	Websocket    *middleware_websocket.WebsocketMiddleware
 }

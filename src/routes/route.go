@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"first-project/src/logger"
 	routes_http_v1 "first-project/src/routes/http/v1"
 	routes_websocket_v1 "first-project/src/routes/ws/v1"
 	"first-project/src/wire"
@@ -10,7 +9,7 @@ import (
 )
 
 func Run(ginEngine *gin.Engine, app *wire.Application) {
-	ginEngine.Use(logger.GinMiddleware)
+	ginEngine.Use(app.Middlewares.Logger.GinLoggerMiddleware)
 	ginEngine.Use(app.Middlewares.Localization.Localization)
 	ginEngine.Use(app.Middlewares.Recovery.Recovery)
 	ginEngine.Use(app.Middlewares.RateLimit.RateLimit)
