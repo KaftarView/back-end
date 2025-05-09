@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package chat;
+option go_package = "first-project/src/ProtoBuffers";
+
+service ChatService {
+  rpc Chat (ChatRequest) returns (ChatReply);
+}
+
+message ChatRequest {
+  string message = 1;
+}
+
+message ChatReply {
+  string reply = 1;
+}
